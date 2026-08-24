@@ -181,11 +181,14 @@ Verification gates:
 
 Commit: `spike(mobile): validate encrypted sqlite runtime`
 
-### Slice 1.3: Go API and PostgreSQL
+### Slice 1.3: Go API and PostgreSQL — complete
 
-- Create `services/api` with configuration validation, structured logging, request IDs, graceful shutdown, and `/health/live` plus `/health/ready`.
-- Add Docker Compose PostgreSQL with a health check and persistent local volume.
-- Add migration tooling and an empty-schema integration test.
+Completed:
+
+- Added `services/api` with validated configuration, structured JSON logging, request IDs, sanitized error responses, graceful shutdown, and `/health/live` plus PostgreSQL-backed `/health/ready`.
+- Added localhost-only PostgreSQL 16.10 Compose runtime with a health check and persistent named volume.
+- Added embedded checksummed migration tooling with a PostgreSQL advisory lock and idempotent empty-schema integration test.
+- Verified PostgreSQL health/readiness, migration execution, migration idempotency, `go test ./...`, `go vet ./...`, both HTTP health endpoints, request-ID propagation, and graceful shutdown.
 
 Verification:
 
