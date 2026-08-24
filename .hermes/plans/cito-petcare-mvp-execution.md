@@ -155,12 +155,22 @@ Results: all dependency checks passed, all 10 mobile tests passed, Android expor
 
 Commit: `feat(mobile): scaffold expo application shell`
 
-### Slice 1.2: encrypted local database spike
+### Slice 1.2: encrypted local database spike — native validation pending
 
-- Select and configure an Expo-compatible SQLite adapter with SQLCipher support.
-- Create a development build configuration; do not claim Expo Go compatibility for native encryption.
-- Prove migration, encrypted reopen, transaction rollback, and key rejection behavior in an isolated test/spike.
-- Record the chosen package and EAS implications in `docs/architecture-decisions/`.
+Completed foundations:
+
+- Selected first-party Expo SQLite with SQLCipher and recorded the decision in `docs/architecture-decisions/0001-encrypted-local-database.md`.
+- Installed `expo-sqlite` and `expo-dev-client`, enabled `useSQLCipher`, and added EAS development/preview/production profiles.
+- Added a typed proof harness covering key-first open, SQLCipher detection, migration, encrypted restart markers, wrong-key rejection, and exclusive domain/outbox rollback.
+- Added a native-only verification screen that keeps its temporary operator-entered key in memory and exposes no native error details.
+- Verified Expo CNG emits `expo.sqlite.useSQLCipher=true`; Expo Doctor, strict TypeScript, ESLint, 18 tests, and Android JavaScript export pass.
+
+Remaining native gates:
+
+- Build and install the Android development client.
+- Run initialization, force-close/relaunch, correct-key reopen, wrong-key rejection, and rollback checks against the real SQLCipher binary.
+
+Current blocker: this host has no Java or Android SDK and only 12 GB free disk, while EAS CLI requires Expo authentication and currently reports `Not logged in`. Do not mark this slice complete or begin domain storage until one native build path is available.
 
 Verification gates:
 
