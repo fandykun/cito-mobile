@@ -35,6 +35,12 @@
           "resizeMode": "contain",
           "backgroundColor": "#F9F9F9"
         }
+      ],
+      [
+        "expo-sqlite",
+        {
+          "useSQLCipher": true
+        }
       ]
     ],
     "experiments": {
