@@ -99,6 +99,8 @@ These are the smallest concrete decisions consistent with the authoritative docu
 
 ## Phase 0 — Align and preserve the prototype
 
+**Status: Complete.** The prototype now lives at `prototype/web`; root npm workspace commands build and run it. Verified with a clean `npm ci`, `npm run prototype:build`, direct workspace build, `npm audit --audit-level=high`, and an HTTP `200 text/html` smoke test from the root development command.
+
 ### Work
 
 1. Move the current Vite project into `prototype/web` without changing behavior.
