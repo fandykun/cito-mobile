@@ -170,7 +170,7 @@ Remaining native gates:
 - Build and install the Android development client.
 - Run initialization, force-close/relaunch, correct-key reopen, wrong-key rejection, and rollback checks against the real SQLCipher binary.
 
-Current blocker: this host has no Java or Android SDK and only 12 GB free disk, while EAS CLI requires Expo authentication and currently reports `Not logged in`. Do not mark this slice complete or begin domain storage until one native build path is available.
+Current state: EAS authentication is configured, the Expo project is linked, and both Android development and self-contained preview builds finished successfully from commit `2381ad8`. The preview APK is ready for installation. The only remaining gate is executing the documented checks on a physical Android device; cloud Maestro execution is unavailable on the current free EAS plan. Do not mark this slice complete or begin domain storage until the device results are recorded.
 
 Verification gates:
 
