@@ -130,21 +130,28 @@ git status --short
 
 ## Phase 1 — Prove the production foundations
 
-### Slice 1.1: Expo shell
+### Slice 1.1: Expo shell — complete
 
-- Create `apps/mobile` with strict TypeScript, Expo Router, linting, tests, and environment validation.
-- Recreate only the shell/navigation and design tokens from the prototype.
-- Add a health/debug screen that contains no clinic data.
+- Created `apps/mobile` with strict TypeScript, Expo Router, linting, Jest tests, and validated public environment configuration.
+- Recreated only the prototype's shell/navigation boundaries and design tokens; no mock clinic records or production domain behavior were copied.
+- Added a safe diagnostics screen containing app version, Expo SDK, environment name, and configured API URL only.
+- Added root mobile scripts and aligned the workspace on React 19 so Expo resolves a single React runtime.
 
-Verification:
+Verification completed from a clean npm install:
 
 ```bash
 npm ci
 npm run mobile:typecheck
 npm run mobile:lint
 npm run mobile:test
-npx expo export --platform android
+npm run mobile:export:android
+cd apps/mobile && npx expo install --check
+cd apps/mobile && npx expo-doctor
+npm run prototype:build
+npm audit --audit-level=high
 ```
+
+Results: all dependency checks passed, all 10 mobile tests passed, Android export completed, the reference prototype still built, and the audit reported no high-severity vulnerabilities.
 
 Commit: `feat(mobile): scaffold expo application shell`
 
