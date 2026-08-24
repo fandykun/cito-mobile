@@ -1,0 +1,385 @@
+# Cito Petcare MVP Execution Plan
+
+## Purpose
+
+Convert the existing Vite/React Figma prototype into the production MVP defined by `docs/prd.md` and `docs/erd.md`: an offline-first Expo mobile app backed by a Go API and PostgreSQL.
+
+The current web application is a design reference only. It has mock data and local UI state, but no authentication, encrypted persistence, API, PostgreSQL schema, synchronization, receipt generation, or production mobile runtime.
+
+## Authority and constraints
+
+Implementation must follow, in order:
+
+1. `docs/prd.md` for product scope and acceptance criteria.
+2. `docs/erd.md` for entities, flows, security layers, and stack.
+3. `AGENTS.md` for implementation boundaries.
+
+Non-negotiable constraints:
+
+- React Native through Expo for the production client.
+- Go API and PostgreSQL backend.
+- Single manually provisioned user; no registration, roles, or multi-tenant scoping.
+- Offline-first local writes for visits, retail transactions, expenses, and owner draws.
+- Encrypted medical data locally and in backend storage.
+- On-device PDF receipt generation that works offline.
+- Historical price snapshots on visit and retail line items.
+- No appointment calendar, staff management, multi-branch support, insurance, barcode scanning, or physical printer integration in MVP.
+
+## Architecture decisions
+
+These are the smallest concrete decisions consistent with the authoritative documents:
+
+- **Repository layout:** npm workspace for JavaScript projects plus an independent Go module.
+- **Mobile:** Expo + TypeScript with Expo Router; production features live under `apps/mobile`.
+- **Prototype:** preserve the existing Vite app under `prototype/web`; do not incrementally turn React DOM components into React Native components.
+- **API:** Go with Echo, `pgx`, explicit service/repository boundaries, and SQL migrations. Avoid an ORM that obscures transactions and price/stock invariants.
+- **Database:** PostgreSQL in Docker Compose for local development; production credentials only through environment variables or a secret manager.
+- **API contract:** OpenAPI document under `api/openapi.yaml`; generated or validated typed clients must not drift from handlers.
+- **Local persistence:** encrypted SQLite through an Expo development build. A Phase 1 spike must prove the selected native SQLite/SQLCipher adapter works with the current Expo/EAS toolchain before domain implementation.
+- **Money:** use integer IDR values in TypeScript and explicit fixed-precision PostgreSQL numeric columns; never use floating-point arithmetic for persisted money.
+- **Identifiers and time:** UUIDs generated on-device for offline records; UTC timestamps in storage and explicit clinic timezone for display/day boundaries.
+- **Sensitive medical fields:** local SQLCipher plus application-level authenticated encryption for clinical observations, diagnosis, treatment plan, and vet notes before PostgreSQL persistence. Encryption keys must not be stored in the database or committed to Git.
+- **Authentication:** Argon2id password hashes, short-lived access JWT, refresh/session rotation, secure device storage, and configurable 24–72 hour session duration. Offline access uses a previously established encrypted local session; first login requires the API.
+- **Sync:** durable outbox records in the same local transaction as each domain write. Push operations are idempotent by UUID/idempotency key. Server acknowledgements mark outbox entries complete; retries use bounded exponential backoff.
+- **Derived finance:** daily and monthly summaries are computed from source transactions, not editable user records.
+
+## Target repository layout
+
+```text
+.
+├── AGENTS.md
+├── README.md
+├── api/
+│   └── openapi.yaml
+├── apps/
+│   └── mobile/
+│       ├── app/
+│       ├── src/
+│       │   ├── db/
+│       │   ├── modules/
+│       │   │   ├── auth/
+│       │   │   ├── inventory/
+│       │   │   ├── patients/
+│       │   │   ├── visits/
+│       │   │   ├── pos/
+│       │   │   ├── finance/
+│       │   │   └── sync/
+│       │   └── shared/
+│       └── package.json
+├── services/
+│   └── api/
+│       ├── cmd/api/
+│       ├── internal/
+│       │   ├── auth/
+│       │   ├── inventory/
+│       │   ├── patients/
+│       │   ├── visits/
+│       │   ├── pos/
+│       │   ├── finance/
+│       │   ├── sync/
+│       │   └── platform/
+│       ├── migrations/
+│       └── go.mod
+├── prototype/
+│   └── web/
+├── infra/
+│   └── compose.yaml
+└── docs/
+```
+
+## Delivery rules
+
+- Execute one coherent, independently revertible slice at a time.
+- Add or observe a failing test before behavior changes when practical.
+- Run the narrowest meaningful tests before every commit.
+- Commit and push each verified slice immediately.
+- Never mark a phase complete based only on scaffolding or mocked success.
+- No production feature may read mock constants from the prototype.
+- Do not log credentials, tokens, encryption keys, diagnoses, treatment notes, or other sensitive medical content.
+
+## Phase 0 — Align and preserve the prototype
+
+### Work
+
+1. Move the current Vite project into `prototype/web` without changing behavior.
+2. Add root workspace metadata and commands that clearly distinguish prototype and production projects.
+3. Rewrite `README.md` with repository purpose, prerequisites, and exact commands.
+4. Keep the prototype independently runnable as a visual reference.
+
+### Verification
+
+```bash
+npm ci
+npm run prototype:build
+npm run prototype:dev -- --host 127.0.0.1
+curl -f http://127.0.0.1:<prototype-port>/
+git status --short
+```
+
+### Exit criteria
+
+- Prototype renders exactly as before.
+- Root structure is ready for Expo and Go projects.
+- No production code has been added to the prototype.
+
+### Commit boundary
+
+`chore(repo): separate figma prototype from production workspace`
+
+## Phase 1 — Prove the production foundations
+
+### Slice 1.1: Expo shell
+
+- Create `apps/mobile` with strict TypeScript, Expo Router, linting, tests, and environment validation.
+- Recreate only the shell/navigation and design tokens from the prototype.
+- Add a health/debug screen that contains no clinic data.
+
+Verification:
+
+```bash
+npm ci
+npm run mobile:typecheck
+npm run mobile:lint
+npm run mobile:test
+npx expo export --platform android
+```
+
+Commit: `feat(mobile): scaffold expo application shell`
+
+### Slice 1.2: encrypted local database spike
+
+- Select and configure an Expo-compatible SQLite adapter with SQLCipher support.
+- Create a development build configuration; do not claim Expo Go compatibility for native encryption.
+- Prove migration, encrypted reopen, transaction rollback, and key rejection behavior in an isolated test/spike.
+- Record the chosen package and EAS implications in `docs/architecture-decisions/`.
+
+Verification gates:
+
+- Correct key opens the database after process restart.
+- Wrong key fails without exposing data.
+- A rolled-back transaction leaves no domain or outbox row.
+- Android development build completes through the selected local/EAS path.
+
+Commit: `spike(mobile): validate encrypted sqlite runtime`
+
+### Slice 1.3: Go API and PostgreSQL
+
+- Create `services/api` with configuration validation, structured logging, request IDs, graceful shutdown, and `/health/live` plus `/health/ready`.
+- Add Docker Compose PostgreSQL with a health check and persistent local volume.
+- Add migration tooling and an empty-schema integration test.
+
+Verification:
+
+```bash
+docker compose -f infra/compose.yaml up -d --wait postgres
+cd services/api && go test ./...
+cd services/api && go vet ./...
+curl -f http://127.0.0.1:<api-port>/health/live
+curl -f http://127.0.0.1:<api-port>/health/ready
+```
+
+Commit: `feat(api): scaffold go service and postgres runtime`
+
+### Phase 1 exit criteria
+
+- Expo production shell builds.
+- Encrypted local storage is proven on the target Android toolchain.
+- API and PostgreSQL start from documented commands.
+- CI runs mobile and API checks from a clean checkout.
+
+## Phase 2 — Schema, encryption, and API contract
+
+### Work
+
+1. Translate the ERD into reviewed PostgreSQL migrations without renaming authoritative fields casually.
+2. Add missing operational metadata required for safe sync: UUID, `created_at`, `updated_at`, idempotency/version information, and deletion/tombstone policy. Any ERD extension must be documented before migration.
+3. Define `api/openapi.yaml` for auth and sync/domain resources.
+4. Implement application-level encryption for sensitive visit fields with versioned ciphertext envelopes and associated data bound to record/field IDs.
+5. Add test fixtures with synthetic data only.
+
+### Required tests
+
+- Migration up/down or forward-only migration verification on an empty database.
+- Unique, foreign-key, non-negative stock, and amount constraints.
+- Transactional stock deduction and rollback.
+- Price snapshot immutability after inventory price changes.
+- Sensitive fields are not searchable/readable as plaintext in PostgreSQL.
+- Ciphertext tampering and wrong-key operations fail explicitly.
+- API contract validation in CI.
+
+### Commit boundaries
+
+1. `feat(db): add core clinic schema and constraints`
+2. `feat(security): encrypt sensitive medical fields`
+3. `feat(api): define and validate openapi contract`
+
+## Phase 3 — Authentication and local app lock
+
+### Work
+
+- Add a CLI/admin command to provision or reset the single account.
+- Implement Argon2id password verification, access JWTs, rotated sessions, logout, and configurable duration.
+- Add mobile login, secure token storage, session expiry, offline re-entry, and optional PIN/biometric re-lock.
+- Ensure every screen and local database open path is gated.
+
+### Required tests
+
+- No app data is accessible before authentication.
+- No self-registration route exists.
+- Invalid credentials, expired sessions, rotated tokens, logout, and replay are rejected.
+- Offline re-entry works only after a successful online login and within configured policy.
+- Logs and errors contain no password, token, PIN, or clinical data.
+
+### Commit boundaries
+
+1. `feat(api): add single-account authentication`
+2. `feat(mobile): gate local data behind secure session`
+3. `feat(mobile): add pin and biometric relock`
+
+## Phase 4 — Inventory vertical slice
+
+### Work
+
+- Implement inventory local schema/repository, API repository/service/handlers, sync operations, and mobile screens.
+- Include create/edit, low-stock threshold, expiry date, supplier fields, and stock adjustment with reason.
+- Replace prototype mock inventory with production module data only in Expo.
+
+### Required tests
+
+- Boundary validation for prices, quantities, expiry, and categories.
+- Stock adjustment is atomic and auditable.
+- Low-stock and expiry calculations use clinic-local dates.
+- Offline create/edit remains after restart and syncs idempotently.
+
+### Exit criterion
+
+Inventory can be managed end-to-end online and offline without duplicate sync effects.
+
+## Phase 5 — Owners, pets, vaccinations, and medical visits
+
+### Work
+
+- Implement owner/pet CRUD, health flags, weight history, vaccinations, and editable visit history.
+- Build structured visit capture for complaint, observations, diagnosis, treatment, notes, service fees, and inventory items.
+- In one local transaction: save visit, snapshot prices, deduct stock, calculate financials, update local projections, and enqueue sync.
+- Mirror the invariant in one server transaction.
+
+### Required tests
+
+- Medical fields are encrypted at rest locally and server-side.
+- Visit edits preserve original creation time and update edit time.
+- Price snapshots do not change when inventory prices change.
+- Insufficient stock rejects the entire visit transaction.
+- Failed writes do not partially deduct stock or enqueue malformed sync work.
+- A representative visit can be completed within the PRD's 2–3 minute target in a usability smoke test.
+
+### Commit boundaries
+
+Split by owner/pet, vaccination, visit editor, transactional stock/financial logic, and sync behavior.
+
+## Phase 6 — Retail POS and offline PDF receipts
+
+### Work
+
+- Implement fast item search, cart, quantity changes, payment method, and checkout.
+- In one local transaction: snapshot prices, deduct stock, save sale, update projection, and enqueue sync.
+- Generate, persist, view, and share an itemized PDF entirely on-device.
+- Keep retail checkout separate from medical visits; no diagnosis is required.
+
+### Required tests
+
+- Totals and profits are correct without floating-point drift.
+- Insufficient stock and duplicate confirmation cannot create partial or duplicate sales.
+- Receipt includes clinic, time, receipt number, items, quantities, prices, total, and payment method.
+- Receipt generation and sharing preparation work with network disabled.
+- Checkout meets the under-one-minute target in a usability smoke test.
+
+## Phase 7 — Expenses, owner draw, and financial rollups
+
+### Work
+
+- Implement expenses and owner draws as distinct records.
+- Add cash opening/expected/actual closing and variance.
+- Compute daily and monthly views from source records locally and server-side.
+- Expose medical versus retail income, operating expenses, net profit, draw, and retained amount.
+
+### Required tests
+
+- Owner draw never appears as an operating expense.
+- `retained = gross income - operating expenses - owner draw` through the documented intermediate net-profit calculation.
+- Recomputing projections is deterministic and idempotent.
+- Month boundaries respect the configured clinic timezone.
+- Offline records appear immediately and reconcile after sync.
+
+## Phase 8 — Sync reliability and recovery
+
+### Work
+
+- Complete push/pull protocol, checkpoints, retries, connectivity triggers, and dead-letter diagnostics.
+- Make all mutations idempotent and transactionally couple domain writes with sync acknowledgements.
+- Add backup/restore runbooks and backend health/metrics without sensitive payloads.
+- Test interrupted uploads, process death, duplicate delivery, out-of-order retries, and database restore.
+
+### Required tests
+
+- Airplane-mode workflow across every core write.
+- App restart with pending outbox records loses no data.
+- Repeated operations create no duplicate visits, sales, expenses, draws, or stock deductions.
+- Restore drill recovers a known synthetic dataset.
+- Sync status is visible without exposing clinical payloads.
+
+## Phase 9 — Release readiness
+
+### Work
+
+- Add production Docker image for API, TLS/reverse-proxy deployment documentation, migration procedure, encrypted backup schedule, and rollback runbook.
+- Configure Expo EAS development, preview, and production profiles.
+- Run Android release build and iOS EAS build; test on physical devices when available.
+- Perform security review, dependency audit, accessibility pass, and PRD acceptance test.
+
+### Release gates
+
+```bash
+npm ci
+npm run mobile:typecheck
+npm run mobile:lint
+npm run mobile:test
+cd services/api && go test -race ./...
+cd services/api && go vet ./...
+docker compose -f infra/compose.yaml up -d --build --wait
+# Run API integration and end-to-end smoke suites
+```
+
+Additionally:
+
+- No secrets or sensitive fixtures in Git history or images.
+- No plaintext medical fields in local/backend storage.
+- Fresh-device install, login, offline workflow, reconnect/sync, logout, backup, and restore are verified.
+- Production migration and rollback procedures are exercised on a disposable environment.
+- MVP acceptance criteria in `docs/prd.md` are checked individually.
+
+## Immediate execution queue
+
+Start with these independently revertible commits:
+
+1. **Repository separation:** move the Figma prototype to `prototype/web`, establish root workspace commands, and verify identical output.
+2. **Expo shell:** scaffold `apps/mobile`, add strict checks, and reproduce the navigation/design shell without business logic.
+3. **Encrypted SQLite spike:** prove the native encrypted database path before committing to domain architecture.
+4. **API foundation:** scaffold Go/Echo, PostgreSQL Compose, migrations, health checks, and integration tests.
+5. **CI foundation:** run clean-install mobile checks, Go checks, migration tests, and prototype build.
+
+Do not begin inventory or patient feature implementation until all five foundation gates pass. The encrypted SQLite spike is the highest-risk prerequisite because offline encrypted medical storage is mandatory and determines the viable Expo development/build workflow.
+
+## Known specification gaps to resolve during implementation
+
+These do not block repository separation, but they must be documented before the affected migration or behavior is committed:
+
+- Exact clinic timezone and currency formatting policy.
+- Chosen encrypted SQLite adapter after the native build spike.
+- Backend encryption key provider and rotation procedure.
+- Sync deletion/tombstone behavior and server-to-device checkpoint format.
+- Whether the single account is expected to use exactly one device for MVP.
+- Retention and audit policy for edits to medical records beyond `updated_at`.
+- Backup destination, recovery-point objective, and recovery-time objective.
+
+When a gap affects product behavior, update `docs/prd.md` and its version history. When it affects implementation only, add an architecture decision record without changing product scope.
