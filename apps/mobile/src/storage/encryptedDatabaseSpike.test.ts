@@ -3,6 +3,9 @@ import {
   assertWrongKeyRejected,
   migrateEncryptedSpikeDatabase,
   openEncryptedDatabase,
+  readCipherVersion,
+  readSpikeMarker,
+  writeSpikeMarker,
   type DatabaseConnection,
   type DatabaseOpener,
 } from '@/src/storage/encryptedDatabaseSpike';
@@ -135,6 +138,24 @@ describe('encrypted database spike', () => {
     await expect(assertRollbackIsolation(connection, 'leaked-operation')).rejects.toThrow(
       'Rollback isolation failed: domain=1, outbox=0.',
     );
+  });
+
+  it('writes and reads a restart marker without exposing domain data', async () => {
+    const connection = createConnection({
+      getFirstAsync: async <T>(): Promise<T | null> => ({ marker: 'restart-marker' }) as T,
+    });
+
+    await writeSpikeMarker(connection, 'restart-marker');
+    await expect(readSpikeMarker(connection)).resolves.toBe('restart-marker');
+
+    expect(connection.calls.some((call) => call === 'transaction:start')).toBe(true);
+    expect(connection.calls.some((call) => call.includes('spike_state'))).toBe(true);
+  });
+
+  it('returns the native SQLCipher version', async () => {
+    const connection = createConnection();
+
+    await expect(readCipherVersion(connection)).resolves.toBe('4.7.0');
   });
 
   it('requires the wrong key to be rejected', async () => {

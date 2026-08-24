@@ -21,6 +21,10 @@ interface CipherVersionRow {
   cipher_version: string;
 }
 
+interface SpikeStateRow {
+  marker: string;
+}
+
 const MINIMUM_KEY_LENGTH = 12;
 const MAXIMUM_KEY_LENGTH = 256;
 
@@ -102,6 +106,41 @@ export async function migrateEncryptedSpikeDatabase(connection: DatabaseConnecti
       PRAGMA user_version = 1;
     `);
   });
+}
+
+export async function readCipherVersion(connection: DatabaseConnection): Promise<string> {
+  const row = await connection.getFirstAsync<CipherVersionRow>('PRAGMA cipher_version');
+  if (!row?.cipher_version) {
+    throw new Error('SQLCipher is unavailable in this native build.');
+  }
+  return row.cipher_version;
+}
+
+export async function writeSpikeMarker(
+  connection: DatabaseConnection,
+  marker: string,
+): Promise<void> {
+  if (!marker || marker.length > 128 || /[\u0000-\u001F\u007F]/u.test(marker)) {
+    throw new Error('Spike marker must be a non-empty printable value up to 128 characters.');
+  }
+
+  await connection.withExclusiveTransactionAsync(async (transaction) => {
+    await transaction.runAsync(
+      `INSERT INTO spike_state (id, marker) VALUES (1, ?)
+       ON CONFLICT(id) DO UPDATE SET marker = excluded.marker`,
+      marker,
+    );
+  });
+}
+
+export async function readSpikeMarker(connection: DatabaseConnection): Promise<string> {
+  const row = await connection.getFirstAsync<SpikeStateRow>(
+    'SELECT marker FROM spike_state WHERE id = 1',
+  );
+  if (!row?.marker) {
+    throw new Error('Encrypted restart marker is missing. Initialize the spike database first.');
+  }
+  return row.marker;
 }
 
 export async function assertRollbackIsolation(
