@@ -45,6 +45,13 @@
     ],
     "experiments": {
       "typedRoutes": true
-    }
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "6a19df58-732e-49f8-b24e-fb486082c9c2"
+      }
+    },
+    "owner": "fandykunnns-team"
   }
 }
