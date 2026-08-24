@@ -1,4 +1,5 @@
 import Constants from 'expo-constants';
+import { Link } from 'expo-router';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { appEnvironment } from '@/src/config/env';
@@ -50,6 +51,10 @@ export default function DebugScreen() {
           encrypted persistence, API connectivity, and sync are not implemented yet.
         </Text>
       </View>
+
+      <Link href="/storage-spike" style={styles.spikeLink}>
+        Open native encrypted-storage verification
+      </Link>
     </ScrollView>
   );
 }
@@ -115,6 +120,16 @@ const styles = StyleSheet.create({
   screen: {
     backgroundColor: colors.background,
     flex: 1,
+  },
+  spikeLink: {
+    backgroundColor: colors.primary,
+    borderRadius: radii.large,
+    color: colors.primaryForeground,
+    fontSize: typography.label,
+    fontWeight: '800',
+    overflow: 'hidden',
+    padding: spacing.large,
+    textAlign: 'center',
   },
   value: {
     color: colors.foreground,

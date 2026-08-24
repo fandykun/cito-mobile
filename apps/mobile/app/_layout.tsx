@@ -46,6 +46,7 @@ export default function RootLayout() {
       >
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
         <Stack.Screen name="debug" options={{ title: 'Application diagnostics' }} />
+        <Stack.Screen name="storage-spike" options={{ title: 'Encrypted storage proof' }} />
       </Stack>
     </ThemeProvider>
   );
