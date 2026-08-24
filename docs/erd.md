@@ -172,7 +172,7 @@ flowchart TB
     subgraph Mobile["Mobile App (Android/iOS — React Native)"]
         UI[UI Layer<br/>Screens & Navigation]
         LOGIC[App Logic<br/>State Management]
-        LOCALDB[(Local DB<br/>SQLite/WatermelonDB<br/>Encrypted)]
+        LOCALDB[(Local DB<br/>Expo SQLite + SQLCipher<br/>Encrypted)]
         PDFGEN[PDF Receipt<br/>Generator]
         SYNCQ[Sync Queue<br/>Manager]
     end
@@ -303,7 +303,7 @@ flowchart LR
 |---|---|
 | Mobile framework | React Native via **Expo** (cross-platform Android/iOS, reuses React/TS knowledge) |
 | Build/distribution | **Expo EAS Build** — compiles and signs iOS apps in the cloud, no Mac/Xcode required; distributes via TestFlight or direct install |
-| Local DB | SQLite via WatermelonDB or op-sqlite (encrypted) |
+| Local DB | SQLite via Expo SQLite with SQLCipher |
 | PDF generation | On-device library (e.g., `react-native-html-to-pdf` or `pdf-lib`) |
 | Backend | Go (Gin or Echo framework) |
 | Backend DB | PostgreSQL |
