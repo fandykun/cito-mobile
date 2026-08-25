@@ -202,6 +202,32 @@ curl -f http://127.0.0.1:<api-port>/health/ready
 
 Commit: `feat(api): scaffold go service and postgres runtime`
 
+### Slice 1.4: continuous integration — complete
+
+Completed:
+
+- Added GitHub Actions jobs for the npm workspaces and Go API, triggered for pull requests and pushes to `main`.
+- The JavaScript job performs a clean install, mobile type-check/lint/tests, Android export, prototype build, and a high-severity production dependency audit.
+- The API job uses PostgreSQL 16.10 and runs formatting verification, race-enabled tests (including migration integration tests), `go vet`, and command builds.
+- Applied least-privilege repository permissions, explicit job timeouts, dependency caching, and cancellation of superseded runs.
+
+Verification:
+
+```bash
+npm ci
+npm run mobile:typecheck
+npm run mobile:lint
+npm run mobile:test
+npm run mobile:export:android
+npm run prototype:build
+npm audit --omit=dev --audit-level=high
+cd services/api && TEST_DATABASE_URL=<local-test-database-url> go test -race ./...
+cd services/api && go vet ./...
+cd services/api && go build ./...
+```
+
+Commit: `ci: validate mobile prototype api and migrations`
+
 ### Phase 1 exit criteria
 
 - Expo production shell builds.
@@ -388,7 +414,7 @@ Start with these independently revertible commits:
 2. **Expo shell:** scaffold `apps/mobile`, add strict checks, and reproduce the navigation/design shell without business logic.
 3. **Encrypted SQLite spike:** prove the native encrypted database path before committing to domain architecture.
 4. **API foundation:** scaffold Go/Echo, PostgreSQL Compose, migrations, health checks, and integration tests.
-5. **CI foundation:** run clean-install mobile checks, Go checks, migration tests, and prototype build.
+5. **CI foundation — complete:** run clean-install mobile checks, Go checks, migration tests, and prototype build.
 
 Do not begin inventory or patient feature implementation until all five foundation gates pass. The encrypted SQLite spike is the highest-risk prerequisite because offline encrypted medical storage is mandatory and determines the viable Expo development/build workflow.
 
