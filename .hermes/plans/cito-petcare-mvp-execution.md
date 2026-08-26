@@ -369,6 +369,15 @@ Commit: `feat(auth): add secure account provisioning`
 
 Commit: `feat(auth): add secure token primitives`
 
+### Slice 3.2b: transactional session lifecycle — complete
+
+- Added case-insensitive login with Argon2id verification, unknown-user timing defense, configured/default session duration, 15-minute access tokens, and persisted refresh sessions.
+- Added one-time refresh rotation that preserves absolute session expiry and retires the previous token transactionally.
+- Added replay defense that revokes every remaining active session when a rotated refresh token is reused, plus explicit expiry revocation and idempotency-resistant logout rejection.
+- Added PostgreSQL integration coverage for valid/invalid login, duration policy, rotation, replay, expiry, logout, access claims, and session row state.
+
+Commit: `feat(auth): implement session lifecycle`
+
 ### Work
 
 - Add a CLI/admin command to provision or reset the single account.
