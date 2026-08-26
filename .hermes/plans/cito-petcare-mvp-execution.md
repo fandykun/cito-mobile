@@ -344,6 +344,14 @@ Commit: `feat(api): define and validate openapi contract`
 
 Commit: `feat(auth): add single-account persistence schema`
 
+### Slice 3.1b: Argon2id password primitives — complete
+
+- Added Argon2id password hashing with 64 MiB memory, three iterations, two lanes, random 16-byte salts, and 32-byte hashes encoded in strict PHC form.
+- Added constant-time verification, 12–1024 byte password boundaries, strict format/base64 parsing, and defensive parameter ceilings that prevent attacker-controlled hashes from requesting excessive work.
+- Added tests for correct and incorrect passwords, salt uniqueness, malformed/legacy/expensive hash rejection, password policy, and non-sensitive errors.
+
+Commit: `feat(auth): add argon2id password security`
+
 ### Work
 
 - Add a CLI/admin command to provision or reset the single account.
