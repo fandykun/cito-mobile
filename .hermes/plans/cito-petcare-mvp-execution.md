@@ -387,6 +387,14 @@ Commit: `feat(auth): implement session lifecycle`
 
 Commit: `feat(api): expose single-account authentication`
 
+### Slice 3.3a: mobile authentication API boundary — complete
+
+- Added a typed Expo authentication client for login, refresh rotation, and bearer-authenticated logout.
+- Added 15-second request cancellation, explicit JSON headers, a 32 KiB response ceiling, strict token/timestamp response validation, and safe error mapping that never embeds credentials or server details.
+- Added tests for request payloads, bearer logout, invalid credentials/sessions, missing configuration, transport failures, malformed server payloads, and token expiry ordering.
+
+Commit: `feat(mobile): add authentication api client`
+
 ### Work
 
 - Add a CLI/admin command to provision or reset the single account.
