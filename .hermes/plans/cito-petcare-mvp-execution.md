@@ -239,6 +239,28 @@ Commit: `ci: validate mobile prototype api and migrations`
 
 Backend schema assumptions are documented in `docs/architecture-decisions/0002-postgresql-domain-schema.md`: client-generated UUIDs, integer IDR amounts, optimistic versions, tombstone deletion, restrictive foreign keys, encrypted medical column types, pet weight history, supplier fields, and audited stock adjustments. This backend-only decision does not unblock mobile domain persistence while ADR 0001's physical SQLCipher gates remain pending.
 
+### Slice 2.1: core clinic schema and constraints — complete
+
+Completed:
+
+- Added the PostgreSQL source schema for owners, pets, weight history, vaccinations, inventory, audited stock adjustments, visits, retail transactions, expenses, owner draws, and daily cash reconciliation.
+- Added UUID primary keys, restrictive foreign keys, optimistic versions, tombstone metadata, integer-IDR amount columns, domain category checks, non-negative stock/amount checks, receipt uniqueness, and query indexes.
+- Stored sensitive pet and visit fields as `BYTEA` from the first domain migration so no transitional plaintext medical schema exists.
+- Kept daily and monthly financial summaries out of source tables; they remain deterministic projections for the finance phase.
+- Added integration coverage for empty-schema idempotency, foreign-key/check/unique constraints, encrypted column types, immutable price snapshots after inventory price changes, and transactional stock rollback.
+
+Verification:
+
+```bash
+cd services/api
+TEST_DATABASE_URL=<local-test-database-url> go test -race ./internal/migrations -count=1
+TEST_DATABASE_URL=<local-test-database-url> go test -race ./...
+go vet ./...
+go build ./...
+```
+
+Commit: `feat(db): add core clinic schema and constraints`
+
 ### Work
 
 1. Translate the ERD into reviewed PostgreSQL migrations without renaming authoritative fields casually.
