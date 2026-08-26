@@ -237,6 +237,8 @@ Commit: `ci: validate mobile prototype api and migrations`
 
 ## Phase 2 — Schema, encryption, and API contract
 
+Backend schema assumptions are documented in `docs/architecture-decisions/0002-postgresql-domain-schema.md`: client-generated UUIDs, integer IDR amounts, optimistic versions, tombstone deletion, restrictive foreign keys, encrypted medical column types, pet weight history, supplier fields, and audited stock adjustments. This backend-only decision does not unblock mobile domain persistence while ADR 0001's physical SQLCipher gates remain pending.
+
 ### Work
 
 1. Translate the ERD into reviewed PostgreSQL migrations without renaming authoritative fields casually.
@@ -425,7 +427,7 @@ These do not block repository separation, but they must be documented before the
 - Exact clinic timezone and currency formatting policy.
 - Chosen encrypted SQLite adapter after the native build spike.
 - Backend encryption key provider and rotation procedure.
-- Sync deletion/tombstone behavior and server-to-device checkpoint format.
+- Server-to-device checkpoint format and tombstone retention duration. Tombstone deletion behavior is defined by ADR 0002.
 - Whether the single account is expected to use exactly one device for MVP.
 - Retention and audit policy for edits to medical records beyond `updated_at`.
 - Backup destination, recovery-point objective, and recovery-time objective.
