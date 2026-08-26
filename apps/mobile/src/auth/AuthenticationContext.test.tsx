@@ -1,4 +1,4 @@
-import { render, screen, userEvent, waitFor } from '@testing-library/react-native';
+import { act, render, screen, userEvent, waitFor } from '@testing-library/react-native';
 import { Pressable, Text } from 'react-native';
 
 import { AuthenticationError, type SessionTokens } from '@/src/auth/api';
@@ -94,6 +94,34 @@ describe('AuthenticationProvider', () => {
       expect(screen.getByTestId('status')).toHaveTextContent('unauthenticated:online'),
     );
     expect(dependencies.repository.clear).toHaveBeenCalledTimes(1);
+  });
+
+  it('locks the app and clears local credentials when the absolute session expires', async () => {
+    jest.useFakeTimers();
+    jest.setSystemTime(new Date('2026-08-26T12:00:00Z'));
+    const shortSession: SessionTokens = {
+      ...activeSession,
+      accessExpiresAt: '2026-08-26T12:00:45Z',
+      sessionExpiresAt: '2026-08-26T12:01:00Z',
+    };
+    const dependencies = createDependencies(shortSession);
+    let unmount: (() => Promise<void>) | undefined;
+    try {
+      ({ unmount } = await render(
+        <AuthenticationProvider {...dependencies}>
+          <StatusHarness />
+        </AuthenticationProvider>,
+      ));
+
+      await act(async () => Promise.resolve());
+      expect(screen.getByTestId('status')).toHaveTextContent('authenticated:online');
+      await act(async () => jest.advanceTimersByTimeAsync(60_000));
+      expect(screen.getByTestId('status')).toHaveTextContent('unauthenticated:online');
+      expect(dependencies.repository.clear).toHaveBeenCalledTimes(1);
+    } finally {
+      await unmount?.();
+      jest.useRealTimers();
+    }
   });
 
   it('logs in, persists tokens, and reports remote logout failure', async () => {

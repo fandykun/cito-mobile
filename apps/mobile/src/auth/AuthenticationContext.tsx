@@ -46,6 +46,7 @@ interface AuthenticationProviderProps extends PropsWithChildren {
 const defaultApi = new AuthenticationApi(appEnvironment.apiUrl);
 const defaultRepository = new SessionRepository();
 const AuthenticationContext = createContext<AuthenticationContextValue | null>(null);
+const MAXIMUM_SESSION_TIMER_MILLISECONDS = 2_147_000_000;
 
 export function AuthenticationProvider({
   api = defaultApi,
@@ -105,6 +106,42 @@ export function AuthenticationProvider({
     // Dependencies are stable constructor-injected services.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [api, repository]);
+
+  useEffect(() => {
+    if (status !== 'authenticated' || !session) {
+      return;
+    }
+    const expiresAt = Date.parse(session.sessionExpiresAt);
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    let cancelled = false;
+
+    const enforceExpiry = () => {
+      const remainingMilliseconds = expiresAt - Date.now();
+      if (remainingMilliseconds > 0) {
+        timer = setTimeout(
+          enforceExpiry,
+          Math.min(remainingMilliseconds, MAXIMUM_SESSION_TIMER_MILLISECONDS),
+        );
+        return;
+      }
+      setSession(null);
+      setIsOfflineSession(false);
+      setStatus('unauthenticated');
+      void repository.clear().catch(() => {
+        if (!cancelled) {
+          setErrorMessage('The expired secure session could not be removed from this device.');
+        }
+      });
+    };
+
+    enforceExpiry();
+    return () => {
+      cancelled = true;
+      if (timer) {
+        clearTimeout(timer);
+      }
+    };
+  }, [repository, session, status]);
 
   async function login(username: string, password: string): Promise<void> {
     setErrorMessage(null);

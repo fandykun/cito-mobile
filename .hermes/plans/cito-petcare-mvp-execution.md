@@ -409,6 +409,7 @@ Commit: `feat(mobile): persist sessions in secure storage`
 - Added an authentication provider that restores SecureStore sessions, rotates near-expiry access tokens, permits offline re-entry only while a previously authenticated session remains within absolute policy, and clears server-rejected sessions.
 - Protected every tab, diagnostics route, and encrypted-storage route behind Expo Router guards; unauthenticated users can access only login, while bootstrap shows no application content.
 - Added authenticated logout, local cleanup even when remote revocation is unavailable, an offline-session banner, and tests for restore, refresh, offline policy, invalidation, login, persistence, and safe failures.
+- Enforced absolute session expiry while the app remains open, immediately closing protected routes and clearing SecureStore rather than relying on an app restart to revalidate policy.
 - Pinned the SDK-compatible navigation/animation native modules at the workspace root and added npm overrides so Expo Router cannot auto-install duplicate peer versions; explicitly hoisted Expo Modules Core for Jest Expo's workspace resolver. Expo install validation and all 21 Expo Doctor checks pass.
 
 Commit: `feat(mobile): gate app behind secure authentication`
