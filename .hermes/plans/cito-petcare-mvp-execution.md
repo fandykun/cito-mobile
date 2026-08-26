@@ -403,6 +403,16 @@ Commit: `feat(mobile): add authentication api client`
 
 Commit: `feat(mobile): persist sessions in secure storage`
 
+### Slice 3.3c: authenticated Expo shell and offline re-entry — complete
+
+- Added a production login screen with bounded credential inputs, disabled invalid submission, safe errors, no credential persistence, and first-login connectivity guidance.
+- Added an authentication provider that restores SecureStore sessions, rotates near-expiry access tokens, permits offline re-entry only while a previously authenticated session remains within absolute policy, and clears server-rejected sessions.
+- Protected every tab, diagnostics route, and encrypted-storage route behind Expo Router guards; unauthenticated users can access only login, while bootstrap shows no application content.
+- Added authenticated logout, local cleanup even when remote revocation is unavailable, an offline-session banner, and tests for restore, refresh, offline policy, invalidation, login, persistence, and safe failures.
+- Pinned the SDK-compatible navigation/animation native modules at the workspace root and added npm overrides so Expo Router cannot auto-install duplicate peer versions; explicitly hoisted Expo Modules Core for Jest Expo's workspace resolver. Expo install validation and all 21 Expo Doctor checks pass.
+
+Commit: `feat(mobile): gate app behind secure authentication`
+
 ### Work
 
 - Add a CLI/admin command to provision or reset the single account.

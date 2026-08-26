@@ -1,7 +1,9 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { Link } from 'expo-router';
+import { useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
+import { useAuthentication } from '@/src/auth/AuthenticationContext';
 import { colors, radii, spacing, typography } from '@/src/design/tokens';
 
 const modules = [
@@ -12,6 +14,21 @@ const modules = [
 ] as const;
 
 export default function DashboardScreen() {
+  const authentication = useAuthentication();
+  const [isSigningOut, setIsSigningOut] = useState(false);
+  const [signOutError, setSignOutError] = useState<string | null>(null);
+
+  async function signOut(): Promise<void> {
+    setIsSigningOut(true);
+    setSignOutError(null);
+    try {
+      await authentication.logout();
+    } catch {
+      setSignOutError('Secure session storage could not be cleared.');
+      setIsSigningOut(false);
+    }
+  }
+
   return (
     <ScrollView contentContainerStyle={styles.content} style={styles.screen}>
       <View>
@@ -34,6 +51,15 @@ export default function DashboardScreen() {
           </Text>
         </View>
       </View>
+
+      {authentication.isOfflineSession ? (
+        <View style={styles.offlineCard}>
+          <Ionicons color={colors.accent} name="cloud-offline-outline" size={22} />
+          <Text style={styles.offlineText}>
+            Offline session: local access remains available until the saved session expires.
+          </Text>
+        </View>
+      ) : null}
 
       <View>
         <Text style={styles.sectionTitle}>MVP modules</Text>
@@ -60,6 +86,21 @@ export default function DashboardScreen() {
           <Ionicons color={colors.mutedForeground} name="chevron-forward" size={20} />
         </Pressable>
       </Link>
+
+      {signOutError ? (
+        <Text accessibilityRole="alert" style={styles.signOutError}>
+          {signOutError}
+        </Text>
+      ) : null}
+      <Pressable
+        accessibilityRole="button"
+        disabled={isSigningOut}
+        onPress={() => void signOut()}
+        style={({ pressed }) => [styles.signOutButton, pressed && styles.pressed]}
+      >
+        <Ionicons color={colors.destructive} name="log-out-outline" size={20} />
+        <Text style={styles.signOutText}>{isSigningOut ? 'Signing out…' : 'Sign out'}</Text>
+      </Pressable>
     </ScrollView>
   );
 }
@@ -133,12 +174,49 @@ const styles = StyleSheet.create({
     fontSize: typography.caption,
     lineHeight: 17,
   },
+  offlineCard: {
+    alignItems: 'center',
+    backgroundColor: '#FFF7ED',
+    borderColor: '#FED7AA',
+    borderRadius: radii.large,
+    borderWidth: 1,
+    flexDirection: 'row',
+    gap: spacing.medium,
+    padding: spacing.large,
+  },
+  offlineText: {
+    color: colors.foreground,
+    flex: 1,
+    fontSize: typography.caption,
+    lineHeight: 18,
+  },
   pressed: {
     opacity: 0.65,
   },
   screen: {
     backgroundColor: colors.background,
     flex: 1,
+  },
+  signOutButton: {
+    alignItems: 'center',
+    alignSelf: 'flex-start',
+    borderColor: colors.border,
+    borderRadius: radii.medium,
+    borderWidth: 1,
+    flexDirection: 'row',
+    gap: spacing.small,
+    paddingHorizontal: spacing.large,
+    paddingVertical: spacing.medium,
+  },
+  signOutError: {
+    color: colors.destructive,
+    fontSize: typography.caption,
+    lineHeight: 18,
+  },
+  signOutText: {
+    color: colors.destructive,
+    fontSize: typography.label,
+    fontWeight: '700',
   },
   sectionTitle: {
     color: colors.foreground,
