@@ -289,6 +289,26 @@ go build ./...
 
 Commit: `feat(security): encrypt sensitive medical fields`
 
+### Slice 2.3: OpenAPI contract and validation — complete
+
+Completed:
+
+- Added an OpenAPI 3.1 contract for implemented health probes and planned authentication, synchronization, inventory, owner, pet, weight, vaccination, visit, retail, expense, owner-draw, cash-reconciliation, and financial-summary resources.
+- Required bearer authentication for all clinic-data operations while explicitly leaving health, login, and refresh public; no registration or sign-up route exists.
+- Defined client UUIDs, idempotency headers, optimistic versions, opaque checkpoints, bounded batches/pages, whole-IDR money values, medical payload limits, price snapshots, generated financial results, and sanitized error responses.
+- Kept PDF receipt generation device-local while representing only portable transaction metadata in the backend contract.
+- Added a pinned Redocly validator, root `api:lint` command, and mandatory CI contract-validation step.
+
+Verification:
+
+```bash
+npm run api:lint
+npx redocly bundle cito@v1 --config redocly.yaml --output /tmp/cito-openapi.json
+npm ci
+```
+
+Commit: `feat(api): define and validate openapi contract`
+
 ### Work
 
 1. Translate the ERD into reviewed PostgreSQL migrations without renaming authoritative fields casually.
