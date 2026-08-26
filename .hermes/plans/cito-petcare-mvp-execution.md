@@ -395,6 +395,14 @@ Commit: `feat(api): expose single-account authentication`
 
 Commit: `feat(mobile): add authentication api client`
 
+### Slice 3.3b: encrypted mobile session persistence — complete
+
+- Added Expo SecureStore using device-bound after-first-unlock accessibility for access/refresh tokens and expiry metadata; usernames and passwords are never persisted.
+- Added strict stored-session validation, automatic malformed/expired session deletion, refusal to persist expired sessions, and a 30-second access-refresh margin.
+- Added tests for persistence/restoration, credential absence, malformed and expired cleanup, invalid save rejection, and refresh timing.
+
+Commit: `feat(mobile): persist sessions in secure storage`
+
 ### Work
 
 - Add a CLI/admin command to provision or reset the single account.
