@@ -274,6 +274,7 @@ Completed:
 - Bound authentication to envelope version, key ID, entity, canonical record UUID, and field name so moved ciphertext fails explicitly.
 - Added bounded plaintext/envelope sizes, strict UUID/entity/field validation, strict base64 and JSON parsing, fresh random nonces, and typed non-sensitive errors.
 - Added a multi-key keyring parser and active-key selection so new writes can rotate while old envelopes remain decryptable.
+- Added a PostgreSQL integration test proving persisted visit reason and diagnosis values do not contain searchable plaintext and still decrypt correctly.
 - Kept encryption construction independent from domain HTTP handlers; repository wiring will occur when the corresponding authenticated APIs are implemented.
 
 Verification:
