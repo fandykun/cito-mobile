@@ -361,6 +361,14 @@ Commit: `feat(auth): add argon2id password security`
 
 Commit: `feat(auth): add secure account provisioning`
 
+### Slice 3.2a: access and refresh token primitives — complete
+
+- Added 15-minute HS256 access JWTs with strict algorithm/type parsing, fixed issuer/audience, UUID subjects and token IDs, exact lifetime validation, and constant-time signature verification.
+- Added 256-bit opaque refresh-token generation and SHA-256 hashing so only token digests are persisted.
+- Added signing-key minimums, strict JSON/base64 parsing, expiry checks, algorithm-confusion/tamper/wrong-key rejection, and tests for token uniqueness and malformed inputs.
+
+Commit: `feat(auth): add secure token primitives`
+
 ### Work
 
 - Add a CLI/admin command to provision or reset the single account.
