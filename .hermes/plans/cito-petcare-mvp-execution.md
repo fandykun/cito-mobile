@@ -265,6 +265,29 @@ go build ./...
 
 Commit: `feat(db): add core clinic schema and constraints`
 
+### Slice 2.2: authenticated medical-field encryption — complete
+
+Completed:
+
+- Added a backend AES-256-GCM service for all authoritative sensitive pet and visit fields.
+- Added strict versioned JSON envelopes containing only non-secret key ID, nonce, and ciphertext metadata.
+- Bound authentication to envelope version, key ID, entity, canonical record UUID, and field name so moved ciphertext fails explicitly.
+- Added bounded plaintext/envelope sizes, strict UUID/entity/field validation, strict base64 and JSON parsing, fresh random nonces, and typed non-sensitive errors.
+- Added a multi-key keyring parser and active-key selection so new writes can rotate while old envelopes remain decryptable.
+- Kept encryption construction independent from domain HTTP handlers; repository wiring will occur when the corresponding authenticated APIs are implemented.
+
+Verification:
+
+```bash
+cd services/api
+go test -race ./internal/medicalcrypto -count=1
+go test -race ./... -count=1
+go vet ./...
+go build ./...
+```
+
+Commit: `feat(security): encrypt sensitive medical fields`
+
 ### Work
 
 1. Translate the ERD into reviewed PostgreSQL migrations without renaming authoritative fields casually.
