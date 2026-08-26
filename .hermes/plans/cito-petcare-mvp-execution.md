@@ -378,6 +378,15 @@ Commit: `feat(auth): add secure token primitives`
 
 Commit: `feat(auth): implement session lifecycle`
 
+### Slice 3.2c: authentication HTTP boundary — complete
+
+- Added contract-aligned login, refresh, and bearer-protected logout handlers with strict JSON/content-type/8 KiB request boundaries and structured sanitized errors carrying request IDs.
+- Added bearer middleware with strict scheme parsing and verified account context, plus an in-memory per-IP five-failure/15-minute login throttle with `Retry-After` responses.
+- Added required base64url JWT-secret loading without making migration or provisioning commands depend on the runtime signing secret.
+- Added handler and real PostgreSQL HTTP integration tests proving login, access authorization, logout, post-logout refresh rejection, malformed body rejection, rate limits, and secret-safe errors.
+
+Commit: `feat(api): expose single-account authentication`
+
 ### Work
 
 - Add a CLI/admin command to provision or reset the single account.
