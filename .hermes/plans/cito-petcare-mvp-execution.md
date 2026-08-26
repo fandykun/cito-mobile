@@ -352,6 +352,15 @@ Commit: `feat(auth): add single-account persistence schema`
 
 Commit: `feat(auth): add argon2id password security`
 
+### Slice 3.1c: manual account provisioning and reset — complete
+
+- Added `cmd/provision-user`, which reads the password only from `CITO_ADMIN_PASSWORD`, applies migrations, and accepts an explicit username and 24–72 hour session duration.
+- Added transactionally serialized create/reset behavior so concurrent operators cannot create multiple accounts.
+- Account reset updates the Argon2id hash and revokes all active refresh sessions in the same PostgreSQL transaction.
+- Added integration tests proving create/reset behavior, singleton preservation, password replacement, session revocation, input validation, and UUIDv4 account IDs.
+
+Commit: `feat(auth): add secure account provisioning`
+
 ### Work
 
 - Add a CLI/admin command to provision or reset the single account.
