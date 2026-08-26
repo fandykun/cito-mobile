@@ -245,7 +245,9 @@ Completed:
 
 - Added the PostgreSQL source schema for owners, pets, weight history, vaccinations, inventory, audited stock adjustments, visits, retail transactions, expenses, owner draws, and daily cash reconciliation.
 - Added UUID primary keys, restrictive foreign keys, optimistic versions, tombstone metadata, integer-IDR amount columns, domain category checks, non-negative stock/amount checks, receipt uniqueness, and query indexes.
-- Stored sensitive pet and visit fields as `BYTEA` from the first domain migration so no transitional plaintext medical schema exists.
+- Stored sensitive pet and visit fields, including the presenting reason, as `BYTEA` so no lasting plaintext medical schema exists.
+- Added retail cost/profit columns and database-generated visit/retail profits so persisted profitability cannot drift from income and cost values.
+- Prevented duplicate active inventory lines within a visit or retail transaction while allowing historical tombstoned lines to remain available for sync.
 - Kept daily and monthly financial summaries out of source tables; they remain deterministic projections for the finance phase.
 - Added integration coverage for empty-schema idempotency, foreign-key/check/unique constraints, encrypted column types, immutable price snapshots after inventory price changes, and transactional stock rollback.
 
