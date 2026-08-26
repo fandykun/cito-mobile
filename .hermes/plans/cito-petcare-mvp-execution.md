@@ -335,6 +335,15 @@ Commit: `feat(api): define and validate openapi contract`
 
 ## Phase 3 — Authentication and local app lock
 
+### Slice 3.1a: single-account persistence foundation — complete
+
+- Added a database-enforced singleton account with case-insensitive username uniqueness, Argon2id hash storage, optional PIN hash storage, configurable 24–72 hour session duration, and login timestamps.
+- Added refresh-session persistence with SHA-256 token hashes, expiry/revocation timestamps, rotation links, restrictive account foreign keys, and an active-session index.
+- Added integration tests for the singleton invariant, session-duration policy, refresh-hash length, rotation/revocation coupling, and four-migration idempotency.
+- No authentication route is active yet; password primitives, manual provisioning, token issuance, handlers, and middleware remain part of Phase 3.
+
+Commit: `feat(auth): add single-account persistence schema`
+
 ### Work
 
 - Add a CLI/admin command to provision or reset the single account.
