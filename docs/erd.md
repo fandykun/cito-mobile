@@ -21,7 +21,6 @@ erDiagram
         uuid id PK
         string username
         string password_hash
-        string pin_hash "optional, for quick re-lock"
         int session_duration_hours "configurable, e.g. 24-72"
         datetime last_login_at
         datetime created_at
@@ -179,7 +178,7 @@ flowchart TB
 
     subgraph Backend["Backend (Go API)"]
         API[REST API<br/>Gin/Echo]
-        AUTH[Auth Middleware<br/>JWT + PIN/Biometric]
+        AUTH[Auth Middleware<br/>Username/Password + JWT]
         BIZLOGIC[Business Logic<br/>Services]
         SYNCSVC[Sync Service<br/>Conflict-free, single-user]
     end
@@ -289,7 +288,6 @@ flowchart LR
 | Layer | Protection |
 |---|---|
 | App login | Required at launch — single, manually-provisioned account (username/password); no self-registration. Session token persists for a **configurable duration** (default ~1–3 days); supports offline login via securely cached credentials |
-| Device access | Optional PIN/biometric re-lock layered on top of login, for quick re-access |
 | Local storage | Encrypted local DB (e.g., SQLCipher) — no plaintext medical data at rest on device |
 | Transport | TLS/HTTPS for all API calls |
 | Backend storage | Encrypted PostgreSQL (at-rest encryption), access restricted to authenticated API |
@@ -307,7 +305,7 @@ flowchart LR
 | PDF generation | On-device library (e.g., `react-native-html-to-pdf` or `pdf-lib`) |
 | Backend | Go (Gin or Echo framework) |
 | Backend DB | PostgreSQL |
-| Auth | JWT-based, paired with local PIN/biometric gate |
+| Auth | Manually provisioned username/password login with JWT sessions |
 | Hosting | Any standard cloud VM/managed Postgres — can stay minimal given single-user scale |
 
 **Note on Expo + EAS**: Using Expo (rather than bare React Native) is recommended here specifically because of the no-Mac constraint — Expo's managed workflow plus EAS Build means iOS compilation, code signing, and even App Store/TestFlight submission all happen on Expo's cloud infrastructure. Local development and testing can still happen on Android freely; for iOS testing, builds are installed via TestFlight or Expo's development client on a physical/borrowed iPhone when needed.

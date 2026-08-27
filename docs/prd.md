@@ -61,9 +61,10 @@ Single user: the clinic owner/vet. No role-based access control needed for MVP.
 
 ### 3.1 Authentication & Login
 - **Login required at app launch** — no access to any screen (inventory, patient records, financials) without authenticating first
+- **Username and password only** — the current product has no PIN or biometric authentication/re-lock flow
 - **Single account, manually provisioned** — the owner's login credentials are set up manually (e.g., by the developer/admin during initial setup); there is **no self-registration, sign-up, or "create account" flow** in the app
 - **No roles/scopes** — login exists purely as an access gate, not for permission differentiation, since there's only one user
-- **Session handling**: once logged in, the session persists for a **configurable duration** (default suggestion: 1–3 days) so the owner isn't forced to log in every time the app opens; after the session expires, a fresh login is required. Duration is adjustable (e.g., in app settings) rather than hardcoded. A PIN/biometric re-lock (per the security requirements in 3.4) can still gate quick re-access within an active session.
+- **Session handling**: once logged in with username and password, the session persists for a **configurable duration** (default suggestion: 1–3 days) so the owner isn't forced to log in every time the app opens; after the session expires, a fresh username/password login is required. Duration is adjustable (e.g., in app settings) rather than hardcoded.
 - **Password/credential recovery**: since there's no self-registration, recovery is also a manual/admin-assisted process (e.g., resetting credentials directly in the backend) rather than an automated "forgot password" email flow — acceptable given single-user scale
 
 ### 3.2 Inventory Management
@@ -92,7 +93,7 @@ Single user: the clinic owner/vet. No role-based access control needed for MVP.
 - **Full historical timeline** per pet — every past diagnosis and treatment viewable in one place, so recurring or chronic issues are easy to track over time
 - **Security**:
   - Data encrypted at rest and in transit
-  - App-level login (see 3.1) is the primary access gate, given the app holds sensitive patient and business data; an additional PIN/biometric re-lock can be layered on top for quick re-access after the initial login
+  - Username/password app login (see 3.1) is the access gate, given the app holds sensitive patient and business data
   - Local (offline) data on-device is protected the same way — not stored in plain text
   - Regular backup/sync to the secured backend so records aren't lost if the device is lost or damaged
 
@@ -193,5 +194,6 @@ Single user: the clinic owner/vet. No role-based access control needed for MVP.
 | v1.6 | Added login requirement (single manually-provisioned account, no self-registration, no roles) to protect stock/financial/patient data. |
 | v1.7 | Login sessions made persistent for a configurable duration (default ~1–3 days) instead of requiring login every app open. |
 | v1.8 | Removed "Future Considerations" section; added this version history for tracking changes going forward. |
+| v1.9 | Authentication limited to username and password for the current product; removed PIN and biometric re-lock requirements. |
 
 **Process going forward**: new feature requests should be added directly into the relevant section of this PRD (Goals, User Stories, Feature Specifications, Data Entities) rather than creating a separate PRD document — this keeps one source of truth for the product, especially since `AGENTS.md` and the architecture doc both reference this file. Log each meaningful change as a new row above.

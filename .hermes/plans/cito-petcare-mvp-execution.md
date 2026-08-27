@@ -333,13 +333,15 @@ Commit: `feat(api): define and validate openapi contract`
 2. `feat(security): encrypt sensitive medical fields`
 3. `feat(api): define and validate openapi contract`
 
-## Phase 3 — Authentication and local app lock
+## Phase 3 — Single-account username/password authentication
+
+**Mandatory access model:** Authentication is a required MVP security boundary, not an optional feature. The app has exactly one manually provisioned owner/vet account authenticated only by username and password. There is no PIN, biometric authentication/re-lock, in-app registration, sign-up, account creation, roles, permissions, or multi-user scoping. The implemented login and route guards must remain active while domain modules are built so inventory, financial, and patient data are never exposed before authentication, including offline. Only nonessential login-screen visual refinement is deferred until release readiness.
 
 ### Slice 3.1a: single-account persistence foundation — complete
 
-- Added a database-enforced singleton account with case-insensitive username uniqueness, Argon2id hash storage, optional PIN hash storage, configurable 24–72 hour session duration, and login timestamps.
+- Added a database-enforced singleton account with case-insensitive username uniqueness, Argon2id password-hash storage, configurable 24–72 hour session duration, and login timestamps. The obsolete unused PIN-hash column is removed by the subsequent username/password-only migration.
 - Added refresh-session persistence with SHA-256 token hashes, expiry/revocation timestamps, rotation links, restrictive account foreign keys, and an active-session index.
-- Added integration tests for the singleton invariant, session-duration policy, refresh-hash length, rotation/revocation coupling, and four-migration idempotency.
+- Added integration tests for the singleton invariant, session-duration policy, refresh-hash length, rotation/revocation coupling, username/password-only credential schema, and migration idempotency.
 - No authentication route is active yet; password primitives, manual provisioning, token issuance, handlers, and middleware remain part of Phase 3.
 
 Commit: `feat(auth): add single-account persistence schema`
@@ -416,24 +418,26 @@ Commit: `feat(mobile): gate app behind secure authentication`
 
 ### Work
 
-- Add a CLI/admin command to provision or reset the single account.
-- Implement Argon2id password verification, access JWTs, rotated sessions, logout, and configurable duration.
-- Add mobile login, secure token storage, session expiry, offline re-entry, and optional PIN/biometric re-lock.
-- Ensure every screen and local database open path is gated.
+- Preserve the implemented account provisioning, API session lifecycle, secure mobile session storage, and route guards while domain modules are built.
+- Keep account creation and credential recovery exclusively in the manual admin/provisioning workflow; do not add registration, sign-up, forgot-password email, roles, permissions, or account-management screens.
+- Keep username and password as the only authentication mechanism; do not add PIN or biometric authentication/re-lock.
+- Defer nonessential login-screen UX refinement until Phase 9.
+- Add authentication work before then only when a domain implementation exposes a concrete security or session integration defect.
 
 ### Required tests
 
 - No app data is accessible before authentication.
-- No self-registration route exists.
+- Exactly one manually provisioned owner/vet account is supported.
+- No self-registration, sign-up, create-account, role, permission, or multi-user route or screen exists.
+- No PIN or biometric authentication/re-lock route or screen exists.
 - Invalid credentials, expired sessions, rotated tokens, logout, and replay are rejected.
 - Offline re-entry works only after a successful online login and within configured policy.
-- Logs and errors contain no password, token, PIN, or clinical data.
+- Logs and errors contain no password, token, or clinical data.
 
 ### Commit boundaries
 
 1. `feat(api): add single-account authentication`
 2. `feat(mobile): gate local data behind secure session`
-3. `feat(mobile): add pin and biometric relock`
 
 ## Phase 4 — Inventory vertical slice
 
@@ -531,6 +535,7 @@ Split by owner/pet, vaccination, visit editor, transactional stock/financial log
 
 ### Work
 
+- Perform final login-screen UX/accessibility validation only after all core application workflows are functional. Preserve mandatory username/password login at launch, the single manually provisioned account, the absence of registration/roles/PIN/biometrics, offline re-entry within an authenticated session, and absolute session expiry.
 - Add production Docker image for API, TLS/reverse-proxy deployment documentation, migration procedure, encrypted backup schedule, and rollback runbook.
 - Configure Expo EAS development, preview, and production profiles.
 - Run Android release build and iOS EAS build; test on physical devices when available.
@@ -554,20 +559,23 @@ Additionally:
 - No secrets or sensitive fixtures in Git history or images.
 - No plaintext medical fields in local/backend storage.
 - Fresh-device install, login, offline workflow, reconnect/sync, logout, backup, and restore are verified.
+- Manual provisioning is exercised, and the shipped app exposes no registration, sign-up, create-account, role, permission, PIN, biometric, or automated credential-recovery flow.
 - Production migration and rollback procedures are exercised on a disposable environment.
 - MVP acceptance criteria in `docs/prd.md` are checked individually.
 
 ## Immediate execution queue
 
-Start with these independently revertible commits:
+The repository, Expo shell, backend/API foundation, schema, encryption, API contract, and mandatory single-account authentication gate are implemented. Continue in these independently revertible product slices:
 
-1. **Repository separation:** move the Figma prototype to `prototype/web`, establish root workspace commands, and verify identical output.
-2. **Expo shell:** scaffold `apps/mobile`, add strict checks, and reproduce the navigation/design shell without business logic.
-3. **Encrypted SQLite spike:** prove the native encrypted database path before committing to domain architecture.
-4. **API foundation:** scaffold Go/Echo, PostgreSQL Compose, migrations, health checks, and integration tests.
-5. **CI foundation — complete:** run clean-install mobile checks, Go checks, migration tests, and prototype build.
+1. **Close the encrypted SQLite device gate:** run the already-built SQLCipher harness on a physical device before relying on local domain persistence.
+2. **Inventory vertical slice:** replace the Expo placeholder with local repository, API, sync, and usable inventory screens.
+3. **Patient and medical records:** implement owners, pets, vaccinations, encrypted visits, stock deduction, and offline outbox behavior.
+4. **Retail POS and receipts:** implement fast offline checkout, transactional stock updates, and on-device PDF receipts.
+5. **Finance:** implement expenses, owner draw, cash reconciliation, and derived daily/monthly views.
+6. **Sync reliability:** complete recovery, retry, idempotency, and diagnostics across every core write.
+7. **Final login validation last:** after the application modules work end to end, validate the required username/password login screen against every finished route and offline workflow, then finish accessibility and visual polish.
 
-Do not begin inventory or patient feature implementation until all five foundation gates pass. The encrypted SQLite spike is the highest-risk prerequisite because offline encrypted medical storage is mandatory and determines the viable Expo development/build workflow.
+Do not remove or bypass the existing login gate while developing the modules. Username and password are the only supported login method and remain required before any stock, financial, or patient data is accessible. The only supported identity is the manually provisioned owner/vet account; do not add in-app registration, roles, permissions, PIN, biometrics, or multi-user scoping. Putting login work last means deferring final screen refinement and end-to-end validation, not deferring or weakening the security boundary. The physical SQLCipher execution remains the highest-risk prerequisite because offline encrypted medical storage is mandatory.
 
 ## Known specification gaps to resolve during implementation
 
