@@ -7,7 +7,7 @@ import { useAuthentication } from '@/src/auth/AuthenticationContext';
 import { colors, radii, spacing, typography } from '@/src/design/tokens';
 
 const modules = [
-  { icon: 'cube-outline', label: 'Inventaris', status: 'Backend API in progress' },
+  { icon: 'cube-outline', label: 'Inventaris', status: 'Online list available' },
   { icon: 'document-text-outline', label: 'Rekam Medis', status: 'Encryption required' },
   { icon: 'cart-outline', label: 'Kasir', status: 'Offline PDF required' },
   { icon: 'trending-up-outline', label: 'Keuangan', status: 'Derived summaries' },

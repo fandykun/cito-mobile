@@ -473,7 +473,19 @@ Remaining HTTP work starts with clinic-local expiry filtering before adding the 
 
 Verification: `TEST_DATABASE_URL=<local> go test ./internal/inventory ./internal/httpserver -count=1`
 
-Remaining Phase 4 HTTP work: define clinic timezone and expiry-window configuration, implement clinic-local expiry filtering, then add the mobile inventory API client.
+Remaining Phase 4 HTTP work: define clinic timezone and expiry-window configuration, then implement clinic-local expiry filtering.
+
+### Slice 4.4: mobile online inventory read boundary — complete
+
+- Added a contract-validating Expo inventory API client with bounded responses, request timeouts, access-token authentication, safe error mapping, and strict inventory/page parsing.
+- Replaced the inventory placeholder with an authenticated read-only online list, cursor-based load-more behavior, IDR prices, low-stock indicators, and medical expiry display.
+- Added truthful loading, empty, retryable error, and restored-offline-session states without prototype records or claims of encrypted offline persistence.
+- Kept create, edit, and stock-adjustment controls hidden until a production local encrypted repository and atomic outbox path exist.
+- Added API boundary and component coverage for malformed responses, transport/session failures, pagination, low-stock rendering, empty data, offline behavior, and retry.
+
+Verification: `npm run mobile:typecheck && npm run mobile:lint && npm run mobile:test`
+
+Remaining Phase 4 work: clinic-local expiry filtering, physical-device SQLCipher verification, production local inventory/outbox persistence, then mobile inventory mutations and synchronization.
 
 ### Work
 
