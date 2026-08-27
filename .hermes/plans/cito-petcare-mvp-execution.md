@@ -441,6 +441,17 @@ Commit: `feat(mobile): gate app behind secure authentication`
 
 ## Phase 4 — Inventory vertical slice
 
+### Slice 4.1: backend inventory domain service — complete
+
+- Added a production PostgreSQL inventory service for client-ID create/replay, active-item reads and bounded listing, optimistic metadata updates that cannot change stock, and auditable stock adjustments.
+- Enforced contract boundaries for canonical UUIDs, whole-IDR prices, nonnegative quantities, bounded text, category values, required medical expiry dates, versions, and occurrence timestamps before database access.
+- Made stock adjustment atomic with row locking, version checks, nonnegative-stock enforcement, audit-row insertion, rollback safety, and adjustment-ID replay protection that never applies a quantity delta twice.
+- Added unit and real PostgreSQL integration coverage for validation, create/update replay, conflicting payloads, tombstones, low-stock calculation, optimistic conflicts, adjustment replay, and failed-adjustment rollback.
+
+Verification: `go test -race ./internal/inventory`
+
+Remaining Phase 4 work starts with authenticated HTTP handlers and contract pagination/alert filters, followed by the mobile API boundary. Encrypted mobile inventory persistence and offline outbox wiring remain blocked by the deferred physical-device SQLCipher gate.
+
 ### Work
 
 - Implement inventory local schema/repository, API repository/service/handlers, sync operations, and mobile screens.
