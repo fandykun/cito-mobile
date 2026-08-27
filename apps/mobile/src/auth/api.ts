@@ -38,13 +38,19 @@ export class AuthenticationApi {
   private readonly timeoutMilliseconds: number;
 
   constructor(baseUrl: string | null, options: AuthenticationApiOptions = {}) {
+    if (
+      options.timeoutMilliseconds !== undefined &&
+      (!Number.isFinite(options.timeoutMilliseconds) || options.timeoutMilliseconds <= 0)
+    ) {
+      throw new Error('Authentication request timeout must be a positive finite number.');
+    }
     this.baseUrl = baseUrl;
     this.fetchImplementation = options.fetchImplementation ?? fetch;
     this.timeoutMilliseconds = options.timeoutMilliseconds ?? DEFAULT_TIMEOUT_MILLISECONDS;
   }
 
   login(username: string, password: string, sessionDurationHours?: number): Promise<SessionTokens> {
-    return this.request('/api/v1/auth/login', {
+    return this.requestSession('/api/v1/auth/login', {
       username,
       password,
       ...(sessionDurationHours === undefined ? {} : { session_duration_hours: sessionDurationHours }),
@@ -52,27 +58,44 @@ export class AuthenticationApi {
   }
 
   refresh(refreshToken: string): Promise<SessionTokens> {
-    return this.request('/api/v1/auth/refresh', { refresh_token: refreshToken });
+    return this.requestSession('/api/v1/auth/refresh', { refresh_token: refreshToken });
   }
 
   async logout(accessToken: string, refreshToken: string): Promise<void> {
-    await this.request('/api/v1/auth/logout', { refresh_token: refreshToken }, accessToken, true);
+    await this.execute(
+      '/api/v1/auth/logout',
+      { refresh_token: refreshToken },
+      (response) => {
+        if (response.status !== 204) {
+          throw new AuthenticationError('server');
+        }
+      },
+      accessToken,
+    );
   }
 
-  private async request(
+  private requestSession(
     path: string,
     body: Readonly<Record<string, string | number>>,
-    accessToken?: string,
-    noContent = false,
   ): Promise<SessionTokens> {
+    return this.execute(path, body, async (response) =>
+      parseSessionTokens(await readBoundedText(response)),
+    );
+  }
+
+  private async execute<Result>(
+    path: string,
+    body: Readonly<Record<string, string | number>>,
+    parseResponse: (response: Response) => Promise<Result> | Result,
+    accessToken?: string,
+  ): Promise<Result> {
     if (!this.baseUrl) {
       throw new AuthenticationError('configuration');
     }
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), this.timeoutMilliseconds);
-    let response: Response;
     try {
-      response = await this.fetchImplementation(`${this.baseUrl}${path}`, {
+      const response = await this.fetchImplementation(`${this.baseUrl}${path}`, {
         method: 'POST',
         headers: {
           Accept: 'application/json',
@@ -82,23 +105,24 @@ export class AuthenticationApi {
         body: JSON.stringify(body),
         signal: controller.signal,
       });
-    } catch {
+      if (response.status === 401) {
+        const code = await readErrorCode(response);
+        throw new AuthenticationError(
+          code === 'invalid_credentials' ? 'invalid_credentials' : 'invalid_session',
+        );
+      }
+      if (!response.ok) {
+        throw new AuthenticationError('server');
+      }
+      return await parseResponse(response);
+    } catch (error: unknown) {
+      if (error instanceof AuthenticationError) {
+        throw error;
+      }
       throw new AuthenticationError('network');
     } finally {
       clearTimeout(timeout);
     }
-
-    if (noContent && response.status === 204) {
-      return emptyTokens();
-    }
-    if (response.status === 401) {
-      const code = await readErrorCode(response);
-      throw new AuthenticationError(code === 'invalid_credentials' ? 'invalid_credentials' : 'invalid_session');
-    }
-    if (!response.ok) {
-      throw new AuthenticationError('server');
-    }
-    return parseSessionTokens(await readBoundedText(response));
   }
 }
 
@@ -159,8 +183,4 @@ function validTimestamp(value: unknown): string | null {
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
-}
-
-function emptyTokens(): SessionTokens {
-  return { accessToken: '', refreshToken: '', accessExpiresAt: '', sessionExpiresAt: '' };
 }

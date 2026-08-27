@@ -54,6 +54,16 @@ describe('AuthenticationApi', () => {
     );
   });
 
+  it('rejects a successful logout response that violates the no-content contract', async () => {
+    const api = new AuthenticationApi('https://api.example.com', {
+      fetchImplementation: jest
+        .fn<Promise<Response>, [string, RequestInit?]>()
+        .mockResolvedValue(response({ unexpected: true })),
+    });
+
+    await expect(api.logout(accessToken, refreshToken)).rejects.toMatchObject({ code: 'server' });
+  });
+
   it.each([
     [401, { code: 'invalid_credentials' }, 'invalid_credentials'],
     [401, { code: 'invalid_session' }, 'invalid_session'],
