@@ -1,9 +1,8 @@
 import { ThemeProvider } from '@react-navigation/native';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { ActivityIndicator, StyleSheet, View } from 'react-native';
 
-import { AuthenticationProvider, useAuthentication } from '@/src/auth/AuthenticationContext';
+import { AuthenticationProvider } from '@/src/auth/AuthenticationContext';
 import { colors } from '@/src/design/tokens';
 import { appEnvironment } from '@/src/config/env';
 
@@ -38,22 +37,13 @@ export default function RootLayout() {
     <ThemeProvider value={citoTheme}>
       <StatusBar style="dark" />
       <AuthenticationProvider>
-        <AuthenticatedStack />
+        <AppStack />
       </AuthenticationProvider>
     </ThemeProvider>
   );
 }
 
-function AuthenticatedStack() {
-  const authentication = useAuthentication();
-  if (authentication.status === 'loading') {
-    return (
-      <View accessibilityLabel="Restoring secure session" style={styles.loading}>
-        <ActivityIndicator color={colors.primary} size="large" />
-      </View>
-    );
-  }
-
+function AppStack() {
   return (
     <Stack
       screenOptions={{
@@ -64,23 +54,12 @@ function AuthenticatedStack() {
         headerTintColor: colors.foreground,
       }}
     >
-      <Stack.Protected guard={authentication.status === 'unauthenticated'}>
+      <Stack.Protected guard={false}>
         <Stack.Screen name="login" options={{ headerShown: false }} />
       </Stack.Protected>
-      <Stack.Protected guard={authentication.status === 'authenticated'}>
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen name="debug" options={{ title: 'Application diagnostics' }} />
-        <Stack.Screen name="storage-spike" options={{ title: 'Encrypted storage proof' }} />
-      </Stack.Protected>
+      <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+      <Stack.Screen name="debug" options={{ title: 'Application diagnostics' }} />
+      <Stack.Screen name="storage-spike" options={{ title: 'Encrypted storage proof' }} />
     </Stack>
   );
 }
-
-const styles = StyleSheet.create({
-  loading: {
-    alignItems: 'center',
-    backgroundColor: colors.background,
-    flex: 1,
-    justifyContent: 'center',
-  },
-});

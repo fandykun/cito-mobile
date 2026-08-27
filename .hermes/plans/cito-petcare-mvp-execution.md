@@ -333,9 +333,9 @@ Commit: `feat(api): define and validate openapi contract`
 2. `feat(security): encrypt sensitive medical fields`
 3. `feat(api): define and validate openapi contract`
 
-## Phase 3 — Single-account username/password authentication
+## Phase 3 — Single-account authentication foundations
 
-**Mandatory access model:** Authentication is a required MVP security boundary, not an optional feature. The app has exactly one manually provisioned owner/vet account authenticated only by username and password. There is no PIN, biometric authentication/re-lock, in-app registration, sign-up, account creation, roles, permissions, or multi-user scoping. The implemented login and route guards must remain active while domain modules are built so inventory, financial, and patient data are never exposed before authentication, including offline. Only nonessential login-screen visual refinement is deferred until release readiness.
+**Production access model:** Authentication remains a required MVP security boundary. The app has exactly one manually provisioned owner/vet account authenticated only by username and password. There is no PIN, biometric authentication/re-lock, in-app registration, sign-up, account creation, roles, permissions, or multi-user scoping. The backend authentication boundary and mobile session implementation are preserved, but mobile login activation is intentionally deferred until the final development slice so the remaining screens can be developed before a login design exists. The dashboard is the temporary unauthenticated development homepage; this bypass must not ship in a preview or production release.
 
 ### Slice 3.1a: single-account persistence foundation — complete
 
@@ -416,17 +416,19 @@ Commit: `feat(mobile): persist sessions in secure storage`
 
 Commit: `feat(mobile): gate app behind secure authentication`
 
+Current development state: the completed login screen and session code remain in the repository, but the mobile route guard and sign-out UI are disabled. The tab dashboard is the initial route without authentication. Backend clinic APIs remain bearer-protected; no API authentication bypass is permitted. Phase 9 must reactivate the mobile gate and verify every route before release.
+
 ### Work
 
-- Preserve the implemented account provisioning, API session lifecycle, secure mobile session storage, and route guards while domain modules are built.
+- Preserve the implemented account provisioning, API session lifecycle, secure mobile session storage, and login implementation while domain modules are built; do not weaken backend bearer protection.
 - Keep account creation and credential recovery exclusively in the manual admin/provisioning workflow; do not add registration, sign-up, forgot-password email, roles, permissions, or account-management screens.
 - Keep username and password as the only authentication mechanism; do not add PIN or biometric authentication/re-lock.
-- Defer nonessential login-screen UX refinement until Phase 9.
+- Defer mobile login activation, final UX, and accessibility work until the final Phase 9 development slice.
 - Add authentication work before then only when a domain implementation exposes a concrete security or session integration defect.
 
 ### Required tests
 
-- No app data is accessible before authentication.
+- Before release, no app data is accessible before authentication.
 - Exactly one manually provisioned owner/vet account is supported.
 - No self-registration, sign-up, create-account, role, permission, or multi-user route or screen exists.
 - No PIN or biometric authentication/re-lock route or screen exists.
@@ -581,11 +583,11 @@ Split by owner/pet, vaccination, visit editor, transactional stock/financial log
 
 ### Work
 
-- Perform final login-screen UX/accessibility validation only after all core application workflows are functional. Preserve mandatory username/password login at launch, the single manually provisioned account, the absence of registration/roles/PIN/biometrics, offline re-entry within an authenticated session, and absolute session expiry.
 - Add production Docker image for API, TLS/reverse-proxy deployment documentation, migration procedure, encrypted backup schedule, and rollback runbook.
 - Configure Expo EAS development, preview, and production profiles.
 - Run Android release build and iOS EAS build; test on physical devices when available.
 - Perform security review, dependency audit, accessibility pass, and PRD acceptance test.
+- As the final development slice, design/refine the login screen, reactivate the mobile route guard and sign-out flow, and validate authentication against every completed route and offline workflow. Preserve mandatory username/password login at launch, the single manually provisioned account, the absence of registration/roles/PIN/biometrics, offline re-entry within an authenticated session, and absolute session expiry.
 
 ### Release gates
 
@@ -611,7 +613,7 @@ Additionally:
 
 ## Immediate execution queue
 
-The repository, Expo shell, backend/API foundation, schema, encryption, API contract, and mandatory single-account authentication gate are implemented. Continue in these independently revertible product slices:
+The repository, Expo shell, backend/API foundation, schema, encryption, API contract, and single-account authentication foundations are implemented. The mobile login gate is temporarily disabled so the dashboard can be used as the development homepage. Continue in these independently revertible product slices:
 
 1. **Close the encrypted SQLite device gate:** run the already-built SQLCipher harness on a physical device before relying on local domain persistence.
 2. **Inventory vertical slice:** replace the Expo placeholder with local repository, API, sync, and usable inventory screens.
@@ -619,9 +621,9 @@ The repository, Expo shell, backend/API foundation, schema, encryption, API cont
 4. **Retail POS and receipts:** implement fast offline checkout, transactional stock updates, and on-device PDF receipts.
 5. **Finance:** implement expenses, owner draw, cash reconciliation, and derived daily/monthly views.
 6. **Sync reliability:** complete recovery, retry, idempotency, and diagnostics across every core write.
-7. **Final login validation last:** after the application modules work end to end, validate the required username/password login screen against every finished route and offline workflow, then finish accessibility and visual polish.
+7. **Login development and activation last:** after the application modules work end to end, finish the username/password login design, reactivate all route guards and sign-out, validate every finished route and offline workflow, then complete accessibility and visual polish.
 
-Do not remove or bypass the existing login gate while developing the modules. Username and password are the only supported login method and remain required before any stock, financial, or patient data is accessible. The only supported identity is the manually provisioned owner/vet account; do not add in-app registration, roles, permissions, PIN, biometrics, or multi-user scoping. Putting login work last means deferring final screen refinement and end-to-end validation, not deferring or weakening the security boundary. The physical SQLCipher execution remains the highest-risk prerequisite because offline encrypted medical storage is mandatory.
+The temporary mobile bypass applies only to local screen development: keep backend clinic APIs bearer-protected and do not add anonymous production data endpoints. Before any preview or production release, username and password must again be required before stock, financial, or patient data is accessible. The only supported identity is the manually provisioned owner/vet account; do not add in-app registration, roles, permissions, PIN, biometrics, or multi-user scoping. The physical SQLCipher execution remains the highest-risk prerequisite because offline encrypted medical storage is mandatory.
 
 ## Known specification gaps to resolve during implementation
 
