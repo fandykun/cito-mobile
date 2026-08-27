@@ -7,7 +7,7 @@ import { useAuthentication } from '@/src/auth/AuthenticationContext';
 import { colors, radii, spacing, typography } from '@/src/design/tokens';
 
 const modules = [
-  { icon: 'cube-outline', label: 'Inventaris', status: 'Planned vertical slice' },
+  { icon: 'cube-outline', label: 'Inventaris', status: 'Backend API in progress' },
   { icon: 'document-text-outline', label: 'Rekam Medis', status: 'Encryption required' },
   { icon: 'cart-outline', label: 'Kasir', status: 'Offline PDF required' },
   { icon: 'trending-up-outline', label: 'Keuangan', status: 'Derived summaries' },
@@ -35,8 +35,9 @@ export default function DashboardScreen() {
         <Text style={styles.eyebrow}>PRODUCTION MOBILE APP</Text>
         <Text style={styles.heading}>Foundation shell ready</Text>
         <Text style={styles.description}>
-          This Expo application is separate from the Figma prototype. Domain data will only appear
-          after encrypted persistence, authentication, and sync foundations pass their gates.
+          This Expo application is separate from the Figma prototype. Authentication and backend
+          foundations are active; clinic data will appear after encrypted local persistence and sync
+          pass their gates.
         </Text>
       </View>
 
@@ -47,7 +48,7 @@ export default function DashboardScreen() {
         <View style={styles.statusText}>
           <Text style={styles.statusTitle}>No mock clinic records</Text>
           <Text style={styles.statusDescription}>
-            This shell contains navigation and design tokens only.
+            This authenticated shell contains no prototype clinic data.
           </Text>
         </View>
       </View>

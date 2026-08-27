@@ -47,8 +47,8 @@ export default function DebugScreen() {
       <View style={styles.notice}>
         <Text style={styles.noticeTitle}>Foundation status</Text>
         <Text style={styles.noticeBody}>
-          Navigation, environment validation, tests, and design tokens are active. Authentication,
-          encrypted persistence, API connectivity, and sync are not implemented yet.
+          Navigation, username/password authentication, environment validation, tests, and backend
+          API foundations are active. Production encrypted local persistence and sync remain pending.
         </Text>
       </View>
 
