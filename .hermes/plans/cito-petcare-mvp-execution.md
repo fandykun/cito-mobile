@@ -452,6 +452,17 @@ Verification: `go test -race ./internal/inventory`
 
 Remaining Phase 4 work starts with authenticated HTTP handlers and contract pagination/alert filters, followed by the mobile API boundary. Encrypted mobile inventory persistence and offline outbox wiring remain blocked by the deferred physical-device SQLCipher gate.
 
+### Slice 4.2: authenticated inventory mutation HTTP boundary — complete
+
+- Exposed bearer-protected create, get, metadata update, and stock-adjustment routes matching the OpenAPI inventory payloads and sanitized error contract.
+- Added strict JSON/content-type/16 KiB request boundaries, path/body ID matching, RFC 3339 timestamp and date parsing, and operation-ID header matching for replay-safe creates and adjustments.
+- Wired the production inventory service through an explicit HTTP dependency bundle without exposing stock changes through metadata updates.
+- Added handler tests for authentication, contract mapping, malformed/oversized requests, path and idempotency mismatches, and domain error mapping, plus a real PostgreSQL HTTP integration flow covering login, create, get, update, adjustment, replay, and persisted audit state.
+
+Verification: `go test -race ./internal/httpserver ./internal/inventory`
+
+Remaining HTTP work: implement active-item listing with opaque cursor pagination plus low-stock and clinic-local expiry filters before adding the mobile inventory API client.
+
 ### Work
 
 - Implement inventory local schema/repository, API repository/service/handlers, sync operations, and mobile screens.
