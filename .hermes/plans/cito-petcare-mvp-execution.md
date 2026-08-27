@@ -461,7 +461,19 @@ Remaining Phase 4 work starts with authenticated HTTP handlers and contract pagi
 
 Verification: `go test -race ./internal/httpserver ./internal/inventory`
 
-Remaining HTTP work: implement active-item listing with opaque cursor pagination plus low-stock and clinic-local expiry filters before adding the mobile inventory API client.
+Remaining HTTP work starts with clinic-local expiry filtering before adding the mobile inventory API client.
+
+### Slice 4.3: authenticated inventory listing and low-stock filter — complete
+
+- Added bearer-protected active-item listing with deterministic case-insensitive name/UUID ordering, bounded limits, and opaque cursor pagination.
+- Fetches one extra row to derive `has_more`, returns contract-shaped page metadata, and excludes tombstoned records on every page.
+- Added the PRD-defined strict low-stock filter (`stock_quantity < low_stock_threshold`) without conflating equality with an alert.
+- Added unit and real PostgreSQL coverage for malformed cursors/limits, cursor continuation, ordering, page boundaries, authentication, and low-stock filtering.
+- Kept expiry filtering out of the implemented contract until its configurable alert window and clinic timezone are explicit; this avoids silently applying UTC or a guessed date window.
+
+Verification: `TEST_DATABASE_URL=<local> go test ./internal/inventory ./internal/httpserver -count=1`
+
+Remaining Phase 4 HTTP work: define clinic timezone and expiry-window configuration, implement clinic-local expiry filtering, then add the mobile inventory API client.
 
 ### Work
 
