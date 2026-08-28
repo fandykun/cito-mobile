@@ -28,6 +28,8 @@ The clinic currently operates with mixed personal/business finances and no digit
 ### 1.5 Target Platform
 Native mobile app for **Android and iOS**, with **offline support** (local storage with sync-on-reconnect).
 
+Business dates use a configurable IANA clinic timezone, defaulting to `Asia/Jakarta`. This timezone governs inventory expiry alerts and future daily/monthly financial boundaries.
+
 ### 1.6 User & Access
 Single user: the clinic owner/vet. No role-based access control needed for MVP.
 
@@ -69,7 +71,7 @@ Single user: the clinic owner/vet. No role-based access control needed for MVP.
 
 ### 3.2 Inventory Management
 - **Item fields**: name, category (Medical / Retail), unit, cost price, selling price, current stock quantity, low-stock threshold, expiry date (optional, required for medical items)
-- **Alerts**: low-stock alert (below threshold), expiry alert (configurable window, e.g. 30 days before expiry)
+- **Alerts**: low-stock alert (below threshold), expiry alert with a configurable 1–365 day window that defaults to 30 days; the expiry alert includes already-expired items
 - **Stock adjustment**: manual adjustment with a reason field (spoilage, correction, breakage)
 - **Auto-deduction**: stock automatically decreases when an item is used in a visit
 - **Supplier info** (optional, lightweight): name and contact per item, no formal PO workflow needed for MVP
@@ -195,5 +197,6 @@ Single user: the clinic owner/vet. No role-based access control needed for MVP.
 | v1.7 | Login sessions made persistent for a configurable duration (default ~1–3 days) instead of requiring login every app open. |
 | v1.8 | Removed "Future Considerations" section; added this version history for tracking changes going forward. |
 | v1.9 | Authentication limited to username and password for the current product; removed PIN and biometric re-lock requirements. |
+| v2.0 | Defined the configurable clinic business timezone (`Asia/Jakarta` default) and the inventory expiry-alert window (30-day default, including expired items). |
 
 **Process going forward**: new feature requests should be added directly into the relevant section of this PRD (Goals, User Stories, Feature Specifications, Data Entities) rather than creating a separate PRD document — this keeps one source of truth for the product, especially since `AGENTS.md` and the architecture doc both reference this file. Log each meaningful change as a new row above.

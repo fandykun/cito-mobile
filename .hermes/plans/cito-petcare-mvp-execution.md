@@ -638,7 +638,7 @@ The temporary mobile bypass applies only to local screen development: keep backe
 
 These do not block repository separation, but they must be documented before the affected migration or behavior is committed:
 
-- Exact clinic timezone and currency formatting policy.
+- Currency formatting policy beyond the established whole-IDR storage rule. The clinic timezone is resolved by ADR 0004.
 - Chosen encrypted SQLite adapter after the native build spike.
 - Production secret-manager integration and encrypted key-backup procedure. The envelope, initial environment keyring, and rotation sequence are defined by ADR 0003.
 - Server-to-device checkpoint format and tombstone retention duration. Tombstone deletion behavior is defined by ADR 0002.
