@@ -517,6 +517,19 @@ Inventory can be managed end-to-end online and offline without duplicate sync ef
 
 ## Phase 5 — Owners, pets, vaccinations, and medical visits
 
+Phase 4 mobile persistence remains blocked by the deferred physical-device SQLCipher gate. Backend patient-domain work can proceed independently because it writes only to the already-reviewed PostgreSQL schema and does not authorize mobile plaintext or unverified local persistence.
+
+### Slice 5.1: backend pet-owner domain service — complete
+
+- Added the `internal/patients` service boundary with validated owner create, get, bounded cursor listing, and optimistic update operations.
+- Enforced contract-sized owner names and contacts, canonical client UUIDs, UTC microsecond timestamps, active-record reads, deterministic case-insensitive ordering, and tombstone exclusion.
+- Made creates and updates replay-safe: identical client retries return the persisted record, while conflicting payloads, stale versions, stale timestamps, and tombstoned IDs fail explicitly.
+- Added unit and isolated PostgreSQL integration coverage for validation, create/update replay, conflicts, pagination, ordering, and tombstones.
+
+Verification: `TEST_DATABASE_URL=<local> go test -race ./internal/patients -count=1`.
+
+Remaining Phase 5 backend work starts with the authenticated owner HTTP boundary, followed by encrypted pet profiles, weight history, vaccinations, and visits. Mobile patient persistence remains blocked by the SQLCipher device gate.
+
 ### Work
 
 - Implement owner/pet CRUD, health flags, weight history, vaccinations, and editable visit history.
