@@ -1,5 +1,5 @@
 export type InventoryCategory = 'medical' | 'retail';
-export type InventoryAlert = 'low_stock';
+export type InventoryAlert = 'low_stock' | 'expiring';
 
 export interface InventoryItem {
   id: string;

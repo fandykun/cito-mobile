@@ -487,7 +487,16 @@ Remaining Phase 4 HTTP work: define clinic timezone and expiry-window configurat
 
 Verification: `npm run mobile:typecheck && npm run mobile:lint && npm run mobile:test`
 
-Remaining Phase 4 work: clinic-local expiry filtering, physical-device SQLCipher verification, production local inventory/outbox persistence, then mobile inventory mutations and synchronization.
+### Slice 4.5: clinic-local inventory expiry alerts — complete
+
+- Added validated API configuration for the clinic IANA timezone and a 1–365 day expiry-alert window, defaulting to `Asia/Jakarta` and 30 days.
+- Added authenticated `alert=expiring` inventory filtering using an inclusive clinic-local boundary; already-expired active items remain visible as urgent alerts.
+- Embedded timezone data in the API binary, documented the shared business-date decision in ADR 0004, and aligned the OpenAPI and typed mobile client contracts.
+- Added configuration, service, PostgreSQL integration, and HTTP boundary coverage, including the UTC-to-clinic midnight transition and inclusive window boundary.
+
+Verification: `TEST_DATABASE_URL=<local> go test -race ./internal/inventory ./internal/httpserver -count=1`, `go test ./internal/config`, and `npm run api:lint`.
+
+Remaining Phase 4 work: physical-device SQLCipher verification, production local inventory/outbox persistence, then mobile inventory mutations and synchronization.
 
 ### Work
 
