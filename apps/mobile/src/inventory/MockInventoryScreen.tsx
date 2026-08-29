@@ -3,6 +3,10 @@ import { useMemo, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 
 import { colors, radii, spacing, typography } from '@/src/design/tokens';
+import {
+  MockInventoryForm,
+  type MockInventoryFormValues,
+} from '@/src/inventory/MockInventoryForm';
 import { mockInventoryItems, type MockInventoryItem } from '@/src/inventory/mockData';
 
 type InventoryFilter = 'all' | 'medical' | 'retail' | 'low';
@@ -22,12 +26,14 @@ function isLowStock(item: MockInventoryItem): boolean {
 
 export function MockInventoryScreen() {
   const [activeFilter, setActiveFilter] = useState<InventoryFilter>('all');
+  const [editorItem, setEditorItem] = useState<MockInventoryItem | 'new' | null>(null);
   const [expandedItemId, setExpandedItemId] = useState<string | null>(null);
+  const [items, setItems] = useState<MockInventoryItem[]>(() => [...mockInventoryItems]);
   const [search, setSearch] = useState('');
 
   const visibleItems = useMemo(() => {
     const query = search.trim().toLocaleLowerCase('id-ID');
-    return mockInventoryItems.filter((item) => {
+    return items.filter((item) => {
       const matchesQuery =
         query.length === 0 ||
         item.name.toLocaleLowerCase('id-ID').includes(query) ||
@@ -37,12 +43,41 @@ export function MockInventoryScreen() {
         (activeFilter === 'low' ? isLowStock(item) : item.category === activeFilter);
       return matchesQuery && matchesFilter;
     });
-  }, [activeFilter, search]);
+  }, [activeFilter, items, search]);
 
   function resetFilters(): void {
     setActiveFilter('all');
     setExpandedItemId(null);
     setSearch('');
+  }
+
+  function saveItem(values: MockInventoryFormValues): void {
+    if (editorItem === 'new') {
+      const newItem: MockInventoryItem = {
+        ...values,
+        id: `demo-local-${items.length + 1}`,
+      };
+      setItems((current) => [newItem, ...current]);
+      setExpandedItemId(newItem.id);
+    } else if (editorItem) {
+      setItems((current) =>
+        current.map((item) => (item.id === editorItem.id ? { ...values, id: item.id } : item)),
+      );
+      setExpandedItemId(editorItem.id);
+    }
+    setActiveFilter('all');
+    setSearch('');
+    setEditorItem(null);
+  }
+
+  if (editorItem) {
+    return (
+      <MockInventoryForm
+        {...(editorItem === 'new' ? {} : { initialItem: editorItem })}
+        onCancel={() => setEditorItem(null)}
+        onSave={saveItem}
+      />
+    );
   }
 
   return (
@@ -52,9 +87,19 @@ export function MockInventoryScreen() {
           <Text style={styles.heading}>Inventaris</Text>
           <Text style={styles.itemCount}>{visibleItems.length} item ditampilkan</Text>
         </View>
-        <View style={styles.demoBadge}>
-          <View style={styles.demoDot} />
-          <Text style={styles.demoBadgeText}>Data demo</Text>
+        <View style={styles.headerActions}>
+          <View style={styles.demoBadge}>
+            <View style={styles.demoDot} />
+            <Text style={styles.demoBadgeText}>Data demo</Text>
+          </View>
+          <Pressable
+            accessibilityLabel="Tambah item demo"
+            accessibilityRole="button"
+            onPress={() => setEditorItem('new')}
+            style={({ pressed }) => [styles.addButton, pressed && styles.pressed]}
+          >
+            <Ionicons color={colors.primaryForeground} name="add" size={18} />
+          </Pressable>
         </View>
       </View>
 
@@ -120,6 +165,7 @@ export function MockInventoryScreen() {
               expanded={expandedItemId === item.id}
               item={item}
               key={item.id}
+              onEdit={() => setEditorItem(item)}
               onToggle={() => setExpandedItemId((current) => (current === item.id ? null : item.id))}
               showDivider={index > 0}
             />
@@ -152,11 +198,13 @@ export function MockInventoryScreen() {
 function InventoryRow({
   expanded,
   item,
+  onEdit,
   onToggle,
   showDivider,
 }: {
   expanded: boolean;
   item: MockInventoryItem;
+  onEdit: () => void;
   onToggle: () => void;
   showDivider: boolean;
 }) {
@@ -234,6 +282,15 @@ function InventoryRow({
             label="Kedaluwarsa"
             value={item.expiryLabel ? `Kedaluwarsa ${item.expiryLabel}` : 'Tidak ada'}
           />
+          <Pressable
+            accessibilityLabel={`Edit ${item.name}`}
+            accessibilityRole="button"
+            onPress={onEdit}
+            style={({ pressed }) => [styles.editButton, pressed && styles.pressed]}
+          >
+            <Ionicons color={colors.primary} name="create-outline" size={16} />
+            <Text style={styles.editButtonText}>Edit item demo</Text>
+          </Pressable>
         </View>
       ) : null}
     </View>
@@ -250,6 +307,14 @@ function Detail({ label, value }: { label: string; value: string }) {
 }
 
 const styles = StyleSheet.create({
+  addButton: {
+    alignItems: 'center',
+    backgroundColor: colors.primary,
+    borderRadius: radii.medium,
+    height: 34,
+    justifyContent: 'center',
+    width: 34,
+  },
   content: {
     gap: spacing.large,
     padding: spacing.xlarge,
@@ -327,6 +392,23 @@ const styles = StyleSheet.create({
     fontSize: typography.body,
     fontWeight: '800',
   },
+  editButton: {
+    alignItems: 'center',
+    borderColor: colors.border,
+    borderRadius: radii.medium,
+    borderWidth: 1,
+    flexDirection: 'row',
+    gap: spacing.small,
+    justifyContent: 'center',
+    marginTop: spacing.xsmall,
+    padding: spacing.small,
+    width: '100%',
+  },
+  editButtonText: {
+    color: colors.primary,
+    fontSize: typography.caption,
+    fontWeight: '700',
+  },
   filterChip: {
     backgroundColor: colors.card,
     borderColor: colors.border,
@@ -349,6 +431,11 @@ const styles = StyleSheet.create({
   },
   filterTextActive: {
     color: colors.primaryForeground,
+  },
+  headerActions: {
+    alignItems: 'center',
+    flexDirection: 'row',
+    gap: spacing.small,
   },
   headerRow: {
     alignItems: 'center',

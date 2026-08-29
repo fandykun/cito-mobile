@@ -51,4 +51,45 @@ describe('MockInventoryScreen', () => {
     expect(screen.getByText('Item tidak ditemukan')).toBeOnTheScreen();
     expect(screen.getByRole('button', { name: 'Reset filter inventaris' })).toBeOnTheScreen();
   });
+
+  it('validates and adds a non-persistent demo item', async () => {
+    const user = userEvent.setup();
+    await render(<MockInventoryScreen />);
+
+    await user.press(screen.getByRole('button', { name: 'Tambah item demo' }));
+    expect(screen.getByText('Tambah item')).toBeOnTheScreen();
+
+    await user.press(screen.getByRole('button', { name: 'Simpan item demo' }));
+    expect(screen.getByText('Nama item wajib diisi.')).toBeOnTheScreen();
+
+    await user.type(screen.getByLabelText('Nama item'), 'Vitamin Kucing Demo');
+    await user.clear(screen.getByLabelText('Kategori tampilan'));
+    await user.type(screen.getByLabelText('Kategori tampilan'), 'Suplemen');
+    await user.type(screen.getByLabelText('Satuan item'), 'btl');
+    await user.type(screen.getByLabelText('Stok awal'), '6');
+    await user.type(screen.getByLabelText('Batas stok menipis'), '3');
+    await user.type(screen.getByLabelText('Harga modal'), '45000');
+    await user.type(screen.getByLabelText('Harga jual'), '90000');
+    await user.type(screen.getByLabelText('Pemasok'), 'Demo Supplier');
+    await user.press(screen.getByRole('button', { name: 'Simpan item demo' }));
+
+    expect(screen.getByText('Vitamin Kucing Demo')).toBeOnTheScreen();
+    expect(screen.getByText('Rp 90.000/btl')).toBeOnTheScreen();
+  });
+
+  it('edits an existing item in local draft state', async () => {
+    const user = userEvent.setup();
+    await render(<MockInventoryScreen />);
+
+    await user.press(screen.getByRole('button', { name: 'Lihat detail Amoxicillin 250mg' }));
+    await user.press(screen.getByRole('button', { name: 'Edit Amoxicillin 250mg' }));
+    expect(screen.getByText('Edit item')).toBeOnTheScreen();
+
+    await user.clear(screen.getByLabelText('Nama item'));
+    await user.type(screen.getByLabelText('Nama item'), 'Amoxicillin 500mg Demo');
+    await user.press(screen.getByRole('button', { name: 'Simpan item demo' }));
+
+    expect(screen.getByText('Amoxicillin 500mg Demo')).toBeOnTheScreen();
+    expect(screen.queryByText('Amoxicillin 250mg')).not.toBeOnTheScreen();
+  });
 });

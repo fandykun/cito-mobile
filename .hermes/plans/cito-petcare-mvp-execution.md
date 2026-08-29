@@ -576,6 +576,19 @@ Remaining inventory UI work: add/edit form presentation and stock-adjustment int
 
 Verification: `npm run mobile:typecheck`, `npm run mobile:lint`, `npm run mobile:test`, and `npm run mobile:export:android`.
 
+#### UI Slice 2b: local-only inventory add/edit form — complete
+
+- Added working add and edit entry points to the mock-backed inventory screen.
+- Added a bounded form for item name, medical/retail type, display category, unit, stock, low-stock threshold, whole-IDR cost/selling prices, supplier, and optional/required expiry presentation.
+- Enforced non-empty identifiers, nonnegative safe-integer stock/prices, and mandatory expiry input for medical demo items before accepting local changes.
+- Applied successful creates and edits only to in-memory screen state; the form and list continue to state explicitly that no API, encrypted storage, or sync write occurs.
+- Preserved authenticated sessions on the existing production server-backed inventory screen rather than exposing demo mutations to authenticated API data.
+- Added integration-style component tests for validation, local creation, formatted IDR display, and editing an existing fixture.
+
+Remaining inventory UI work: add auditable stock-adjustment presentation with a required reason and nonnegative-stock validation in local-only state.
+
+Verification: `npm run mobile:typecheck`, `npm run mobile:lint`, `npm run mobile:test`, and `npm run mobile:export:android`.
+
 ### Work
 
 - Implement owner/pet CRUD, health flags, weight history, vaccinations, and editable visit history.
@@ -684,7 +697,7 @@ Additionally:
 The repository, Expo shell, backend/API foundation, schema, encryption, API contract, and single-account authentication foundations are implemented. The mobile login gate is temporarily disabled so the screens can be reviewed without a finished login design. Continue in these independently revertible product slices, prioritizing the UI-first track requested for the current development cycle:
 
 1. **Dashboard UI — complete:** mock-backed Expo dashboard and reusable presentation primitives without appointment-booking UI.
-2. **Inventory UI — in progress:** search, filters, and expandable details are complete; implement item form and stock-adjustment presentation with typed local draft state.
+2. **Inventory UI — in progress:** search, filters, expandable details, and local add/edit forms are complete; implement stock-adjustment presentation with a required reason and typed local draft state.
 3. **Patient and medical-record UI:** implement owner/pet lists, profiles, vaccinations, visit history, and the structured visit editor with non-sensitive demo fixtures.
 4. **Retail POS UI:** implement product search, cart, payment selection, confirmation, and receipt-preview presentation with demo fixtures.
 5. **Finance UI:** implement daily/monthly summaries, expenses, owner draw, reconciliation, and trend presentation with demo fixtures.
