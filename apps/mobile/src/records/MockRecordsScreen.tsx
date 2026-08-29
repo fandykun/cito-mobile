@@ -8,9 +8,13 @@ import {
   type MockPatientFormValues,
 } from '@/src/records/MockPatientForm';
 import {
+  MockVaccinationForm,
+} from '@/src/records/MockVaccinationForm';
+import {
   mockPatients,
   type MockPatient,
   type MockPatientSpecies,
+  type MockVaccination,
   type MockVaccinationStatus,
 } from '@/src/records/mockData';
 
@@ -58,6 +62,7 @@ export function MockRecordsScreen() {
   const [expandedPatientId, setExpandedPatientId] = useState<string | null>(null);
   const [patients, setPatients] = useState<MockPatient[]>(() => [...mockPatients]);
   const [search, setSearch] = useState('');
+  const [vaccinationPatient, setVaccinationPatient] = useState<MockPatient | null>(null);
 
   const visiblePatients = useMemo(() => {
     const query = search.trim().toLocaleLowerCase('id-ID');
@@ -127,12 +132,40 @@ export function MockRecordsScreen() {
     setEditorPatient(null);
   }
 
+  function saveVaccination(vaccination: MockVaccination): void {
+    if (!vaccinationPatient) {
+      return;
+    }
+    const patientId = vaccinationPatient.id;
+    setPatients((current) =>
+      current.map((patient) =>
+        patient.id === patientId
+          ? { ...patient, vaccinations: [vaccination, ...patient.vaccinations] }
+          : patient,
+      ),
+    );
+    setActiveFilter('all');
+    setExpandedPatientId(patientId);
+    setSearch('');
+    setVaccinationPatient(null);
+  }
+
   if (editorPatient) {
     return (
       <MockPatientForm
         {...(editorPatient === 'new' ? {} : { initialPatient: editorPatient })}
         onCancel={() => setEditorPatient(null)}
         onSave={savePatient}
+      />
+    );
+  }
+
+  if (vaccinationPatient) {
+    return (
+      <MockVaccinationForm
+        onCancel={() => setVaccinationPatient(null)}
+        onSave={saveVaccination}
+        patient={vaccinationPatient}
       />
     );
   }
@@ -223,6 +256,7 @@ export function MockRecordsScreen() {
             <PatientCard
               expanded={expandedPatientId === patient.id}
               key={patient.id}
+              onAddVaccination={() => setVaccinationPatient(patient)}
               onEdit={() => setEditorPatient(patient)}
               onToggle={() =>
                 setExpandedPatientId((current) => (current === patient.id ? null : patient.id))
@@ -257,11 +291,13 @@ export function MockRecordsScreen() {
 
 function PatientCard({
   expanded,
+  onAddVaccination,
   onEdit,
   onToggle,
   patient,
 }: {
   expanded: boolean;
+  onAddVaccination: () => void;
   onEdit: () => void;
   onToggle: () => void;
   patient: MockPatient;
@@ -304,12 +340,22 @@ function PatientCard({
         </View>
       </Pressable>
 
-      {expanded ? <PatientDetails onEdit={onEdit} patient={patient} /> : null}
+      {expanded ? (
+        <PatientDetails onAddVaccination={onAddVaccination} onEdit={onEdit} patient={patient} />
+      ) : null}
     </View>
   );
 }
 
-function PatientDetails({ onEdit, patient }: { onEdit: () => void; patient: MockPatient }) {
+function PatientDetails({
+  onAddVaccination,
+  onEdit,
+  patient,
+}: {
+  onAddVaccination: () => void;
+  onEdit: () => void;
+  patient: MockPatient;
+}) {
   const currentWeight = patient.weightHistory.at(0);
 
   return (
@@ -358,7 +404,18 @@ function PatientDetails({ onEdit, patient }: { onEdit: () => void; patient: Mock
       </View>
 
       <View>
-        <Text style={styles.sectionTitle}>Vaksinasi</Text>
+        <View style={styles.sectionHeaderRow}>
+          <Text style={styles.sectionTitle}>Vaksinasi</Text>
+          <Pressable
+            accessibilityLabel={`Tambah vaksinasi ${patient.name}`}
+            accessibilityRole="button"
+            onPress={onAddVaccination}
+            style={({ pressed }) => [styles.inlineAddButton, pressed && styles.pressed]}
+          >
+            <Ionicons color={colors.primary} name="add" size={15} />
+            <Text style={styles.inlineAddText}>Tambah</Text>
+          </Pressable>
+        </View>
         {patient.vaccinations.length > 0 ? (
           <View style={styles.sectionList}>
             {patient.vaccinations.map((vaccination) => {
@@ -534,6 +591,18 @@ const styles = StyleSheet.create({
   },
   healthText: { color: '#9A3412', fontSize: typography.caption, lineHeight: 18 },
   healthTitle: { color: '#9A3412', fontSize: typography.label, fontWeight: '800' },
+  inlineAddButton: {
+    alignItems: 'center',
+    backgroundColor: colors.card,
+    borderColor: colors.border,
+    borderRadius: radii.pill,
+    borderWidth: 1,
+    flexDirection: 'row',
+    gap: spacing.xsmall,
+    paddingHorizontal: spacing.small,
+    paddingVertical: spacing.xsmall,
+  },
+  inlineAddText: { color: colors.primary, fontSize: typography.caption, fontWeight: '700' },
   medicationChip: {
     backgroundColor: '#E6F7F5',
     borderRadius: radii.pill,
@@ -602,6 +671,7 @@ const styles = StyleSheet.create({
     fontSize: typography.body,
     paddingVertical: spacing.medium,
   },
+  sectionHeaderRow: { alignItems: 'center', flexDirection: 'row', justifyContent: 'space-between' },
   sectionList: { gap: spacing.small, marginTop: spacing.small },
   sectionTitle: {
     color: colors.foreground,

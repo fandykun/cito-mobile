@@ -629,6 +629,19 @@ Remaining patient UI work: local vaccination entry and then structured visit cre
 
 Verification: `npm run mobile:typecheck`, `npm run mobile:lint`, `npm run mobile:test`, and `npm run mobile:export:android`.
 
+#### UI Slice 3c: local-only vaccination entry — complete
+
+- Added a working vaccination-entry action to every expanded synthetic patient profile.
+- Added required vaccine name, administered-date label, next-due-date label, and explicit current/due-soon/overdue reminder status controls.
+- Prepended successful entries to the selected patient's in-memory vaccination timeline, restored the expanded patient detail, and made the new status immediately participate in the attention filter.
+- Kept reminder status deliberately manual in the mockup rather than pretending that free-text date labels provide production-grade date calculations or device notifications.
+- Kept the flow explicitly synthetic and non-persistent: no encrypted record, reminder, audit event, API request, or sync operation is created.
+- Added component and integration tests for required fields, local timeline insertion, administered/due labels, and reminder-status presentation.
+
+Remaining patient UI work: structured visit creation and editing with local-only clinical draft state, followed by inventory-item and service-fee presentation.
+
+Verification: `npm run mobile:typecheck`, `npm run mobile:lint`, `npm run mobile:test`, and `npm run mobile:export:android`.
+
 ### Work
 
 - Implement owner/pet CRUD, health flags, weight history, vaccinations, and editable visit history.
@@ -738,7 +751,7 @@ The repository, Expo shell, backend/API foundation, schema, encryption, API cont
 
 1. **Dashboard UI — complete:** mock-backed Expo dashboard and reusable presentation primitives without appointment-booking UI.
 2. **Inventory UI — complete:** search, filters, expandable details, local add/edit forms, and auditable stock-adjustment presentation are covered with typed demo state.
-3. **Patient and medical-record UI — in progress:** searchable profiles, health flags, profile create/edit, vaccinations, and visit-history presentation are complete; implement local vaccination entry and structured visit create/edit flows with synthetic fixtures.
+3. **Patient and medical-record UI — in progress:** searchable profiles, profile create/edit, weight history, vaccination timeline, and local vaccination entry are complete; implement structured visit create/edit flows with synthetic clinical drafts.
 4. **Retail POS UI:** implement product search, cart, payment selection, confirmation, and receipt-preview presentation with demo fixtures.
 5. **Finance UI:** implement daily/monthly summaries, expenses, owner draw, reconciliation, and trend presentation with demo fixtures.
 6. **Production integration:** close the physical SQLCipher gate, replace fixtures feature-by-feature with encrypted local repositories/API adapters, and complete backend domain slices, transactions, sync, and PDF generation.

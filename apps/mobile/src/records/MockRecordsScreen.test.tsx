@@ -107,4 +107,27 @@ describe('MockRecordsScreen', () => {
     expect(screen.getByText('Alergi: Penisilin, Debu')).toBeOnTheScreen();
     expect(screen.queryByText('Milo Demo')).not.toBeOnTheScreen();
   });
+
+  it('validates and adds a vaccination to the local patient timeline', async () => {
+    const user = userEvent.setup();
+    await render(<MockRecordsScreen />);
+
+    await user.press(screen.getByRole('button', { name: 'Lihat detail Luna Demo' }));
+    await user.press(screen.getByRole('button', { name: 'Tambah vaksinasi Luna Demo' }));
+    expect(screen.getByText('Tambah vaksinasi')).toBeOnTheScreen();
+
+    await user.press(screen.getByRole('button', { name: 'Simpan vaksinasi demo' }));
+    expect(screen.getByText('Nama vaksin wajib diisi.')).toBeOnTheScreen();
+
+    await user.type(screen.getByLabelText('Nama vaksin'), 'FeLV');
+    await user.type(screen.getByLabelText('Tanggal vaksin diberikan'), '20 Agu 2026');
+    await user.type(screen.getByLabelText('Tanggal vaksin berikutnya'), '20 Agu 2027');
+    await user.press(screen.getByRole('button', { name: 'Pilih status segera jatuh tempo' }));
+    await user.press(screen.getByRole('button', { name: 'Simpan vaksinasi demo' }));
+
+    expect(screen.getByText('FeLV')).toBeOnTheScreen();
+    expect(screen.getByText('Diberikan 20 Agu 2026')).toBeOnTheScreen();
+    expect(screen.getByText('Jatuh tempo 20 Agu 2027')).toBeOnTheScreen();
+    expect(screen.getByText('Segera jatuh tempo')).toBeOnTheScreen();
+  });
 });
