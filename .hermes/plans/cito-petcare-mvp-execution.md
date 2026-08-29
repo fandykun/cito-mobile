@@ -539,6 +539,30 @@ Verification: `TEST_DATABASE_URL=<local> go test -race ./... -count=1`, `go vet 
 
 Remaining Phase 5 backend work starts with encrypted pet profiles, weight history, vaccinations, and visits. Mobile patient persistence remains blocked by the SQLCipher device gate.
 
+### UI-first development track
+
+Product UI development is now prioritized before the remaining backend and encrypted-persistence slices. Implement the Expo screens from the existing Figma/Vite visual reference with isolated, strongly typed mock fixtures so navigation, information hierarchy, accessibility, and core interaction flows can be reviewed early.
+
+Rules for this track:
+
+- Build only in `apps/mobile`; the Vite prototype remains a read-only visual reference.
+- Keep fixtures under feature-owned `mockData.ts` modules rather than embedding untyped objects throughout components.
+- Label mock-backed screens visibly as demo data and never send mock records to the API, local database, sync queue, logs, or analytics.
+- Keep data access behind component boundaries that can later receive the encrypted local repository or API adapter without redesigning the screen.
+- Do not imply that persistence, encryption, sync, stock deduction, financial calculations, or receipt generation work until their production implementations pass the existing gates.
+- Do not port the prototype's appointment schedule: in-app booking/calendar remains outside the MVP.
+- Every visible action must navigate or perform a safe local mock interaction; no dead production-looking buttons.
+
+#### UI Slice 1: mock-backed mobile dashboard — complete
+
+- Replaced the foundation-status homepage with the design-backed dashboard layout.
+- Added typed demo metrics, owner-draw summary, navigable module shortcuts, and low-stock alerts.
+- Added an explicit `Data demo` marker and disclaimer separating fixtures from clinic/API data.
+- Excluded the prototype appointment schedule because booking is outside MVP scope.
+- Added component tests covering visible metrics, fixture labeling, module links, and appointment exclusion.
+
+Verification: `npm run mobile:typecheck`, `npm run mobile:lint`, `npm run mobile:test`, and `npm run mobile:export:android`.
+
 ### Work
 
 - Implement owner/pet CRUD, health flags, weight history, vaccinations, and editable visit history.
@@ -644,15 +668,16 @@ Additionally:
 
 ## Immediate execution queue
 
-The repository, Expo shell, backend/API foundation, schema, encryption, API contract, and single-account authentication foundations are implemented. The mobile login gate is temporarily disabled so the dashboard can be used as the development homepage. Continue in these independently revertible product slices:
+The repository, Expo shell, backend/API foundation, schema, encryption, API contract, and single-account authentication foundations are implemented. The mobile login gate is temporarily disabled so the screens can be reviewed without a finished login design. Continue in these independently revertible product slices, prioritizing the UI-first track requested for the current development cycle:
 
-1. **Close the encrypted SQLite device gate:** run the already-built SQLCipher harness on a physical device before relying on local domain persistence.
-2. **Inventory vertical slice:** replace the Expo placeholder with local repository, API, sync, and usable inventory screens.
-3. **Patient and medical records:** implement owners, pets, vaccinations, encrypted visits, stock deduction, and offline outbox behavior.
-4. **Retail POS and receipts:** implement fast offline checkout, transactional stock updates, and on-device PDF receipts.
-5. **Finance:** implement expenses, owner draw, cash reconciliation, and derived daily/monthly views.
-6. **Sync reliability:** complete recovery, retry, idempotency, and diagnostics across every core write.
-7. **Login development and activation last:** after the application modules work end to end, finish the username/password login design, reactivate all route guards and sign-out, validate every finished route and offline workflow, then complete accessibility and visual polish.
+1. **Dashboard UI:** complete the mock-backed Expo dashboard and reusable presentation primitives without appointment-booking UI.
+2. **Inventory UI:** implement searchable/filterable inventory, item detail/form, and stock-adjustment presentation with typed demo fixtures.
+3. **Patient and medical-record UI:** implement owner/pet lists, profiles, vaccinations, visit history, and the structured visit editor with non-sensitive demo fixtures.
+4. **Retail POS UI:** implement product search, cart, payment selection, confirmation, and receipt-preview presentation with demo fixtures.
+5. **Finance UI:** implement daily/monthly summaries, expenses, owner draw, reconciliation, and trend presentation with demo fixtures.
+6. **Production integration:** close the physical SQLCipher gate, replace fixtures feature-by-feature with encrypted local repositories/API adapters, and complete backend domain slices, transactions, sync, and PDF generation.
+7. **Sync reliability:** complete recovery, retry, idempotency, and diagnostics across every core write.
+8. **Login development and activation last:** after the application modules work end to end, finish the username/password login design, reactivate all route guards and sign-out, validate every finished route and offline workflow, then complete accessibility and visual polish.
 
 The temporary mobile bypass applies only to local screen development: keep backend clinic APIs bearer-protected and do not add anonymous production data endpoints. Before any preview or production release, username and password must again be required before stock, financial, or patient data is accessible. The only supported identity is the manually provisioned owner/vet account; do not add in-app registration, roles, permissions, PIN, biometrics, or multi-user scoping. The physical SQLCipher execution remains the highest-risk prerequisite because offline encrypted medical storage is mandatory.
 
