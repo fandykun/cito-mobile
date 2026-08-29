@@ -130,4 +130,44 @@ describe('MockRecordsScreen', () => {
     expect(screen.getByText('Jatuh tempo 20 Agu 2027')).toBeOnTheScreen();
     expect(screen.getByText('Segera jatuh tempo')).toBeOnTheScreen();
   });
+
+  it('creates and edits a structured visit in local state', async () => {
+    const user = userEvent.setup();
+    await render(<MockRecordsScreen />);
+
+    await user.press(screen.getByRole('button', { name: 'Lihat detail Luna Demo' }));
+    await user.press(screen.getByRole('button', { name: 'Tambah kunjungan Luna Demo' }));
+    expect(screen.getByText('Tambah kunjungan')).toBeOnTheScreen();
+
+    await user.press(screen.getByRole('button', { name: 'Simpan kunjungan demo' }));
+    expect(screen.getByText('Jenis kunjungan wajib diisi.')).toBeOnTheScreen();
+
+    await user.type(screen.getByLabelText('Jenis kunjungan'), 'Kontrol kulit');
+    await user.type(screen.getByLabelText('Tanggal kunjungan'), '21 Agu 2026');
+    await user.type(screen.getByLabelText('Keluhan kunjungan'), 'Gatal ringan.');
+    await user.type(screen.getByLabelText('Observasi kunjungan'), 'Kulit sedikit kemerahan.');
+    await user.type(screen.getByLabelText('Diagnosis kunjungan'), 'Dermatitis ringan.');
+    await user.type(screen.getByLabelText('Rencana terapi kunjungan'), 'Sampo medikasi dua kali seminggu.');
+    await user.type(screen.getByLabelText('Obat kunjungan'), 'Sampo demo, Omega 3 demo');
+    await user.type(screen.getByLabelText('Catatan dokter'), 'Evaluasi ulang dalam dua minggu.');
+    await user.press(screen.getByRole('button', { name: 'Simpan kunjungan demo' }));
+
+    expect(screen.getByText('Kontrol kulit')).toBeOnTheScreen();
+    expect(screen.getByText('21 Agu 2026')).toBeOnTheScreen();
+    expect(screen.getByText('Dermatitis ringan.')).toBeOnTheScreen();
+    expect(screen.getByText('Sampo demo')).toBeOnTheScreen();
+    expect(screen.getByText('Omega 3 demo')).toBeOnTheScreen();
+    expect(screen.getByText('Evaluasi ulang dalam dua minggu.')).toBeOnTheScreen();
+
+    await user.press(
+      screen.getByRole('button', { name: 'Edit kunjungan Kontrol kulit 21 Agu 2026' }),
+    );
+    expect(screen.getByText('Edit kunjungan')).toBeOnTheScreen();
+    await user.clear(screen.getByLabelText('Diagnosis kunjungan'));
+    await user.type(screen.getByLabelText('Diagnosis kunjungan'), 'Dermatitis membaik.');
+    await user.press(screen.getByRole('button', { name: 'Simpan kunjungan demo' }));
+
+    expect(screen.getByText('Dermatitis membaik.')).toBeOnTheScreen();
+    expect(screen.queryByText('Dermatitis ringan.')).not.toBeOnTheScreen();
+  });
 });

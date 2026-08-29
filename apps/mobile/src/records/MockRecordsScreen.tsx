@@ -10,15 +10,18 @@ import {
 import {
   MockVaccinationForm,
 } from '@/src/records/MockVaccinationForm';
+import { MockVisitForm } from '@/src/records/MockVisitForm';
 import {
   mockPatients,
   type MockPatient,
   type MockPatientSpecies,
   type MockVaccination,
   type MockVaccinationStatus,
+  type MockVisit,
 } from '@/src/records/mockData';
 
 type RecordsFilter = 'all' | 'attention';
+type VisitEditor = { patient: MockPatient; visitIndex: number | 'new' };
 
 const filters: readonly { accessibilityLabel: string; id: RecordsFilter; label: string }[] = [
   { accessibilityLabel: 'Tampilkan semua pasien', id: 'all', label: 'Semua pasien' },
@@ -63,6 +66,7 @@ export function MockRecordsScreen() {
   const [patients, setPatients] = useState<MockPatient[]>(() => [...mockPatients]);
   const [search, setSearch] = useState('');
   const [vaccinationPatient, setVaccinationPatient] = useState<MockPatient | null>(null);
+  const [visitEditor, setVisitEditor] = useState<VisitEditor | null>(null);
 
   const visiblePatients = useMemo(() => {
     const query = search.trim().toLocaleLowerCase('id-ID');
@@ -150,6 +154,33 @@ export function MockRecordsScreen() {
     setVaccinationPatient(null);
   }
 
+  function saveVisit(visit: MockVisit): void {
+    if (!visitEditor) {
+      return;
+    }
+    const { patient: editedPatient, visitIndex } = visitEditor;
+    setPatients((current) =>
+      current.map((patient) => {
+        if (patient.id !== editedPatient.id) {
+          return patient;
+        }
+        if (visitIndex === 'new') {
+          return { ...patient, visits: [visit, ...patient.visits] };
+        }
+        return {
+          ...patient,
+          visits: patient.visits.map((currentVisit, index) =>
+            index === visitIndex ? visit : currentVisit,
+          ),
+        };
+      }),
+    );
+    setActiveFilter('all');
+    setExpandedPatientId(editedPatient.id);
+    setSearch('');
+    setVisitEditor(null);
+  }
+
   if (editorPatient) {
     return (
       <MockPatientForm
@@ -166,6 +197,19 @@ export function MockRecordsScreen() {
         onCancel={() => setVaccinationPatient(null)}
         onSave={saveVaccination}
         patient={vaccinationPatient}
+      />
+    );
+  }
+
+  if (visitEditor) {
+    const initialVisit =
+      visitEditor.visitIndex === 'new' ? undefined : visitEditor.patient.visits[visitEditor.visitIndex];
+    return (
+      <MockVisitForm
+        {...(initialVisit ? { initialVisit } : {})}
+        onCancel={() => setVisitEditor(null)}
+        onSave={saveVisit}
+        patient={visitEditor.patient}
       />
     );
   }
@@ -257,7 +301,9 @@ export function MockRecordsScreen() {
               expanded={expandedPatientId === patient.id}
               key={patient.id}
               onAddVaccination={() => setVaccinationPatient(patient)}
+              onAddVisit={() => setVisitEditor({ patient, visitIndex: 'new' })}
               onEdit={() => setEditorPatient(patient)}
+              onEditVisit={(visitIndex) => setVisitEditor({ patient, visitIndex })}
               onToggle={() =>
                 setExpandedPatientId((current) => (current === patient.id ? null : patient.id))
               }
@@ -292,13 +338,17 @@ export function MockRecordsScreen() {
 function PatientCard({
   expanded,
   onAddVaccination,
+  onAddVisit,
   onEdit,
+  onEditVisit,
   onToggle,
   patient,
 }: {
   expanded: boolean;
   onAddVaccination: () => void;
+  onAddVisit: () => void;
   onEdit: () => void;
+  onEditVisit: (visitIndex: number) => void;
   onToggle: () => void;
   patient: MockPatient;
 }) {
@@ -341,7 +391,13 @@ function PatientCard({
       </Pressable>
 
       {expanded ? (
-        <PatientDetails onAddVaccination={onAddVaccination} onEdit={onEdit} patient={patient} />
+        <PatientDetails
+          onAddVaccination={onAddVaccination}
+          onAddVisit={onAddVisit}
+          onEdit={onEdit}
+          onEditVisit={onEditVisit}
+          patient={patient}
+        />
       ) : null}
     </View>
   );
@@ -349,11 +405,15 @@ function PatientCard({
 
 function PatientDetails({
   onAddVaccination,
+  onAddVisit,
   onEdit,
+  onEditVisit,
   patient,
 }: {
   onAddVaccination: () => void;
+  onAddVisit: () => void;
   onEdit: () => void;
+  onEditVisit: (visitIndex: number) => void;
   patient: MockPatient;
 }) {
   const currentWeight = patient.weightHistory.at(0);
@@ -443,19 +503,40 @@ function PatientDetails({
       </View>
 
       <View>
-        <Text style={styles.sectionTitle}>Riwayat kunjungan</Text>
+        <View style={styles.sectionHeaderRow}>
+          <Text style={styles.sectionTitle}>Riwayat kunjungan</Text>
+          <Pressable
+            accessibilityLabel={`Tambah kunjungan ${patient.name}`}
+            accessibilityRole="button"
+            onPress={onAddVisit}
+            style={({ pressed }) => [styles.inlineAddButton, pressed && styles.pressed]}
+          >
+            <Ionicons color={colors.primary} name="add" size={15} />
+            <Text style={styles.inlineAddText}>Tambah</Text>
+          </Pressable>
+        </View>
         {patient.visits.length > 0 ? (
           <View style={styles.sectionList}>
-            {patient.visits.map((visit) => (
+            {patient.visits.map((visit, visitIndex) => (
               <View key={`${visit.dateLabel}-${visit.type}`} style={styles.visitCard}>
                 <View style={styles.visitTitleRow}>
                   <Text style={styles.timelineTitle}>{visit.type}</Text>
                   <Text style={styles.timelineMeta}>{visit.dateLabel}</Text>
                 </View>
+                <Pressable
+                  accessibilityLabel={`Edit kunjungan ${visit.type} ${visit.dateLabel}`}
+                  accessibilityRole="button"
+                  onPress={() => onEditVisit(visitIndex)}
+                  style={({ pressed }) => [styles.visitEditButton, pressed && styles.pressed]}
+                >
+                  <Ionicons color={colors.primary} name="create-outline" size={14} />
+                  <Text style={styles.visitEditText}>Edit kunjungan demo</Text>
+                </Pressable>
                 <ClinicalField label="Keluhan" value={visit.complaint} />
                 <ClinicalField label="Observasi" value={visit.observations} />
                 <ClinicalField label="Diagnosis" value={visit.diagnosis} />
                 <ClinicalField label="Rencana terapi" value={visit.treatment} />
+                {visit.vetNotes ? <ClinicalField label="Catatan dokter" value={visit.vetNotes} /> : null}
                 {visit.medications.length > 0 ? (
                   <View style={styles.medicationRow}>
                     {visit.medications.map((medication) => (
@@ -725,6 +806,14 @@ const styles = StyleSheet.create({
     gap: spacing.small,
     padding: spacing.medium,
   },
+  visitEditButton: {
+    alignItems: 'center',
+    alignSelf: 'flex-start',
+    flexDirection: 'row',
+    gap: spacing.xsmall,
+    paddingVertical: spacing.xsmall,
+  },
+  visitEditText: { color: colors.primary, fontSize: typography.caption, fontWeight: '700' },
   visitTitleRow: { alignItems: 'center', flexDirection: 'row', justifyContent: 'space-between' },
   weightHistory: { gap: spacing.xsmall, marginTop: spacing.small },
   weightHistoryText: {
