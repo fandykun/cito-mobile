@@ -602,6 +602,19 @@ The mock-backed inventory UI track is complete. Production integration remains d
 
 Verification: `npm run mobile:typecheck`, `npm run mobile:lint`, `npm run mobile:test`, and `npm run mobile:export:android`.
 
+#### UI Slice 3a: patient directory and clinical timeline — complete
+
+- Replaced the Records placeholder with a searchable, filterable patient directory backed only by typed synthetic fixtures.
+- Added pet identity, species/breed, owner contact, date of birth, current weight, health flags, vaccination status, and structured visit-history presentation.
+- Added an attention filter for allergies, chronic conditions, and due/overdue vaccinations, plus truthful search reset and empty-result behavior.
+- Made allergies and chronic conditions prominent in expanded records and presented vaccination due dates and structured complaint, observation, diagnosis, treatment, and medicine history.
+- Labeled all fixture content as demo-only and explicitly stated that it is not real medical data and is not stored in encrypted persistence, audit history, or sync.
+- Added component tests for demo labeling, patient/owner search, attention filtering, profile expansion, vaccination data, clinical timeline content, and empty-state recovery.
+
+Remaining patient UI work: local-only patient profile create/edit presentation, weight and vaccination entry, then the structured visit editor and editable visit-detail flow. These screens must remain synthetic and non-persistent until encrypted storage is proven.
+
+Verification: `npm run mobile:typecheck`, `npm run mobile:lint`, `npm run mobile:test`, and `npm run mobile:export:android`.
+
 ### Work
 
 - Implement owner/pet CRUD, health flags, weight history, vaccinations, and editable visit history.
@@ -711,7 +724,7 @@ The repository, Expo shell, backend/API foundation, schema, encryption, API cont
 
 1. **Dashboard UI — complete:** mock-backed Expo dashboard and reusable presentation primitives without appointment-booking UI.
 2. **Inventory UI — complete:** search, filters, expandable details, local add/edit forms, and auditable stock-adjustment presentation are covered with typed demo state.
-3. **Patient and medical-record UI — next:** implement owner/pet lists, profiles, vaccinations, visit history, and the structured visit editor with non-sensitive demo fixtures.
+3. **Patient and medical-record UI — in progress:** searchable profiles, health flags, vaccinations, and structured visit-history presentation are complete; implement local profile editing, clinical entries, and the structured visit editor with synthetic fixtures.
 4. **Retail POS UI:** implement product search, cart, payment selection, confirmation, and receipt-preview presentation with demo fixtures.
 5. **Finance UI:** implement daily/monthly summaries, expenses, owner draw, reconciliation, and trend presentation with demo fixtures.
 6. **Production integration:** close the physical SQLCipher gate, replace fixtures feature-by-feature with encrypted local repositories/API adapters, and complete backend domain slices, transactions, sync, and PDF generation.
