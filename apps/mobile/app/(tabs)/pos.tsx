@@ -1,11 +1,5 @@
-import { ModulePlaceholder } from '@/src/components/ModulePlaceholder';
+import { MockPosScreen } from '@/src/pos/MockPosScreen';
 
 export default function PosScreen() {
-  return (
-    <ModulePlaceholder
-      description="Fast offline checkout and on-device PDF receipts are planned after inventory and transactional storage foundations."
-      icon="cart-outline"
-      title="Kasir"
-    />
-  );
+  return <MockPosScreen />;
 }
