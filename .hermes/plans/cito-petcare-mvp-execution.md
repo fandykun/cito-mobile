@@ -589,6 +589,19 @@ Remaining inventory UI work: add auditable stock-adjustment presentation with a 
 
 Verification: `npm run mobile:typecheck`, `npm run mobile:lint`, `npm run mobile:test`, and `npm run mobile:export:android`.
 
+#### UI Slice 2c: local-only stock adjustment — complete
+
+- Added a dedicated stock-adjustment flow from each expanded demo inventory item, with explicit add/decrease modes and a live projected-stock summary.
+- Required a positive whole-unit quantity and one of the bounded reasons: restock, breakage, expiry, or data correction.
+- Rejected adjustments that would produce negative stock and kept invalid submissions on the form with an accessible error.
+- Applied valid adjustments only to in-memory inventory state and displayed the latest local adjustment reason, signed quantity, and optional note on the item detail as an audit-preview treatment.
+- Kept the flow explicitly labeled as demo-only with no API audit event, encrypted local write, production stock mutation, or sync operation.
+- Added component and integration tests for required reasons, negative-stock rejection, updated quantities, and local audit presentation.
+
+The mock-backed inventory UI track is complete. Production integration remains deferred to the encrypted repository/API/sync phase; authenticated sessions continue to use the existing protected inventory implementation.
+
+Verification: `npm run mobile:typecheck`, `npm run mobile:lint`, `npm run mobile:test`, and `npm run mobile:export:android`.
+
 ### Work
 
 - Implement owner/pet CRUD, health flags, weight history, vaccinations, and editable visit history.
@@ -697,8 +710,8 @@ Additionally:
 The repository, Expo shell, backend/API foundation, schema, encryption, API contract, and single-account authentication foundations are implemented. The mobile login gate is temporarily disabled so the screens can be reviewed without a finished login design. Continue in these independently revertible product slices, prioritizing the UI-first track requested for the current development cycle:
 
 1. **Dashboard UI — complete:** mock-backed Expo dashboard and reusable presentation primitives without appointment-booking UI.
-2. **Inventory UI — in progress:** search, filters, expandable details, and local add/edit forms are complete; implement stock-adjustment presentation with a required reason and typed local draft state.
-3. **Patient and medical-record UI:** implement owner/pet lists, profiles, vaccinations, visit history, and the structured visit editor with non-sensitive demo fixtures.
+2. **Inventory UI — complete:** search, filters, expandable details, local add/edit forms, and auditable stock-adjustment presentation are covered with typed demo state.
+3. **Patient and medical-record UI — next:** implement owner/pet lists, profiles, vaccinations, visit history, and the structured visit editor with non-sensitive demo fixtures.
 4. **Retail POS UI:** implement product search, cart, payment selection, confirmation, and receipt-preview presentation with demo fixtures.
 5. **Finance UI:** implement daily/monthly summaries, expenses, owner draw, reconciliation, and trend presentation with demo fixtures.
 6. **Production integration:** close the physical SQLCipher gate, replace fixtures feature-by-feature with encrypted local repositories/API adapters, and complete backend domain slices, transactions, sync, and PDF generation.

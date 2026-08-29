@@ -92,4 +92,23 @@ describe('MockInventoryScreen', () => {
     expect(screen.getByText('Amoxicillin 500mg Demo')).toBeOnTheScreen();
     expect(screen.queryByText('Amoxicillin 250mg')).not.toBeOnTheScreen();
   });
+
+  it('requires a reason and records a local stock adjustment', async () => {
+    const user = userEvent.setup();
+    await render(<MockInventoryScreen />);
+
+    await user.press(screen.getByRole('button', { name: 'Lihat detail Amoxicillin 250mg' }));
+    await user.press(screen.getByRole('button', { name: 'Sesuaikan stok Amoxicillin 250mg' }));
+    expect(screen.getByText('Sesuaikan stok')).toBeOnTheScreen();
+
+    await user.type(screen.getByLabelText('Jumlah penyesuaian stok'), '5');
+    await user.press(screen.getByRole('button', { name: 'Simpan penyesuaian stok demo' }));
+    expect(screen.getByText('Alasan penyesuaian wajib dipilih.')).toBeOnTheScreen();
+
+    await user.press(screen.getByRole('button', { name: 'Pilih alasan stok ulang' }));
+    await user.press(screen.getByRole('button', { name: 'Simpan penyesuaian stok demo' }));
+
+    expect(screen.getByText('13 tab')).toBeOnTheScreen();
+    expect(screen.getByText('Stok ulang · +5 tab')).toBeOnTheScreen();
+  });
 });

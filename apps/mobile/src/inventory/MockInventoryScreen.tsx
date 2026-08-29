@@ -8,6 +8,10 @@ import {
   type MockInventoryFormValues,
 } from '@/src/inventory/MockInventoryForm';
 import { mockInventoryItems, type MockInventoryItem } from '@/src/inventory/mockData';
+import {
+  MockStockAdjustmentForm,
+  type MockStockAdjustmentValues,
+} from '@/src/inventory/MockStockAdjustmentForm';
 
 type InventoryFilter = 'all' | 'medical' | 'retail' | 'low';
 
@@ -26,6 +30,8 @@ function isLowStock(item: MockInventoryItem): boolean {
 
 export function MockInventoryScreen() {
   const [activeFilter, setActiveFilter] = useState<InventoryFilter>('all');
+  const [adjustmentItem, setAdjustmentItem] = useState<MockInventoryItem | null>(null);
+  const [adjustments, setAdjustments] = useState<Record<string, MockStockAdjustmentValues>>({});
   const [editorItem, setEditorItem] = useState<MockInventoryItem | 'new' | null>(null);
   const [expandedItemId, setExpandedItemId] = useState<string | null>(null);
   const [items, setItems] = useState<MockInventoryItem[]>(() => [...mockInventoryItems]);
@@ -70,12 +76,37 @@ export function MockInventoryScreen() {
     setEditorItem(null);
   }
 
+  function saveAdjustment(values: MockStockAdjustmentValues): void {
+    if (!adjustmentItem) {
+      return;
+    }
+    const itemId = adjustmentItem.id;
+    setItems((current) =>
+      current.map((item) =>
+        item.id === itemId ? { ...item, stockQuantity: item.stockQuantity + values.delta } : item,
+      ),
+    );
+    setAdjustments((current) => ({ ...current, [itemId]: values }));
+    setExpandedItemId(itemId);
+    setAdjustmentItem(null);
+  }
+
   if (editorItem) {
     return (
       <MockInventoryForm
         {...(editorItem === 'new' ? {} : { initialItem: editorItem })}
         onCancel={() => setEditorItem(null)}
         onSave={saveItem}
+      />
+    );
+  }
+
+  if (adjustmentItem) {
+    return (
+      <MockStockAdjustmentForm
+        item={adjustmentItem}
+        onCancel={() => setAdjustmentItem(null)}
+        onSave={saveAdjustment}
       />
     );
   }
@@ -162,9 +193,11 @@ export function MockInventoryScreen() {
         <View style={styles.listCard}>
           {visibleItems.map((item, index) => (
             <InventoryRow
+              {...(adjustments[item.id] ? { adjustment: adjustments[item.id] } : {})}
               expanded={expandedItemId === item.id}
               item={item}
               key={item.id}
+              onAdjust={() => setAdjustmentItem(item)}
               onEdit={() => setEditorItem(item)}
               onToggle={() => setExpandedItemId((current) => (current === item.id ? null : item.id))}
               showDivider={index > 0}
@@ -196,14 +229,18 @@ export function MockInventoryScreen() {
 }
 
 function InventoryRow({
+  adjustment,
   expanded,
   item,
+  onAdjust,
   onEdit,
   onToggle,
   showDivider,
 }: {
+  adjustment?: MockStockAdjustmentValues;
   expanded: boolean;
   item: MockInventoryItem;
+  onAdjust: () => void;
   onEdit: () => void;
   onToggle: () => void;
   showDivider: boolean;
@@ -282,15 +319,36 @@ function InventoryRow({
             label="Kedaluwarsa"
             value={item.expiryLabel ? `Kedaluwarsa ${item.expiryLabel}` : 'Tidak ada'}
           />
-          <Pressable
-            accessibilityLabel={`Edit ${item.name}`}
-            accessibilityRole="button"
-            onPress={onEdit}
-            style={({ pressed }) => [styles.editButton, pressed && styles.pressed]}
-          >
-            <Ionicons color={colors.primary} name="create-outline" size={16} />
-            <Text style={styles.editButtonText}>Edit item demo</Text>
-          </Pressable>
+          {adjustment ? (
+            <View style={styles.adjustmentAudit}>
+              <Text style={styles.adjustmentAuditLabel}>Penyesuaian lokal terakhir</Text>
+              <Text style={styles.adjustmentAuditValue}>
+                {adjustment.reasonLabel} · {adjustment.delta > 0 ? '+' : ''}
+                {adjustment.delta} {item.unit}
+              </Text>
+              {adjustment.note ? <Text style={styles.adjustmentAuditNote}>{adjustment.note}</Text> : null}
+            </View>
+          ) : null}
+          <View style={styles.detailActions}>
+            <Pressable
+              accessibilityLabel={`Edit ${item.name}`}
+              accessibilityRole="button"
+              onPress={onEdit}
+              style={({ pressed }) => [styles.detailActionButton, pressed && styles.pressed]}
+            >
+              <Ionicons color={colors.primary} name="create-outline" size={16} />
+              <Text style={styles.detailActionText}>Edit</Text>
+            </Pressable>
+            <Pressable
+              accessibilityLabel={`Sesuaikan stok ${item.name}`}
+              accessibilityRole="button"
+              onPress={onAdjust}
+              style={({ pressed }) => [styles.detailActionButton, pressed && styles.pressed]}
+            >
+              <Ionicons color={colors.primary} name="swap-vertical-outline" size={16} />
+              <Text style={styles.detailActionText}>Sesuaikan stok</Text>
+            </Pressable>
+          </View>
         </View>
       ) : null}
     </View>
@@ -392,19 +450,48 @@ const styles = StyleSheet.create({
     fontSize: typography.body,
     fontWeight: '800',
   },
-  editButton: {
+  adjustmentAudit: {
+    backgroundColor: '#E6F7F5',
+    borderRadius: radii.medium,
+    padding: spacing.medium,
+    width: '100%',
+  },
+  adjustmentAuditLabel: {
+    color: '#0F766E',
+    fontSize: 10,
+    fontWeight: '700',
+    letterSpacing: 0.4,
+    textTransform: 'uppercase',
+  },
+  adjustmentAuditNote: {
+    color: colors.mutedForeground,
+    fontSize: typography.caption,
+    marginTop: spacing.xsmall,
+  },
+  adjustmentAuditValue: {
+    color: colors.foreground,
+    fontSize: typography.label,
+    fontWeight: '800',
+    marginTop: spacing.xsmall,
+  },
+  detailActionButton: {
     alignItems: 'center',
     borderColor: colors.border,
     borderRadius: radii.medium,
     borderWidth: 1,
+    flex: 1,
     flexDirection: 'row',
     gap: spacing.small,
     justifyContent: 'center',
-    marginTop: spacing.xsmall,
     padding: spacing.small,
+  },
+  detailActions: {
+    flexDirection: 'row',
+    gap: spacing.small,
+    marginTop: spacing.xsmall,
     width: '100%',
   },
-  editButtonText: {
+  detailActionText: {
     color: colors.primary,
     fontSize: typography.caption,
     fontWeight: '700',
