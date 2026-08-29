@@ -13,12 +13,23 @@ export type MockVaccination = {
   status: MockVaccinationStatus;
 };
 
+export type MockVisitItem = {
+  costPriceAtTime: number;
+  inventoryItemId: string;
+  name: string;
+  quantity: number;
+  sellingPriceAtTime: number;
+  unit: string;
+};
+
 export type MockVisit = {
   complaint: string;
   dateLabel: string;
   diagnosis: string;
+  items: readonly MockVisitItem[];
   medications: readonly string[];
   observations: string;
+  serviceFee: number;
   treatment: string;
   type: string;
   vetNotes: string;
@@ -70,8 +81,10 @@ export const mockPatients: readonly MockPatient[] = [
         complaint: 'Pemeriksaan kesehatan rutin.',
         dateLabel: '14 Agu 2026',
         diagnosis: 'Sehat; karang gigi ringan.',
+        items: [],
         medications: ['Heartgard Plus — 1 dosis'],
         observations: 'Berat stabil, suhu dan denyut dalam batas normal.',
+        serviceFee: 0,
         treatment: 'Perawatan gigi rumahan dan kontrol enam bulan.',
         type: 'Pemeriksaan tahunan',
         vetNotes: 'Pantau kondisi geraham atas.',
@@ -80,8 +93,10 @@ export const mockPatients: readonly MockPatient[] = [
         complaint: 'Booster vaksin terjadwal.',
         dateLabel: '3 Mei 2026',
         diagnosis: 'Layak vaksinasi.',
+        items: [],
         medications: ['Vaksin DHPP — 1 dosis'],
         observations: 'Tidak ada demam atau reaksi alergi aktif.',
+        serviceFee: 0,
         treatment: 'Booster DHPP diberikan.',
         type: 'Vaksinasi',
         vetNotes: 'Tidak ada reaksi pascavaksin yang dilaporkan.',
@@ -114,8 +129,10 @@ export const mockPatients: readonly MockPatient[] = [
         complaint: 'Pemeriksaan kesehatan rutin.',
         dateLabel: '30 Jul 2026',
         diagnosis: 'Penyakit gigi ringan grade 1.',
+        items: [],
         medications: ['Revolution Plus — 1 dosis'],
         observations: 'Nafsu makan dan aktivitas normal.',
+        serviceFee: 0,
         treatment: 'Jadwalkan pembersihan gigi pada kontrol berikutnya.',
         type: 'Pemeriksaan tahunan',
         vetNotes: 'Pasien indoor dan sudah disterilkan.',
@@ -138,8 +155,10 @@ export const mockPatients: readonly MockPatient[] = [
         complaint: 'Tidak makan dan produksi feses menurun.',
         dateLabel: '20 Agu 2026',
         diagnosis: 'Stasis gastrointestinal ringan.',
+        items: [],
         medications: ['Metoklopramid', 'Critical Care Herbivore'],
         observations: 'Motilitas usus menurun; hidrasi ringan.',
+        serviceFee: 0,
         treatment: 'Cairan, dukungan nutrisi, dan pemantauan di rumah.',
         type: 'Pemeriksaan stasis GI',
         vetNotes: 'Diet jerami harus tersedia tanpa batas.',
@@ -169,8 +188,10 @@ export const mockPatients: readonly MockPatient[] = [
         complaint: 'Kontrol pengobatan hipertiroid.',
         dateLabel: '18 Agu 2026',
         diagnosis: 'Hipertiroid terkontrol dengan terapi.',
+        items: [],
         medications: ['Methimazole 2,5 mg — 30 hari'],
         observations: 'Berat meningkat dan kadar T4 mendekati normal.',
+        serviceFee: 0,
         treatment: 'Lanjutkan dosis dan ulang pemeriksaan darah tiga bulan.',
         type: 'Kontrol tiroid',
         vetNotes: 'Pantau nafsu makan dan berat badan mingguan.',

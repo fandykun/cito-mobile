@@ -59,6 +59,10 @@ function formatWeight(kilograms: number): string {
   return `${kilograms.toLocaleString('id-ID', { maximumFractionDigits: 1, minimumFractionDigits: 1 })} kg`;
 }
 
+function formatCurrency(amount: number): string {
+  return `Rp ${amount.toLocaleString('id-ID')}`;
+}
+
 export function MockRecordsScreen() {
   const [activeFilter, setActiveFilter] = useState<RecordsFilter>('all');
   const [editorPatient, setEditorPatient] = useState<MockPatient | 'new' | null>(null);
@@ -518,40 +522,85 @@ function PatientDetails({
         {patient.visits.length > 0 ? (
           <View style={styles.sectionList}>
             {patient.visits.map((visit, visitIndex) => (
-              <View key={`${visit.dateLabel}-${visit.type}`} style={styles.visitCard}>
-                <View style={styles.visitTitleRow}>
-                  <Text style={styles.timelineTitle}>{visit.type}</Text>
-                  <Text style={styles.timelineMeta}>{visit.dateLabel}</Text>
-                </View>
-                <Pressable
-                  accessibilityLabel={`Edit kunjungan ${visit.type} ${visit.dateLabel}`}
-                  accessibilityRole="button"
-                  onPress={() => onEditVisit(visitIndex)}
-                  style={({ pressed }) => [styles.visitEditButton, pressed && styles.pressed]}
-                >
-                  <Ionicons color={colors.primary} name="create-outline" size={14} />
-                  <Text style={styles.visitEditText}>Edit kunjungan demo</Text>
-                </Pressable>
-                <ClinicalField label="Keluhan" value={visit.complaint} />
-                <ClinicalField label="Observasi" value={visit.observations} />
-                <ClinicalField label="Diagnosis" value={visit.diagnosis} />
-                <ClinicalField label="Rencana terapi" value={visit.treatment} />
-                {visit.vetNotes ? <ClinicalField label="Catatan dokter" value={visit.vetNotes} /> : null}
-                {visit.medications.length > 0 ? (
-                  <View style={styles.medicationRow}>
-                    {visit.medications.map((medication) => (
-                      <View key={medication} style={styles.medicationChip}>
-                        <Text style={styles.medicationText}>{medication}</Text>
-                      </View>
-                    ))}
-                  </View>
-                ) : null}
-              </View>
+              <VisitTimelineCard
+                key={`${visit.dateLabel}-${visit.type}`}
+                onEdit={() => onEditVisit(visitIndex)}
+                visit={visit}
+              />
             ))}
           </View>
         ) : (
           <Text style={styles.noDataText}>Belum ada kunjungan pada data demo.</Text>
         )}
+      </View>
+    </View>
+  );
+}
+
+function VisitTimelineCard({ onEdit, visit }: { onEdit: () => void; visit: MockVisit }) {
+  const itemIncome = visit.items.reduce(
+    (total, item) => total + item.sellingPriceAtTime * item.quantity,
+    0,
+  );
+  const itemCost = visit.items.reduce(
+    (total, item) => total + item.costPriceAtTime * item.quantity,
+    0,
+  );
+  const income = visit.serviceFee + itemIncome;
+  const profit = income - itemCost;
+
+  return (
+    <View style={styles.visitCard}>
+      <View style={styles.visitTitleRow}>
+        <Text style={styles.timelineTitle}>{visit.type}</Text>
+        <Text style={styles.timelineMeta}>{visit.dateLabel}</Text>
+      </View>
+      <Pressable
+        accessibilityLabel={`Edit kunjungan ${visit.type} ${visit.dateLabel}`}
+        accessibilityRole="button"
+        onPress={onEdit}
+        style={({ pressed }) => [styles.visitEditButton, pressed && styles.pressed]}
+      >
+        <Ionicons color={colors.primary} name="create-outline" size={14} />
+        <Text style={styles.visitEditText}>Edit kunjungan demo</Text>
+      </Pressable>
+      <ClinicalField label="Keluhan" value={visit.complaint} />
+      <ClinicalField label="Observasi" value={visit.observations} />
+      <ClinicalField label="Diagnosis" value={visit.diagnosis} />
+      <ClinicalField label="Rencana terapi" value={visit.treatment} />
+      {visit.vetNotes ? <ClinicalField label="Catatan dokter" value={visit.vetNotes} /> : null}
+      {visit.medications.length > 0 ? (
+        <View style={styles.medicationRow}>
+          {visit.medications.map((medication) => (
+            <View key={medication} style={styles.medicationChip}>
+              <Text style={styles.medicationText}>{medication}</Text>
+            </View>
+          ))}
+        </View>
+      ) : null}
+      {visit.items.length > 0 ? (
+        <View style={styles.visitItemList}>
+          <Text style={styles.clinicalLabel}>Snapshot item demo</Text>
+          {visit.items.map((item) => (
+            <View key={item.inventoryItemId} style={styles.visitItemCard}>
+              <Text style={styles.visitItemTitle}>
+                {item.name} × {item.quantity} {item.unit}
+              </Text>
+              <Text style={styles.timelineMeta}>
+                Harga jual tersimpan {formatCurrency(item.sellingPriceAtTime)} / {item.unit}
+              </Text>
+              <Text style={styles.timelineMeta}>
+                Harga modal tersimpan {formatCurrency(item.costPriceAtTime)} / {item.unit}
+              </Text>
+            </View>
+          ))}
+        </View>
+      ) : null}
+      <View style={styles.visitFinancialCard}>
+        <Text style={styles.visitFinancialText}>Biaya jasa {formatCurrency(visit.serviceFee)}</Text>
+        <Text style={styles.visitFinancialText}>Pendapatan demo {formatCurrency(income)}</Text>
+        <Text style={styles.visitFinancialText}>Modal demo {formatCurrency(itemCost)}</Text>
+        <Text style={styles.visitFinancialProfit}>Laba kotor demo {formatCurrency(profit)}</Text>
       </View>
     </View>
   );
@@ -814,6 +863,24 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.xsmall,
   },
   visitEditText: { color: colors.primary, fontSize: typography.caption, fontWeight: '700' },
+  visitFinancialCard: {
+    backgroundColor: '#E6F7F5',
+    borderRadius: radii.medium,
+    gap: spacing.xsmall,
+    padding: spacing.small,
+  },
+  visitFinancialProfit: { color: '#0F766E', fontSize: typography.caption, fontWeight: '800' },
+  visitFinancialText: { color: colors.foreground, fontSize: typography.caption, fontWeight: '700' },
+  visitItemCard: {
+    backgroundColor: colors.secondary,
+    borderColor: colors.border,
+    borderRadius: radii.medium,
+    borderWidth: 1,
+    gap: 2,
+    padding: spacing.small,
+  },
+  visitItemList: { gap: spacing.small },
+  visitItemTitle: { color: colors.foreground, fontSize: typography.caption, fontWeight: '800' },
   visitTitleRow: { alignItems: 'center', flexDirection: 'row', justifyContent: 'space-between' },
   weightHistory: { gap: spacing.xsmall, marginTop: spacing.small },
   weightHistoryText: {

@@ -148,6 +148,13 @@ describe('MockRecordsScreen', () => {
     await user.type(screen.getByLabelText('Observasi kunjungan'), 'Kulit sedikit kemerahan.');
     await user.type(screen.getByLabelText('Diagnosis kunjungan'), 'Dermatitis ringan.');
     await user.type(screen.getByLabelText('Rencana terapi kunjungan'), 'Sampo medikasi dua kali seminggu.');
+    await user.type(screen.getByLabelText('Biaya jasa kunjungan'), '150000');
+    await user.press(
+      screen.getByRole('button', { name: 'Tambah Amoxicillin 250mg ke kunjungan' }),
+    );
+    await user.press(
+      screen.getByRole('button', { name: 'Tambah Amoxicillin 250mg ke kunjungan' }),
+    );
     await user.type(screen.getByLabelText('Obat kunjungan'), 'Sampo demo, Omega 3 demo');
     await user.type(screen.getByLabelText('Catatan dokter'), 'Evaluasi ulang dalam dua minggu.');
     await user.press(screen.getByRole('button', { name: 'Simpan kunjungan demo' }));
@@ -158,6 +165,12 @@ describe('MockRecordsScreen', () => {
     expect(screen.getByText('Sampo demo')).toBeOnTheScreen();
     expect(screen.getByText('Omega 3 demo')).toBeOnTheScreen();
     expect(screen.getByText('Evaluasi ulang dalam dua minggu.')).toBeOnTheScreen();
+    expect(screen.getByText('Amoxicillin 250mg × 2 tab')).toBeOnTheScreen();
+    expect(screen.getByText('Harga jual tersimpan Rp 8.000 / tab')).toBeOnTheScreen();
+    expect(screen.getByText('Biaya jasa Rp 150.000')).toBeOnTheScreen();
+    expect(screen.getByText('Pendapatan demo Rp 166.000')).toBeOnTheScreen();
+    expect(screen.getByText('Modal demo Rp 5.000')).toBeOnTheScreen();
+    expect(screen.getByText('Laba kotor demo Rp 161.000')).toBeOnTheScreen();
 
     await user.press(
       screen.getByRole('button', { name: 'Edit kunjungan Kontrol kulit 21 Agu 2026' }),
@@ -169,5 +182,7 @@ describe('MockRecordsScreen', () => {
 
     expect(screen.getByText('Dermatitis membaik.')).toBeOnTheScreen();
     expect(screen.queryByText('Dermatitis ringan.')).not.toBeOnTheScreen();
+    expect(screen.getByText('Amoxicillin 250mg × 2 tab')).toBeOnTheScreen();
+    expect(screen.getByText('Pendapatan demo Rp 166.000')).toBeOnTheScreen();
   });
 });

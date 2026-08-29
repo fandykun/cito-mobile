@@ -656,6 +656,20 @@ Remaining patient UI work: visit service-fee and inventory-item presentation wit
 
 Verification: `npm run mobile:typecheck`, `npm run mobile:lint`, `npm run mobile:test`, and `npm run mobile:export:android`.
 
+#### UI Slice 3e: demo visit fees and item price snapshots — complete
+
+- Extended typed visit drafts with whole-IDR service fees and explicit inventory-item quantity, unit, cost-price-at-time, and selling-price-at-time snapshots.
+- Added bounded medical-inventory quantity controls using the existing synthetic inventory catalog, capped by displayed reference stock without mutating inventory state.
+- Added live service-fee, item-income, item-cost, total-income, and gross-profit previews using integer rupiah arithmetic.
+- Preserved captured item prices when editing a visit instead of re-reading current catalog prices, and presented both saved selling and cost prices in the visit timeline.
+- Added required nonnegative safe-integer service-fee validation and retained local item snapshots across clinical edits.
+- Kept the entire flow explicitly presentational: saving does not deduct stock, create a financial transaction, write encrypted medical data, emit audit events, call an API, or enqueue sync.
+- Added integration and form tests for invalid fees, quantities, saved price presentation, financial totals, and snapshot preservation across edits.
+
+The mock-backed Patient and Medical Records UI track is complete. Production encrypted persistence, transactional stock/financial writes, audit behavior, and sync remain deferred to the production-integration track.
+
+Verification: `npm run mobile:typecheck`, `npm run mobile:lint`, `npm run mobile:test`, and `npm run mobile:export:android`.
+
 ### Work
 
 - Implement owner/pet CRUD, health flags, weight history, vaccinations, and editable visit history.
@@ -765,8 +779,8 @@ The repository, Expo shell, backend/API foundation, schema, encryption, API cont
 
 1. **Dashboard UI — complete:** mock-backed Expo dashboard and reusable presentation primitives without appointment-booking UI.
 2. **Inventory UI — complete:** search, filters, expandable details, local add/edit forms, and auditable stock-adjustment presentation are covered with typed demo state.
-3. **Patient and medical-record UI — in progress:** searchable profiles, profile create/edit, weight/vaccination timelines, and structured local visit create/edit are complete; add demo service-fee and inventory-item price-snapshot presentation before production integration.
-4. **Retail POS UI:** implement product search, cart, payment selection, confirmation, and receipt-preview presentation with demo fixtures.
+3. **Patient and medical-record UI — complete:** searchable profiles, profile create/edit, weight/vaccination timelines, structured visit create/edit, service fees, item quantities, and saved price/financial presentation are covered with typed demo state.
+4. **Retail POS UI — next:** implement product search, cart, payment selection, confirmation, and receipt-preview presentation with demo fixtures.
 5. **Finance UI:** implement daily/monthly summaries, expenses, owner draw, reconciliation, and trend presentation with demo fixtures.
 6. **Production integration:** close the physical SQLCipher gate, replace fixtures feature-by-feature with encrypted local repositories/API adapters, and complete backend domain slices, transactions, sync, and PDF generation.
 7. **Sync reliability:** complete recovery, retry, idempotency, and diagnostics across every core write.
