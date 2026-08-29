@@ -4,6 +4,10 @@ import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-
 
 import { colors, radii, spacing, typography } from '@/src/design/tokens';
 import {
+  MockPatientForm,
+  type MockPatientFormValues,
+} from '@/src/records/MockPatientForm';
+import {
   mockPatients,
   type MockPatient,
   type MockPatientSpecies,
@@ -50,12 +54,14 @@ function formatWeight(kilograms: number): string {
 
 export function MockRecordsScreen() {
   const [activeFilter, setActiveFilter] = useState<RecordsFilter>('all');
+  const [editorPatient, setEditorPatient] = useState<MockPatient | 'new' | null>(null);
   const [expandedPatientId, setExpandedPatientId] = useState<string | null>(null);
+  const [patients, setPatients] = useState<MockPatient[]>(() => [...mockPatients]);
   const [search, setSearch] = useState('');
 
   const visiblePatients = useMemo(() => {
     const query = search.trim().toLocaleLowerCase('id-ID');
-    return mockPatients.filter((patient) => {
+    return patients.filter((patient) => {
       const matchesQuery =
         query.length === 0 ||
         patient.name.toLocaleLowerCase('id-ID').includes(query) ||
@@ -63,12 +69,72 @@ export function MockRecordsScreen() {
       const matchesFilter = activeFilter === 'all' || needsAttention(patient);
       return matchesQuery && matchesFilter;
     });
-  }, [activeFilter, search]);
+  }, [activeFilter, patients, search]);
 
   function resetDiscovery(): void {
     setActiveFilter('all');
     setExpandedPatientId(null);
     setSearch('');
+  }
+
+  function savePatient(values: MockPatientFormValues): void {
+    if (editorPatient === 'new') {
+      const newPatient: MockPatient = {
+        allergies: values.allergies,
+        birthDateLabel: values.birthDateLabel,
+        breed: values.breed,
+        chronicConditions: values.chronicConditions,
+        id: `demo-local-patient-${patients.length + 1}`,
+        name: values.name,
+        owner: { name: values.ownerName, phone: values.ownerPhone },
+        species: values.species,
+        vaccinations: [],
+        visits: [],
+        weightHistory: [{ dateLabel: 'Entri demo terbaru', kilograms: values.weightKilograms }],
+      };
+      setPatients((current) => [newPatient, ...current]);
+      setExpandedPatientId(newPatient.id);
+    } else if (editorPatient) {
+      const previousWeight = editorPatient.weightHistory.at(0)?.kilograms;
+      const weightHistory =
+        previousWeight === values.weightKilograms
+          ? editorPatient.weightHistory
+          : [
+              { dateLabel: 'Entri demo terbaru', kilograms: values.weightKilograms },
+              ...editorPatient.weightHistory,
+            ];
+      setPatients((current) =>
+        current.map((patient) =>
+          patient.id === editorPatient.id
+            ? {
+                ...patient,
+                allergies: values.allergies,
+                birthDateLabel: values.birthDateLabel,
+                breed: values.breed,
+                chronicConditions: values.chronicConditions,
+                name: values.name,
+                owner: { name: values.ownerName, phone: values.ownerPhone },
+                species: values.species,
+                weightHistory,
+              }
+            : patient,
+        ),
+      );
+      setExpandedPatientId(editorPatient.id);
+    }
+    setActiveFilter('all');
+    setSearch('');
+    setEditorPatient(null);
+  }
+
+  if (editorPatient) {
+    return (
+      <MockPatientForm
+        {...(editorPatient === 'new' ? {} : { initialPatient: editorPatient })}
+        onCancel={() => setEditorPatient(null)}
+        onSave={savePatient}
+      />
+    );
   }
 
   return (
@@ -78,9 +144,19 @@ export function MockRecordsScreen() {
           <Text style={styles.heading}>Rekam Medis</Text>
           <Text style={styles.patientCount}>{visiblePatients.length} pasien ditampilkan</Text>
         </View>
-        <View style={styles.demoBadge}>
-          <View style={styles.demoDot} />
-          <Text style={styles.demoBadgeText}>Data demo</Text>
+        <View style={styles.headerActions}>
+          <View style={styles.demoBadge}>
+            <View style={styles.demoDot} />
+            <Text style={styles.demoBadgeText}>Data demo</Text>
+          </View>
+          <Pressable
+            accessibilityLabel="Tambah pasien demo"
+            accessibilityRole="button"
+            onPress={() => setEditorPatient('new')}
+            style={({ pressed }) => [styles.addButton, pressed && styles.pressed]}
+          >
+            <Ionicons color={colors.primaryForeground} name="add" size={18} />
+          </Pressable>
         </View>
       </View>
 
@@ -147,6 +223,7 @@ export function MockRecordsScreen() {
             <PatientCard
               expanded={expandedPatientId === patient.id}
               key={patient.id}
+              onEdit={() => setEditorPatient(patient)}
               onToggle={() =>
                 setExpandedPatientId((current) => (current === patient.id ? null : patient.id))
               }
@@ -180,10 +257,12 @@ export function MockRecordsScreen() {
 
 function PatientCard({
   expanded,
+  onEdit,
   onToggle,
   patient,
 }: {
   expanded: boolean;
+  onEdit: () => void;
   onToggle: () => void;
   patient: MockPatient;
 }) {
@@ -225,12 +304,12 @@ function PatientCard({
         </View>
       </Pressable>
 
-      {expanded ? <PatientDetails patient={patient} /> : null}
+      {expanded ? <PatientDetails onEdit={onEdit} patient={patient} /> : null}
     </View>
   );
 }
 
-function PatientDetails({ patient }: { patient: MockPatient }) {
+function PatientDetails({ onEdit, patient }: { onEdit: () => void; patient: MockPatient }) {
   const currentWeight = patient.weightHistory.at(0);
 
   return (
@@ -242,6 +321,27 @@ function PatientDetails({ patient }: { patient: MockPatient }) {
           value={currentWeight ? formatWeight(currentWeight.kilograms) : 'Belum dicatat'}
         />
       </View>
+
+      <View>
+        <Text style={styles.sectionTitle}>Riwayat berat</Text>
+        <View style={styles.weightHistory}>
+          {patient.weightHistory.map((entry) => (
+            <Text key={`${entry.dateLabel}-${entry.kilograms}`} style={styles.weightHistoryText}>
+              {entry.dateLabel} · {formatWeight(entry.kilograms)}
+            </Text>
+          ))}
+        </View>
+      </View>
+
+      <Pressable
+        accessibilityLabel={`Edit profil ${patient.name}`}
+        accessibilityRole="button"
+        onPress={onEdit}
+        style={({ pressed }) => [styles.editButton, pressed && styles.pressed]}
+      >
+        <Ionicons color={colors.primary} name="create-outline" size={16} />
+        <Text style={styles.editButtonText}>Edit profil demo</Text>
+      </Pressable>
 
       <View style={styles.healthCard}>
         <View style={styles.sectionTitleRow}>
@@ -287,29 +387,33 @@ function PatientDetails({ patient }: { patient: MockPatient }) {
 
       <View>
         <Text style={styles.sectionTitle}>Riwayat kunjungan</Text>
-        <View style={styles.sectionList}>
-          {patient.visits.map((visit) => (
-            <View key={`${visit.dateLabel}-${visit.type}`} style={styles.visitCard}>
-              <View style={styles.visitTitleRow}>
-                <Text style={styles.timelineTitle}>{visit.type}</Text>
-                <Text style={styles.timelineMeta}>{visit.dateLabel}</Text>
-              </View>
-              <ClinicalField label="Keluhan" value={visit.complaint} />
-              <ClinicalField label="Observasi" value={visit.observations} />
-              <ClinicalField label="Diagnosis" value={visit.diagnosis} />
-              <ClinicalField label="Rencana terapi" value={visit.treatment} />
-              {visit.medications.length > 0 ? (
-                <View style={styles.medicationRow}>
-                  {visit.medications.map((medication) => (
-                    <View key={medication} style={styles.medicationChip}>
-                      <Text style={styles.medicationText}>{medication}</Text>
-                    </View>
-                  ))}
+        {patient.visits.length > 0 ? (
+          <View style={styles.sectionList}>
+            {patient.visits.map((visit) => (
+              <View key={`${visit.dateLabel}-${visit.type}`} style={styles.visitCard}>
+                <View style={styles.visitTitleRow}>
+                  <Text style={styles.timelineTitle}>{visit.type}</Text>
+                  <Text style={styles.timelineMeta}>{visit.dateLabel}</Text>
                 </View>
-              ) : null}
-            </View>
-          ))}
-        </View>
+                <ClinicalField label="Keluhan" value={visit.complaint} />
+                <ClinicalField label="Observasi" value={visit.observations} />
+                <ClinicalField label="Diagnosis" value={visit.diagnosis} />
+                <ClinicalField label="Rencana terapi" value={visit.treatment} />
+                {visit.medications.length > 0 ? (
+                  <View style={styles.medicationRow}>
+                    {visit.medications.map((medication) => (
+                      <View key={medication} style={styles.medicationChip}>
+                        <Text style={styles.medicationText}>{medication}</Text>
+                      </View>
+                    ))}
+                  </View>
+                ) : null}
+              </View>
+            ))}
+          </View>
+        ) : (
+          <Text style={styles.noDataText}>Belum ada kunjungan pada data demo.</Text>
+        )}
       </View>
     </View>
   );
@@ -334,6 +438,14 @@ function ClinicalField({ label, value }: { label: string; value: string }) {
 }
 
 const styles = StyleSheet.create({
+  addButton: {
+    alignItems: 'center',
+    backgroundColor: colors.primary,
+    borderRadius: radii.medium,
+    height: 34,
+    justifyContent: 'center',
+    width: 34,
+  },
   attentionDot: { backgroundColor: colors.accent, borderRadius: radii.pill, height: 7, width: 7 },
   clinicalField: { gap: 2 },
   clinicalLabel: {
@@ -385,6 +497,18 @@ const styles = StyleSheet.create({
     padding: spacing.xxlarge,
   },
   emptyTitle: { color: colors.foreground, fontSize: typography.body, fontWeight: '800' },
+  editButton: {
+    alignItems: 'center',
+    backgroundColor: colors.card,
+    borderColor: colors.border,
+    borderRadius: radii.medium,
+    borderWidth: 1,
+    flexDirection: 'row',
+    gap: spacing.small,
+    justifyContent: 'center',
+    padding: spacing.small,
+  },
+  editButtonText: { color: colors.primary, fontSize: typography.caption, fontWeight: '700' },
   filterChip: {
     backgroundColor: colors.card,
     borderColor: colors.border,
@@ -397,6 +521,7 @@ const styles = StyleSheet.create({
   filterRow: { flexDirection: 'row', gap: spacing.small },
   filterText: { color: colors.mutedForeground, fontSize: typography.caption, fontWeight: '700' },
   filterTextSelected: { color: colors.primaryForeground },
+  headerActions: { alignItems: 'center', flexDirection: 'row', gap: spacing.small },
   headerRow: { alignItems: 'center', flexDirection: 'row', justifyContent: 'space-between' },
   heading: { color: colors.foreground, fontSize: typography.heading, fontWeight: '800' },
   healthCard: {
@@ -531,5 +656,15 @@ const styles = StyleSheet.create({
     padding: spacing.medium,
   },
   visitTitleRow: { alignItems: 'center', flexDirection: 'row', justifyContent: 'space-between' },
+  weightHistory: { gap: spacing.xsmall, marginTop: spacing.small },
+  weightHistoryText: {
+    backgroundColor: colors.card,
+    borderColor: colors.border,
+    borderRadius: radii.medium,
+    borderWidth: 1,
+    color: colors.foreground,
+    fontSize: typography.caption,
+    padding: spacing.small,
+  },
   weightText: { color: colors.foreground, fontSize: typography.caption, fontWeight: '700' },
 });
