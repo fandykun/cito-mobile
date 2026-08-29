@@ -528,7 +528,16 @@ Phase 4 mobile persistence remains blocked by the deferred physical-device SQLCi
 
 Verification: `TEST_DATABASE_URL=<local> go test -race ./internal/patients -count=1`.
 
-Remaining Phase 5 backend work starts with the authenticated owner HTTP boundary, followed by encrypted pet profiles, weight history, vaccinations, and visits. Mobile patient persistence remains blocked by the SQLCipher device gate.
+### Slice 5.2: authenticated pet-owner HTTP boundary — complete
+
+- Exposed bearer-protected owner create, get, bounded cursor list, and optimistic update routes matching the OpenAPI owner payloads and metadata.
+- Added strict JSON/content-type/8 KiB request limits, unknown-field rejection, path/body ID checks, RFC 3339 timestamp parsing, and create idempotency-header matching.
+- Added opaque cursor encoding, sanitized domain error mapping, production service wiring, and explicit OpenAPI validation responses for malformed list/get parameters.
+- Added handler coverage for authentication, contract mapping, malformed requests, cursor continuation, oversized bodies, and domain errors, plus a real PostgreSQL HTTP flow covering login, create, paginated list, get, update, and persisted state.
+
+Verification: `TEST_DATABASE_URL=<local> go test -race ./... -count=1`, `go vet ./...`, `go build ./...`, and `npm run api:lint`.
+
+Remaining Phase 5 backend work starts with encrypted pet profiles, weight history, vaccinations, and visits. Mobile patient persistence remains blocked by the SQLCipher device gate.
 
 ### Work
 
