@@ -3,25 +3,28 @@ import { useMemo, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 
 import { colors, radii, spacing, typography } from '@/src/design/tokens';
-import { mockPosProducts, type MockPosProduct } from '@/src/pos/mockData';
+import {
+  MockCheckoutConfirmation,
+  MockReceiptPreview,
+  paymentMethodLabels,
+} from '@/src/pos/MockPosCheckout';
+import {
+  mockPosProducts,
+  type MockPaymentMethod,
+  type MockPosCartEntry,
+  type MockPosProduct,
+  type MockPosReceipt,
+} from '@/src/pos/mockData';
 
 type CatalogFilter = 'all' | 'medical' | 'retail';
-
-type CartEntry = {
-  costPriceAtTime: number;
-  name: string;
-  productId: string;
-  quantity: number;
-  sellingPriceAtTime: number;
-  stockLimit: number;
-  unit: string;
-};
 
 const filters: readonly { accessibilityLabel: string; id: CatalogFilter; label: string }[] = [
   { accessibilityLabel: 'Tampilkan semua produk', id: 'all', label: 'Semua' },
   { accessibilityLabel: 'Tampilkan produk medis', id: 'medical', label: 'Medis' },
   { accessibilityLabel: 'Tampilkan produk ritel', id: 'retail', label: 'Ritel' },
 ];
+
+const paymentMethods: readonly MockPaymentMethod[] = ['cash', 'qris', 'transfer', 'card'];
 
 const idrFormatter = new Intl.NumberFormat('id-ID');
 
@@ -31,7 +34,10 @@ function formatCurrency(amount: number): string {
 
 export function MockPosScreen() {
   const [activeFilter, setActiveFilter] = useState<CatalogFilter>('all');
-  const [cart, setCart] = useState<CartEntry[]>([]);
+  const [cart, setCart] = useState<MockPosCartEntry[]>([]);
+  const [isReviewingPayment, setIsReviewingPayment] = useState(false);
+  const [paymentMethod, setPaymentMethod] = useState<MockPaymentMethod>('cash');
+  const [receipt, setReceipt] = useState<MockPosReceipt | null>(null);
   const [search, setSearch] = useState('');
 
   const visibleProducts = useMemo(() => {
@@ -103,6 +109,42 @@ export function MockPosScreen() {
   function resetDiscovery(): void {
     setActiveFilter('all');
     setSearch('');
+  }
+
+  function confirmPayment(): void {
+    setReceipt({
+      items: cart.map((entry) => ({ ...entry })),
+      paymentMethod,
+      receiptNumber: 'DEMO-RCP-0001',
+      timeLabel: '22 Agu 2026 · 14.30 WIB',
+      total,
+    });
+    setIsReviewingPayment(false);
+  }
+
+  function startNewSale(): void {
+    setActiveFilter('all');
+    setCart([]);
+    setIsReviewingPayment(false);
+    setPaymentMethod('cash');
+    setReceipt(null);
+    setSearch('');
+  }
+
+  if (receipt) {
+    return <MockReceiptPreview onNewSale={startNewSale} receipt={receipt} />;
+  }
+
+  if (isReviewingPayment) {
+    return (
+      <MockCheckoutConfirmation
+        items={cart}
+        onBack={() => setIsReviewingPayment(false)}
+        onConfirm={confirmPayment}
+        paymentMethod={paymentMethod}
+        total={total}
+      />
+    );
   }
 
   return (
@@ -289,8 +331,38 @@ export function MockPosScreen() {
               <Text style={styles.totalMeta}>Modal tersimpan {formatCurrency(totalCost)}</Text>
               <Text style={styles.profitText}>Laba kotor demo {formatCurrency(grossProfit)}</Text>
             </View>
+            <View style={styles.paymentSection}>
+              <Text style={styles.paymentTitle}>Metode pembayaran demo</Text>
+              <View style={styles.paymentMethods}>
+                {paymentMethods.map((method) => {
+                  const selected = paymentMethod === method;
+                  return (
+                    <Pressable
+                      accessibilityLabel={`Pilih pembayaran ${paymentMethodLabels[method]}`}
+                      accessibilityRole="button"
+                      accessibilityState={{ selected }}
+                      key={method}
+                      onPress={() => setPaymentMethod(method)}
+                      style={[styles.paymentButton, selected && styles.paymentButtonSelected]}
+                    >
+                      <Text style={[styles.paymentButtonText, selected && styles.paymentButtonTextSelected]}>
+                        {paymentMethodLabels[method]}
+                      </Text>
+                    </Pressable>
+                  );
+                })}
+              </View>
+              <Pressable
+                accessibilityLabel="Tinjau pembayaran demo"
+                accessibilityRole="button"
+                onPress={() => setIsReviewingPayment(true)}
+                style={({ pressed }) => [styles.checkoutButton, pressed && styles.pressed]}
+              >
+                <Text style={styles.checkoutButtonText}>Tinjau pembayaran {formatCurrency(total)}</Text>
+              </Pressable>
+            </View>
             <Text style={styles.nextStepText}>
-              Pemilihan pembayaran, konfirmasi, dan pratinjau struk tersedia pada slice berikutnya.
+              Konfirmasi hanya membuat pratinjau struk lokal; PDF dan transaksi produksi belum dibuat.
             </Text>
           </View>
         ) : (
@@ -347,6 +419,13 @@ const styles = StyleSheet.create({
   cartSubtitle: { color: colors.mutedForeground, fontSize: typography.caption, marginTop: 2 },
   cartTitle: { color: colors.foreground, fontSize: typography.body, fontWeight: '800' },
   clearCartText: { color: colors.destructive, fontSize: typography.caption, fontWeight: '700' },
+  checkoutButton: {
+    alignItems: 'center',
+    backgroundColor: '#0F172A',
+    borderRadius: radii.medium,
+    padding: spacing.medium,
+  },
+  checkoutButtonText: { color: colors.primaryForeground, fontSize: typography.label, fontWeight: '800' },
   content: { gap: spacing.large, padding: spacing.xlarge, paddingBottom: spacing.xxlarge },
   demoBadge: {
     alignItems: 'center',
@@ -401,6 +480,22 @@ const styles = StyleSheet.create({
     padding: spacing.medium,
   },
   noticeText: { color: '#9A3412', flex: 1, fontSize: typography.caption, lineHeight: 18 },
+  paymentButton: {
+    alignItems: 'center',
+    backgroundColor: colors.card,
+    borderColor: colors.border,
+    borderRadius: radii.medium,
+    borderWidth: 1,
+    flexBasis: '46%',
+    flexGrow: 1,
+    padding: spacing.small,
+  },
+  paymentButtonSelected: { backgroundColor: '#0F172A', borderColor: '#0F172A' },
+  paymentButtonText: { color: colors.mutedForeground, fontSize: typography.caption, fontWeight: '700' },
+  paymentButtonTextSelected: { color: colors.primaryForeground },
+  paymentMethods: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.small },
+  paymentSection: { gap: spacing.small },
+  paymentTitle: { color: colors.foreground, fontSize: typography.caption, fontWeight: '800' },
   pressed: { opacity: 0.65 },
   productCard: {
     backgroundColor: colors.card,

@@ -708,6 +708,20 @@ Remaining POS UI work: payment-method selection, explicit confirmation, success 
 
 Verification: `npm run mobile:typecheck`, `npm run mobile:lint`, `npm run mobile:test`, and `npm run mobile:export:android`.
 
+#### UI Slice 4b: payment confirmation and receipt preview — complete
+
+- Added cash, QRIS, transfer, and card selection with accessible selected-state presentation matching the PRD.
+- Added an explicit review screen that itemizes the saved cart snapshots, payment method, and total before confirmation.
+- Added a separate synthetic receipt-success state containing clinic name, deterministic demo receipt number/time, item names, quantities, saved prices, total paid, and payment method.
+- Added working back-to-cart and start-new-sale actions so checkout states are reversible and no controls are inert.
+- Kept confirmation idempotent and local to the screen state: it does not accept money, persist a sale, mutate inventory, write financial projections, emit audit events, call an API, or enqueue sync.
+- Labeled receipt output truthfully as a UI preview rather than a generated, saved, shared, or printable PDF.
+- Added integration coverage for payment selection, review cancellation, explicit confirmation, required receipt content, and resetting into a clean sale.
+
+The mock-backed Retail POS UI track is complete. Production checkout transactions, encrypted local persistence, stock deduction, financial rollups, sync, and offline PDF generation/sharing remain deferred to production integration.
+
+Verification: `npm run mobile:typecheck`, `npm run mobile:lint`, `npm run mobile:test`, and `npm run mobile:export:android`.
+
 ### Work
 
 - Implement fast item search, cart, quantity changes, payment method, and checkout.
@@ -796,8 +810,8 @@ The repository, Expo shell, backend/API foundation, schema, encryption, API cont
 1. **Dashboard UI — complete:** mock-backed Expo dashboard and reusable presentation primitives without appointment-booking UI.
 2. **Inventory UI — complete:** search, filters, expandable details, local add/edit forms, and auditable stock-adjustment presentation are covered with typed demo state.
 3. **Patient and medical-record UI — complete:** searchable profiles, profile create/edit, weight/vaccination timelines, structured visit create/edit, service fees, item quantities, and saved price/financial presentation are covered with typed demo state.
-4. **Retail POS UI — in progress:** typed catalog search/filtering, bounded cart controls, saved prices, and local totals are complete; implement payment selection, confirmation, and receipt-preview presentation.
-5. **Finance UI:** implement daily/monthly summaries, expenses, owner draw, reconciliation, and trend presentation with demo fixtures.
+4. **Retail POS UI — complete:** typed product discovery, bounded cart controls, saved prices, payment selection, explicit confirmation, success state, and itemized receipt preview are covered with synthetic local state.
+5. **Finance UI — next:** implement daily/monthly summaries, expenses, owner draw, reconciliation, and trend presentation with demo fixtures.
 6. **Production integration:** close the physical SQLCipher gate, replace fixtures feature-by-feature with encrypted local repositories/API adapters, and complete backend domain slices, transactions, sync, and PDF generation.
 7. **Sync reliability:** complete recovery, retry, idempotency, and diagnostics across every core write.
 8. **Login development and activation last:** after the application modules work end to end, finish the username/password login design, reactivate all route guards and sign-out, validate every finished route and offline workflow, then complete accessibility and visual polish.

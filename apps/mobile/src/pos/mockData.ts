@@ -1,5 +1,25 @@
 import { mockInventoryItems, type MockInventoryCategory } from '@/src/inventory/mockData';
 
+export type MockPaymentMethod = 'card' | 'cash' | 'qris' | 'transfer';
+
+export type MockPosCartEntry = {
+  costPriceAtTime: number;
+  name: string;
+  productId: string;
+  quantity: number;
+  sellingPriceAtTime: number;
+  stockLimit: number;
+  unit: string;
+};
+
+export type MockPosReceipt = {
+  items: readonly MockPosCartEntry[];
+  paymentMethod: MockPaymentMethod;
+  receiptNumber: string;
+  timeLabel: string;
+  total: number;
+};
+
 export type MockPosProduct = {
   category: MockInventoryCategory;
   categoryLabel: string;
