@@ -1,4 +1,5 @@
 import {
+  calculateCashReconciliation,
   calculateDailySummary,
   calculateMonthlySummary,
 } from '@/src/finance/calculations';
@@ -59,5 +60,32 @@ describe('finance calculations', () => {
         retailIncome: 0,
       }),
     ).toThrow('Payment breakdown (9000) must equal total daily income (10000).');
+  });
+
+  it('derives expected cash and a signed closing variance', () => {
+    expect(
+      calculateCashReconciliation({
+        actualClosing: 3_950_000,
+        cashExpenses: 1_100_000,
+        cashIncome: 3_100_000,
+        openingBalance: 2_000_000,
+      }),
+    ).toEqual({
+      actualClosing: 3_950_000,
+      cashExpenses: 1_100_000,
+      cashIncome: 3_100_000,
+      expectedClosing: 4_000_000,
+      openingBalance: 2_000_000,
+      variance: -50_000,
+    });
+
+    expect(() =>
+      calculateCashReconciliation({
+        actualClosing: -1,
+        cashExpenses: 0,
+        cashIncome: 0,
+        openingBalance: 0,
+      }),
+    ).toThrow('Actual closing balance must be a nonnegative whole-IDR safe integer.');
   });
 });

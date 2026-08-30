@@ -6,9 +6,14 @@ import { colors, radii, spacing, typography } from '@/src/design/tokens';
 import {
   calculateDailySummary,
   calculateMonthlySummary,
+  type CashReconciliation,
   type DailyFinanceSummary,
   type MonthlyFinanceSummary,
 } from '@/src/finance/calculations';
+import {
+  MockCashReconciliationForm,
+  type MockCashReconciliationValues,
+} from '@/src/finance/MockCashReconciliationForm';
 import {
   MockFinanceEntryForm,
   type MockFinanceEntryValues,
@@ -24,6 +29,16 @@ const compactFormatter = new Intl.NumberFormat('id-ID', { maximumFractionDigits:
 
 function formatCurrency(amount: number): string {
   return `Rp ${idrFormatter.format(amount)}`;
+}
+
+function formatSignedCurrency(amount: number): string {
+  if (amount < 0) {
+    return `−${formatCurrency(Math.abs(amount))}`;
+  }
+  if (amount > 0) {
+    return `+${formatCurrency(amount)}`;
+  }
+  return formatCurrency(0);
 }
 
 function formatCompact(amount: number): string {
@@ -164,7 +179,93 @@ function TrendBar({ color, max, value }: { color: string; max: number; value: nu
   return <View style={[styles.trendBar, { backgroundColor: color, width: `${width}%` }]} />;
 }
 
-function DailyView({ daily }: { daily: DailyFinanceSummary }) {
+function CashReconciliationCard({
+  onReconcile,
+  reconciliation,
+}: {
+  onReconcile: () => void;
+  reconciliation: CashReconciliation | null;
+}) {
+  const status =
+    reconciliation?.variance === 0
+      ? 'Kas sesuai'
+      : reconciliation && reconciliation.variance < 0
+        ? 'Kas kurang'
+        : reconciliation
+          ? 'Kas lebih'
+          : null;
+
+  return (
+    <View style={styles.card}>
+      <View style={styles.reconciliationHeader}>
+        <View>
+          <Text style={styles.cardTitle}>Rekonsiliasi kas</Text>
+          <Text style={styles.cardSubtitle}>Uang fisik terhadap perkiraan penutupan</Text>
+        </View>
+        {status ? (
+          <Text
+            style={[
+              styles.reconciliationStatus,
+              reconciliation!.variance < 0 && styles.reconciliationStatusNegative,
+              reconciliation!.variance > 0 && styles.reconciliationStatusPositive,
+            ]}
+          >
+            {status}
+          </Text>
+        ) : null}
+      </View>
+      {reconciliation ? (
+        <View style={styles.reconciliationGrid}>
+          <Text style={styles.reconciliationMetric}>
+            Pembukaan {formatCurrency(reconciliation.openingBalance)}
+          </Text>
+          <Text style={styles.reconciliationMetric}>
+            Perkiraan {formatCurrency(reconciliation.expectedClosing)}
+          </Text>
+          <Text style={styles.reconciliationMetric}>
+            Aktual {formatCurrency(reconciliation.actualClosing)}
+          </Text>
+          <Text
+            style={[
+              styles.reconciliationMetric,
+              styles.reconciliationVariance,
+              reconciliation.variance < 0 && styles.reconciliationVarianceNegative,
+            ]}
+          >
+            Selisih {formatSignedCurrency(reconciliation.variance)}
+          </Text>
+        </View>
+      ) : (
+        <Text style={styles.emptyActivity}>Belum ada penutupan kas lokal untuk tanggal ini.</Text>
+      )}
+      <Text style={styles.assumptionText}>
+        Asumsi demo: seluruh beban harian dianggap sebagai arus kas keluar tunai karena metode pembayaran
+        Expense belum ditentukan.
+      </Text>
+      <Pressable
+        accessibilityLabel={reconciliation ? 'Edit rekonsiliasi kas demo' : 'Rekonsiliasi kas demo'}
+        accessibilityRole="button"
+        onPress={onReconcile}
+        style={styles.reconciliationButton}
+      >
+        <Ionicons color={colors.primaryForeground} name="calculator-outline" size={17} />
+        <Text style={styles.reconciliationButtonText}>
+          {reconciliation ? 'Edit rekonsiliasi' : 'Mulai rekonsiliasi'}
+        </Text>
+      </Pressable>
+    </View>
+  );
+}
+
+function DailyView({
+  daily,
+  onReconcile,
+  reconciliation,
+}: {
+  daily: DailyFinanceSummary;
+  onReconcile: () => void;
+  reconciliation: CashReconciliation | null;
+}) {
   const payments = [
     { id: 'cash', label: 'Tunai', value: daily.payments.cash },
     { id: 'qris', label: 'QRIS', value: daily.payments.qris },
@@ -197,12 +298,7 @@ function DailyView({ daily }: { daily: DailyFinanceSummary }) {
           ))}
         </View>
       </View>
-      <View style={styles.pendingCard}>
-        <Ionicons color="#9A3412" name="calculator-outline" size={20} />
-        <Text style={styles.pendingText}>
-          Rekonsiliasi kas, saldo pembukaan, dan saldo aktual akan menjadi slice UI berikutnya.
-        </Text>
-      </View>
+      <CashReconciliationCard onReconcile={onReconcile} reconciliation={reconciliation} />
     </>
   );
 }
@@ -336,8 +432,10 @@ function MonthlyView({
 }
 
 export function MockFinanceScreen() {
+  const [cashReconciliation, setCashReconciliation] = useState<MockCashReconciliationValues | null>(null);
   const [entries, setEntries] = useState<StoredFinanceEntry[]>([]);
   const [entryMode, setEntryMode] = useState<FinanceEntryMode | null>(null);
+  const [isReconcilingCash, setIsReconcilingCash] = useState(false);
   const [period, setPeriod] = useState<FinancePeriod>('month');
   const latestBase = financeMockData.months[financeMockData.months.length - 1]!;
 
@@ -388,6 +486,22 @@ export function MockFinanceScreen() {
     ]);
     setEntryMode(null);
     setPeriod('month');
+  }
+
+  if (isReconcilingCash) {
+    return (
+      <MockCashReconciliationForm
+        cashExpenses={dailySummary.expenses}
+        cashIncome={dailySummary.payments.cash}
+        {...(cashReconciliation ? { initialValues: cashReconciliation } : {})}
+        onCancel={() => setIsReconcilingCash(false)}
+        onSave={(values) => {
+          setCashReconciliation(values);
+          setIsReconcilingCash(false);
+          setPeriod('day');
+        }}
+      />
+    );
   }
 
   if (entryMode) {
@@ -455,7 +569,11 @@ export function MockFinanceScreen() {
           summary={monthlySummary}
         />
       ) : (
-        <DailyView daily={dailySummary} />
+        <DailyView
+          daily={dailySummary}
+          onReconcile={() => setIsReconcilingCash(true)}
+          reconciliation={cashReconciliation}
+        />
       )}
     </ScrollView>
   );
@@ -477,6 +595,14 @@ const styles = StyleSheet.create({
     paddingTop: spacing.small,
   },
   activitySubtitle: { color: colors.mutedForeground, fontSize: 10, marginTop: 2 },
+  assumptionText: {
+    backgroundColor: '#FFF7ED',
+    borderRadius: radii.medium,
+    color: '#9A3412',
+    fontSize: 10,
+    lineHeight: 15,
+    padding: spacing.small,
+  },
   breakdownFill: { backgroundColor: colors.primary, borderRadius: radii.pill, height: '100%' },
   breakdownIdentity: { alignItems: 'center', flexDirection: 'row', gap: spacing.small },
   breakdownLabel: { color: colors.foreground, fontSize: typography.label, fontWeight: '700' },
@@ -575,15 +701,6 @@ const styles = StyleSheet.create({
   paymentList: { gap: spacing.small },
   paymentRow: { alignItems: 'center', flexDirection: 'row', justifyContent: 'space-between' },
   paymentValue: { color: colors.foreground, fontSize: typography.caption, fontWeight: '800' },
-  pendingCard: {
-    alignItems: 'flex-start',
-    backgroundColor: '#FFF7ED',
-    borderRadius: radii.large,
-    flexDirection: 'row',
-    gap: spacing.small,
-    padding: spacing.medium,
-  },
-  pendingText: { color: '#9A3412', flex: 1, fontSize: typography.caption, lineHeight: 18 },
   periodButton: { alignItems: 'center', borderRadius: radii.medium, flex: 1, padding: spacing.small },
   periodButtonSelected: { backgroundColor: colors.card, borderColor: colors.border, borderWidth: 1 },
   periodButtonText: { color: colors.mutedForeground, fontSize: typography.caption, fontWeight: '700' },
@@ -597,6 +714,33 @@ const styles = StyleSheet.create({
     padding: 3,
   },
   periodTitle: { color: colors.foreground, fontSize: typography.body, fontWeight: '800' },
+  reconciliationButton: {
+    alignItems: 'center',
+    backgroundColor: '#0F172A',
+    borderRadius: radii.medium,
+    flexDirection: 'row',
+    gap: spacing.xsmall,
+    justifyContent: 'center',
+    padding: spacing.medium,
+  },
+  reconciliationButtonText: { color: colors.primaryForeground, fontSize: typography.caption, fontWeight: '800' },
+  reconciliationGrid: { gap: spacing.small },
+  reconciliationHeader: { alignItems: 'center', flexDirection: 'row', justifyContent: 'space-between' },
+  reconciliationMetric: { color: colors.foreground, fontSize: typography.caption, fontWeight: '700' },
+  reconciliationStatus: {
+    backgroundColor: colors.secondary,
+    borderRadius: radii.pill,
+    color: colors.foreground,
+    fontSize: 10,
+    fontWeight: '800',
+    overflow: 'hidden',
+    paddingHorizontal: spacing.small,
+    paddingVertical: spacing.xsmall,
+  },
+  reconciliationStatusNegative: { backgroundColor: '#FEF2F2', color: colors.destructive },
+  reconciliationStatusPositive: { backgroundColor: '#F0FDFA', color: '#0F766E' },
+  reconciliationVariance: { color: '#0F766E' },
+  reconciliationVarianceNegative: { color: colors.destructive },
   retailDot: { backgroundColor: '#3B82F6' },
   screen: { backgroundColor: colors.background, flex: 1 },
   subtitle: { color: colors.mutedForeground, fontSize: typography.caption, marginTop: spacing.xsmall },

@@ -770,6 +770,20 @@ Remaining Finance UI work: cash opening, expected closing, actual closing, and v
 
 Verification: `npm run mobile:typecheck`, `npm run mobile:lint`, `npm run mobile:test`, and `npm run mobile:export:android`.
 
+#### UI Slice 5c: cash-drawer reconciliation — complete
+
+- Added a validated local reconciliation form for nonnegative safe whole-IDR opening and actual closing balances.
+- Added a live expected-closing calculation and signed variance preview: `expected = opening + cash income − cash expenses`; `variance = actual − expected`.
+- Added saved daily reconciliation presentation for opening, expected, actual, variance, and balanced/short/over status.
+- Added working edit/cancel behavior that preloads saved balances while preserving the prior reconciliation when an edit is cancelled.
+- Explicitly disclosed the mock-only assumption that all daily expenses are treated as cash outflows because the current `Expense` entity does not capture payment method. Production reconciliation must resolve this before integration.
+- Kept the reconciliation snapshot local to screen memory and avoided production cash closing, encrypted persistence, audit events, APIs, and sync writes.
+- Added calculation, validation, preview, save, presentation, and edit-state tests.
+
+The mock-backed Finance UI track is complete. Production repositories, transaction attribution, encrypted persistence, API/sync integration, and authoritative rollup generation remain deferred to the production-integration track.
+
+Verification: `npm run mobile:typecheck`, `npm run mobile:lint`, `npm run mobile:test`, and `npm run mobile:export:android`.
+
 ### Work
 
 - Implement expenses and owner draws as distinct records.
@@ -842,8 +856,8 @@ The repository, Expo shell, backend/API foundation, schema, encryption, API cont
 2. **Inventory UI — complete:** search, filters, expandable details, local add/edit forms, and auditable stock-adjustment presentation are covered with typed demo state.
 3. **Patient and medical-record UI — complete:** searchable profiles, profile create/edit, weight/vaccination timelines, structured visit create/edit, service fees, item quantities, and saved price/financial presentation are covered with typed demo state.
 4. **Retail POS UI — complete:** typed product discovery, bounded cart controls, saved prices, payment selection, explicit confirmation, success state, and itemized receipt preview are covered with synthetic local state.
-5. **Finance UI — in progress:** summaries, trends, validated expense entry, and distinct owner's-draw entry are complete; implement cash opening/expected/actual reconciliation and variance.
-6. **Production integration:** close the physical SQLCipher gate, replace fixtures feature-by-feature with encrypted local repositories/API adapters, and complete backend domain slices, transactions, sync, and PDF generation.
+5. **Finance UI — complete:** summaries, trends, distinct expense/owner-draw entry, and cash opening/expected/actual reconciliation with variance are covered by synthetic local state.
+6. **Production integration — next:** close the physical SQLCipher gate, replace fixtures feature-by-feature with encrypted local repositories/API adapters, and complete backend domain slices, transactions, sync, and PDF generation.
 7. **Sync reliability:** complete recovery, retry, idempotency, and diagnostics across every core write.
 8. **Login development and activation last:** after the application modules work end to end, finish the username/password login design, reactivate all route guards and sign-out, validate every finished route and offline workflow, then complete accessibility and visual polish.
 
@@ -860,5 +874,6 @@ These do not block repository separation, but they must be documented before the
 - Whether the single account is expected to use exactly one device for MVP.
 - Retention and audit policy for edits to medical records beyond `updated_at`.
 - Backup destination, recovery-point objective, and recovery-time objective.
+- Expense payment-method attribution for authoritative cash-drawer reconciliation; the mock UI temporarily treats every daily expense as a cash outflow and labels that assumption.
 
 When a gap affects product behavior, update `docs/prd.md` and its version history. When it affects implementation only, add an architecture decision record without changing product scope.

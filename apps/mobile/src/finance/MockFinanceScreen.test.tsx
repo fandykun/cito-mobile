@@ -74,4 +74,28 @@ describe('MockFinanceScreen', () => {
     expect(screen.getByText('Pengambilan Agustus')).toBeOnTheScreen();
     expect(screen.getByText(/hanya disimpan di memori layar/i)).toBeOnTheScreen();
   });
+
+  it('saves and presents a local cash-drawer reconciliation', async () => {
+    const user = userEvent.setup();
+    await render(<MockFinanceScreen />);
+
+    await user.press(screen.getByRole('button', { name: 'Tampilkan ringkasan hari ini' }));
+    await user.press(screen.getByRole('button', { name: 'Rekonsiliasi kas demo' }));
+    await user.type(screen.getByLabelText('Saldo pembukaan kas'), '2000000');
+    await user.type(screen.getByLabelText('Saldo penutupan kas aktual'), '3950000');
+    await user.press(screen.getByRole('button', { name: 'Simpan rekonsiliasi kas demo' }));
+
+    expect(screen.getByText('Rekonsiliasi kas')).toBeOnTheScreen();
+    expect(screen.getByText('Kas kurang')).toBeOnTheScreen();
+    expect(screen.getByText('Pembukaan Rp 2.000.000')).toBeOnTheScreen();
+    expect(screen.getByText('Perkiraan Rp 4.000.000')).toBeOnTheScreen();
+    expect(screen.getByText('Aktual Rp 3.950.000')).toBeOnTheScreen();
+    expect(screen.getByText('Selisih −Rp 50.000')).toBeOnTheScreen();
+    expect(screen.getByText(/asumsi demo: seluruh beban harian/i)).toBeOnTheScreen();
+    await user.press(screen.getByRole('button', { name: 'Edit rekonsiliasi kas demo' }));
+    expect(screen.getByLabelText('Saldo pembukaan kas')).toHaveProp('value', '2000000');
+    expect(screen.getByLabelText('Saldo penutupan kas aktual')).toHaveProp('value', '3950000');
+    await user.press(screen.getByRole('button', { name: 'Batal rekonsiliasi kas demo' }));
+    expect(screen.getByText('Kas kurang')).toBeOnTheScreen();
+  });
 });

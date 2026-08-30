@@ -1,3 +1,15 @@
+export type CashReconciliationSource = {
+  actualClosing: number;
+  cashExpenses: number;
+  cashIncome: number;
+  openingBalance: number;
+};
+
+export type CashReconciliation = CashReconciliationSource & {
+  expectedClosing: number;
+  variance: number;
+};
+
 export type PaymentBreakdown = {
   card: number;
   cash: number;
@@ -34,6 +46,26 @@ function assertMoney(label: string, value: number): void {
   if (!Number.isSafeInteger(value) || value < 0) {
     throw new Error(`${label} must be a nonnegative whole-IDR safe integer.`);
   }
+}
+
+export function calculateCashReconciliation(
+  source: CashReconciliationSource,
+): CashReconciliation {
+  assertMoney('Opening balance', source.openingBalance);
+  assertMoney('Cash income', source.cashIncome);
+  assertMoney('Cash expenses', source.cashExpenses);
+  assertMoney('Actual closing balance', source.actualClosing);
+
+  const expectedClosing = source.openingBalance + source.cashIncome - source.cashExpenses;
+  if (!Number.isSafeInteger(expectedClosing) || expectedClosing < 0) {
+    throw new Error('Expected closing balance must be a nonnegative whole-IDR safe integer.');
+  }
+  const variance = source.actualClosing - expectedClosing;
+  if (!Number.isSafeInteger(variance)) {
+    throw new Error('Cash variance must be a whole-IDR safe integer.');
+  }
+
+  return { ...source, expectedClosing, variance };
 }
 
 export function calculateDailySummary(source: DailyFinanceSource): DailyFinanceSummary {
