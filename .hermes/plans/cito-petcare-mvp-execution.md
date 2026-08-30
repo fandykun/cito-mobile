@@ -163,14 +163,14 @@ Completed foundations:
 - Installed `expo-sqlite` and `expo-dev-client`, enabled `useSQLCipher`, and added EAS development/preview/production profiles.
 - Added a typed proof harness covering key-first open, SQLCipher detection, migration, encrypted restart markers, wrong-key rejection, and exclusive domain/outbox rollback.
 - Added a native-only verification screen that keeps its temporary operator-entered key in memory and exposes no native error details.
-- Verified Expo CNG emits `expo.sqlite.useSQLCipher=true`; Expo Doctor, strict TypeScript, ESLint, 18 tests, and Android JavaScript export pass.
+- Reverified against Expo SDK `57.0.18` that clean Android CNG emits `expo.sqlite.useSQLCipher=true`; all 21 Expo Doctor checks, strict TypeScript, ESLint, the current mobile test suite, Android JavaScript export, and the prototype build pass.
 
 Remaining native gates:
 
 - Build and install the Android development client.
 - Run initialization, force-close/relaunch, correct-key reopen, wrong-key rejection, and rollback checks against the real SQLCipher binary.
 
-Current state: EAS authentication is configured, the Expo project is linked, and both Android development and self-contained preview builds finished successfully from commit `2381ad8`. The APKs and four-ABI native libraries were inspected and contain the expected SQLCipher symbols. At the user's direction, physical-device execution is deferred until later development steps are complete. Slice 1.2 therefore remains open; only independent foundation work may proceed, and mobile domain persistence remains blocked until the device results are recorded.
+Current state: the Expo project is linked, and both Android development and self-contained preview builds previously finished successfully from commit `2381ad8`. The APKs and four-ABI native libraries were inspected and contain the expected SQLCipher symbols. The UI-first feature tracks are now complete, so physical-device execution is the next production-integration gate. This host has neither Java nor an Android SDK, and its EAS CLI session is currently unauthenticated; a new installable build therefore requires private Expo reauthentication before the device sequence can run. Slice 1.2 remains open, and mobile domain persistence remains blocked until the device results are recorded.
 
 Verification gates:
 
