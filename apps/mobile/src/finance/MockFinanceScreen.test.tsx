@@ -46,4 +46,32 @@ describe('MockFinanceScreen', () => {
     expect(screen.getByText('Kartu')).toBeOnTheScreen();
     expect(screen.getByText('Rp 500.000')).toBeOnTheScreen();
   });
+
+  it('adds expenses and owner draws as separate local records and recomputes the month', async () => {
+    const user = userEvent.setup();
+    await render(<MockFinanceScreen />);
+
+    await user.press(screen.getByRole('button', { name: 'Catat beban operasional demo' }));
+    await user.type(screen.getByLabelText('Jumlah entri keuangan'), '500000');
+    await user.press(screen.getByRole('button', { name: 'Pilih kategori utilitas' }));
+    await user.type(screen.getByLabelText('Catatan entri keuangan'), 'Tagihan listrik');
+    await user.press(screen.getByRole('button', { name: 'Simpan beban demo' }));
+
+    expect(screen.getByText('Rp 13.300.000')).toBeOnTheScreen();
+    expect(screen.getByText('Rp 81.200.000')).toBeOnTheScreen();
+    expect(screen.getByText('Utilitas · 22 Agu 2026')).toBeOnTheScreen();
+    expect(screen.getByText('Tagihan listrik')).toBeOnTheScreen();
+
+    await user.press(screen.getByRole('button', { name: 'Catat pengambilan pemilik demo' }));
+    await user.type(screen.getByLabelText('Jumlah entri keuangan'), '2000000');
+    await user.type(screen.getByLabelText('Catatan entri keuangan'), 'Pengambilan Agustus');
+    await user.press(screen.getByRole('button', { name: 'Simpan pengambilan pemilik demo' }));
+
+    expect(screen.getByText('Rp 13.300.000')).toBeOnTheScreen();
+    expect(screen.getByText('Rp 35.000.000')).toBeOnTheScreen();
+    expect(screen.getByText('Rp 46.200.000')).toBeOnTheScreen();
+    expect(screen.getByText('Pengambilan pemilik · 22 Agu 2026')).toBeOnTheScreen();
+    expect(screen.getByText('Pengambilan Agustus')).toBeOnTheScreen();
+    expect(screen.getByText(/hanya disimpan di memori layar/i)).toBeOnTheScreen();
+  });
 });
