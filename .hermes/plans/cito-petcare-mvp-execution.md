@@ -739,6 +739,22 @@ Verification: `npm run mobile:typecheck`, `npm run mobile:lint`, `npm run mobile
 
 ## Phase 7 — Expenses, owner draw, and financial rollups
 
+### UI-first progress
+
+#### UI Slice 5a: daily/monthly summaries and trends — complete
+
+- Replaced the Finance placeholder with typed synthetic daily and six-month fixtures using the configured `Asia/Jakarta` business-date context.
+- Added deterministic whole-IDR calculation helpers for daily income/net and monthly gross income, operating expenses, net profit, owner draw, and retained funds.
+- Enforced nonnegative safe-integer money inputs and required the daily payment-method breakdown to reconcile exactly to daily income.
+- Added month and day views with accessible period controls, summary metrics, medical-versus-retail income breakdowns, payment-method presentation, and a lightweight six-month trend visualization.
+- Kept owner's draw visibly and mathematically separate from operating expenses: `net profit = gross income − operating expenses`; `retained = net profit − owner draw`.
+- Kept the slice explicitly presentational and non-persistent: it does not read production transactions, log expenses/draws, close a cash drawer, write encrypted storage, call APIs, or enqueue sync.
+- Added pure calculation tests and component tests for monthly metrics, daily switching, payment breakdowns, and owner-draw separation.
+
+Remaining Finance UI work: validated local expense and owner's-draw entry, followed by cash opening/expected/actual reconciliation and variance presentation.
+
+Verification: `npm run mobile:typecheck`, `npm run mobile:lint`, `npm run mobile:test`, and `npm run mobile:export:android`.
+
 ### Work
 
 - Implement expenses and owner draws as distinct records.
@@ -811,7 +827,7 @@ The repository, Expo shell, backend/API foundation, schema, encryption, API cont
 2. **Inventory UI — complete:** search, filters, expandable details, local add/edit forms, and auditable stock-adjustment presentation are covered with typed demo state.
 3. **Patient and medical-record UI — complete:** searchable profiles, profile create/edit, weight/vaccination timelines, structured visit create/edit, service fees, item quantities, and saved price/financial presentation are covered with typed demo state.
 4. **Retail POS UI — complete:** typed product discovery, bounded cart controls, saved prices, payment selection, explicit confirmation, success state, and itemized receipt preview are covered with synthetic local state.
-5. **Finance UI — next:** implement daily/monthly summaries, expenses, owner draw, reconciliation, and trend presentation with demo fixtures.
+5. **Finance UI — in progress:** typed daily/monthly summaries, owner-draw separation, payment breakdowns, and six-month trends are complete; implement expense/draw entry and cash reconciliation.
 6. **Production integration:** close the physical SQLCipher gate, replace fixtures feature-by-feature with encrypted local repositories/API adapters, and complete backend domain slices, transactions, sync, and PDF generation.
 7. **Sync reliability:** complete recovery, retry, idempotency, and diagnostics across every core write.
 8. **Login development and activation last:** after the application modules work end to end, finish the username/password login design, reactivate all route guards and sign-out, validate every finished route and offline workflow, then complete accessibility and visual polish.
