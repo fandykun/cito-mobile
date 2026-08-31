@@ -564,7 +564,17 @@ Verification: `TEST_DATABASE_URL=<local> go test -race ./... -count=1`, `go vet 
 
 Verification: `TEST_DATABASE_URL=<local> go test -race ./... -count=1`, `go vet ./...`, `go build ./...`, `npm run api:lint`, and OpenAPI bundle validation.
 
-Remaining Phase 5 backend work starts with the weight-history ledger, followed by vaccinations and transactional visits. Mobile patient persistence remains blocked until the physical SQLCipher device sequence passes.
+### Slice 5.5: replay-safe pet weight-history domain service — complete
+
+- Added exact integer-gram weight entries backed by `NUMERIC(8,3)`, canonical client UUIDs, bounded timestamps, active-pet enforcement, and deterministic newest-first ordering.
+- Made weight creation replay-safe: identical retries return the original entry without changing the pet version, while reused IDs with different payloads conflict.
+- Maintained `pets.current_weight` transactionally from the newest `(recorded_at, id)` history entry; out-of-order historical imports do not overwrite the current projection, while a new latest value increments the pet version once.
+- Added isolated PostgreSQL coverage for exact replay, conflicting replay, out-of-order history, derived projection/version behavior, ordering, and missing pets.
+- Corrected the OpenAPI weight schema composition, numeric maximum, malformed-pet response, and projection semantics. Authenticated weight HTTP handlers remain the next transport slice.
+
+Verification: `TEST_DATABASE_URL=<local> go test -race ./... -count=1`, `go vet ./...`, `go build ./...`, `npm run api:lint`, and OpenAPI bundle validation.
+
+Remaining Phase 5 backend work starts with authenticated weight-history HTTP delivery, followed by vaccinations and transactional visits. Mobile patient persistence remains blocked until the physical SQLCipher device sequence passes.
 
 ### UI-first development track
 
