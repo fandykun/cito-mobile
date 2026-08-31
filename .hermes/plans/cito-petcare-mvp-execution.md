@@ -614,7 +614,18 @@ Verification: `TEST_DATABASE_URL=<local> go test -race ./... -count=1`, `go vet 
 
 Verification: `TEST_DATABASE_URL=<local> go test -race ./... -count=1`, `go vet ./...`, `go build ./...`, `npm run api:lint`, and OpenAPI bundle validation.
 
-Remaining Phase 5 backend work starts with authenticated visit create/get/list transport, followed by replay-safe visit amendment semantics. Mobile patient persistence remains blocked until the physical SQLCipher device sequence passes.
+### Slice 5.10: authenticated visit create/get/list API — complete
+
+- Wired the encrypted visit service into production startup and exposed bearer-protected create, get, and optional pet-filtered list routes.
+- Added deterministic newest-first `(visit_date DESC, id DESC)` cursor pagination with bounded limits and opaque strict cursors.
+- Enforced matching idempotency keys, strict date and timestamp parsing, supported JSON media types, unknown-field and trailing-object rejection, and an 8 MiB request boundary sized for worst-case JSON escaping of the contract's encrypted clinical-field limits.
+- Returned decrypted clinical fields, immutable client-captured price snapshots, derived visit financials, and sanitized validation, missing-dependency, stock/conflict, and internal errors.
+- Added handler coverage for authentication, request/response mapping, malformed and oversized requests, cursor continuation, filters, and error mapping.
+- Added an isolated PostgreSQL HTTP flow covering login, encrypted creation, exact replay without duplicate stock deduction, changed-payload conflict, get, filtered pagination, ciphertext-at-rest verification, financials, and final stock state.
+
+Verification: `TEST_DATABASE_URL=<local> go test -race ./... -count=1`, `go vet ./...`, `go build ./...`, `npm run api:lint`, and OpenAPI bundle validation.
+
+Remaining Phase 5 backend work starts with replay-safe visit amendment semantics, including transactional stock deltas and preserved historical price snapshots. Mobile patient persistence remains blocked until the physical SQLCipher device sequence passes.
 
 ### UI-first development track
 
