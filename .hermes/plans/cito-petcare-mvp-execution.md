@@ -537,7 +537,18 @@ Verification: `TEST_DATABASE_URL=<local> go test -race ./internal/patients -coun
 
 Verification: `TEST_DATABASE_URL=<local> go test -race ./... -count=1`, `go vet ./...`, `go build ./...`, and `npm run api:lint`.
 
-Remaining Phase 5 backend work starts with encrypted pet profiles, weight history, vaccinations, and visits. Mobile patient persistence remains blocked by the SQLCipher device gate.
+### Slice 5.3: encrypted pet profile domain service — complete
+
+- Added a dedicated backend pet service with validated create, get, and optimistic update operations while leaving the existing owner service boundary unchanged.
+- Enforced canonical client UUIDs, active-owner references, bounded identity fields, exact three-decimal weight handling as integer grams, nullable date/weight fields, UTC microsecond event timestamps, and version limits.
+- Encrypted allergies and chronic conditions before PostgreSQL persistence with the existing AES-256-GCM keyring and field/record-bound associated data; empty health flags persist as null rather than plaintext.
+- Made creates and updates replay-safe: identical retries return the persisted decrypted profile, while payload changes, stale versions, old timestamps, tombstoned IDs, and missing/tombstoned owners fail explicitly.
+- Added unit and isolated PostgreSQL integration coverage for validation, dependency requirements, encryption-at-rest, plaintext recovery, create/update replay, conflicts, and active-owner enforcement.
+- Kept the service unwired from HTTP/configuration until the next slice adds keyring configuration, pet listing/filtering, authenticated handlers, and sanitized crypto failure mapping.
+
+Verification: `TEST_DATABASE_URL=<local> go test -race ./... -count=1`, `go vet ./...`, `go build ./...`, and `npm run api:lint`.
+
+Remaining Phase 5 backend work starts with pet listing and the authenticated pet HTTP boundary, followed by weight history, vaccinations, and transactional visits. Mobile patient persistence remains blocked until the physical SQLCipher device sequence passes.
 
 ### UI-first development track
 
