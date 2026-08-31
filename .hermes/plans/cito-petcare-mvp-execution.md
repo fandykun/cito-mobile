@@ -544,6 +544,9 @@ Verification: `TEST_DATABASE_URL=<local> go test -race ./... -count=1`, `go vet 
 - Encrypted allergies and chronic conditions before PostgreSQL persistence with the existing AES-256-GCM keyring and field/record-bound associated data; empty health flags persist as null rather than plaintext.
 - Made creates and updates replay-safe: identical retries return the persisted decrypted profile, while payload changes, stale versions, old timestamps, tombstoned IDs, and missing/tombstoned owners fail explicitly.
 - Added unit and isolated PostgreSQL integration coverage for validation, dependency requirements, encryption-at-rest, plaintext recovery, create/update replay, conflicts, and active-owner enforcement.
+- Hardened the profile boundary after design review: `current_weight` is a read-only projection of the weight-history ledger, so profile creates/updates cannot silently bypass the PRD-required history or invent an offline weight-entry ID.
+- Added regression coverage proving create retries preserve the original ciphertext bytes, derived weight changes do not invalidate create replay, profile updates preserve derived weight, and multibyte health text is bounded by encrypted UTF-8 byte size.
+- Corrected the pet OpenAPI composition so strict schemas accept valid update/response fields, documented bad-query responses and UTF-8 byte limits, and aligned the ERD/medical-encryption ADR with ciphertext storage and key-ID-bound associated data.
 - Kept the service unwired from HTTP/configuration until the next slice adds keyring configuration, pet listing/filtering, authenticated handlers, and sanitized crypto failure mapping.
 
 Verification: `TEST_DATABASE_URL=<local> go test -race ./... -count=1`, `go vet ./...`, `go build ./...`, and `npm run api:lint`.

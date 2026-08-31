@@ -41,8 +41,8 @@ erDiagram
         string breed
         date dob
         decimal current_weight
-        text allergies
-        text chronic_conditions
+        binary allergies "ciphertext at rest"
+        binary chronic_conditions "ciphertext at rest"
         datetime created_at
         datetime updated_at
     }
@@ -72,11 +72,11 @@ erDiagram
         uuid id PK
         uuid pet_id FK
         date visit_date
-        text reason
-        text clinical_observations
-        text diagnosis
-        text treatment_plan
-        text vet_notes
+        binary reason "ciphertext at rest"
+        binary clinical_observations "ciphertext at rest"
+        binary diagnosis "ciphertext at rest"
+        binary treatment_plan "ciphertext at rest"
+        binary vet_notes "ciphertext at rest"
         decimal service_fee
         decimal visit_income
         decimal visit_cost
@@ -158,6 +158,7 @@ erDiagram
 - `DAILY_SUMMARY` and `MONTHLY_SUMMARY` are **derived/computed** tables (materialized for fast reads), not manually entered — rebuilt from `VISIT`, `RETAIL_TRANSACTION`, `EXPENSE`, and `OWNER_DRAW` records.
 - `synced` boolean fields exist on records created offline, to track what's pending upload to the backend.
 - `PET` and `VISIT` include `updated_at` since both are editable after creation (correcting profile info, amending a diagnosis/notes) — `created_at` is preserved as the original record date, `updated_at` reflects the latest edit.
+- Medical fields shown as `binary` are plaintext only at authenticated application boundaries; PostgreSQL stores versioned authenticated-encryption envelopes in `BYTEA` columns as defined by ADR 0003.
 - `APP_USER` is a standalone entity (not connected by foreign key to clinic data) — it exists purely to gate login access. Since there's only one user and no roles/scopes, clinic records don't need a `user_id` ownership column; the account is provisioned manually (no self-registration flow) and simply controls whether the app can be opened at all.
 
 ---
