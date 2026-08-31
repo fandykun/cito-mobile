@@ -583,7 +583,17 @@ Verification: `TEST_DATABASE_URL=<local> go test -race ./... -count=1`, `go vet 
 
 Verification: `TEST_DATABASE_URL=<local> go test -race ./... -count=1`, `go vet ./...`, `go build ./...`, `npm run api:lint`, and OpenAPI bundle validation.
 
-Remaining Phase 5 backend work starts with vaccinations, followed by transactional visits. Mobile patient persistence remains blocked until the physical SQLCipher device sequence passes.
+### Slice 5.7: replay-safe vaccination domain service — complete
+
+- Added normalized vaccine type, date-given, optional due-date, active-pet, client-UUID, and event-time validation aligned with PostgreSQL constraints.
+- Made vaccination creation replay-safe: exact retries return the original row, while changed payloads using an existing ID conflict without overwriting clinical history.
+- Added deterministic newest-first `(date_given, id)` history with tombstone exclusion and explicit missing-pet behavior.
+- Added isolated PostgreSQL coverage for normalization, exact replay, conflict, same-date ordering, historical entries, and missing pets.
+- Corrected strict vaccination OpenAPI schema composition and documented malformed pet identifiers on history requests. Authenticated vaccination handlers remain the next transport slice.
+
+Verification: `TEST_DATABASE_URL=<local> go test -race ./... -count=1`, `go vet ./...`, `go build ./...`, `npm run api:lint`, and OpenAPI bundle validation.
+
+Remaining Phase 5 backend work starts with authenticated vaccination HTTP delivery, followed by transactional visits. Mobile patient persistence remains blocked until the physical SQLCipher device sequence passes.
 
 ### UI-first development track
 
