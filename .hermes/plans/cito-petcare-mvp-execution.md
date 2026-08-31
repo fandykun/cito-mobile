@@ -603,7 +603,18 @@ Verification: `TEST_DATABASE_URL=<local> go test -race ./... -count=1`, `go vet 
 
 Verification: `TEST_DATABASE_URL=<local> go test -race ./... -count=1`, `go vet ./...`, `go build ./...`, `npm run api:lint`, and OpenAPI bundle validation.
 
-Remaining Phase 5 backend work starts with encrypted transactional visits and immutable visit-item pricing. Mobile patient persistence remains blocked until the physical SQLCipher device sequence passes.
+### Slice 5.9: encrypted transactional visit persistence — complete
+
+- Added a dedicated visit domain service with strict client UUID, date, event-time, whole-IDR money, bounded clinical text, quantity, item-count, and duplicate-item validation.
+- Encrypted the presenting reason, clinical observations, diagnosis, treatment plan, and veterinarian notes with record/field-bound authenticated encryption before PostgreSQL persistence; reads decrypt only at the service boundary.
+- Created visits, authenticated-client price snapshots captured by the offline transaction, stock deductions, and derived income/cost/profit in one PostgreSQL transaction with deterministic inventory row locking and full rollback on missing or insufficient stock.
+- Serialized client-ID operations with a transaction-scoped advisory lock so concurrent identical retries return one visit without duplicate stock deductions; changed payloads conflict.
+- Preserved offline snapshot prices when live inventory prices change before delayed upload, bounded future client clock skew, and used server processing time for inventory metadata so client timestamps cannot poison mutation ordering.
+- Added unit and isolated PostgreSQL integration coverage for validation, encrypted-at-rest fields, exact replay and ciphertext preservation, concurrent replay, financial calculations, delayed-upload snapshots, future timestamps, insufficient-stock rollback, and changed-payload conflicts.
+
+Verification: `TEST_DATABASE_URL=<local> go test -race ./... -count=1`, `go vet ./...`, `go build ./...`, `npm run api:lint`, and OpenAPI bundle validation.
+
+Remaining Phase 5 backend work starts with authenticated visit create/get/list transport, followed by replay-safe visit amendment semantics. Mobile patient persistence remains blocked until the physical SQLCipher device sequence passes.
 
 ### UI-first development track
 
