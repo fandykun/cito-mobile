@@ -553,7 +553,18 @@ Verification: `TEST_DATABASE_URL=<local> go test -race ./... -count=1`, `go vet 
 
 Verification: `TEST_DATABASE_URL=<local> go test -race ./... -count=1`, `go vet ./...`, `go build ./...`, and `npm run api:lint`.
 
-Remaining Phase 5 backend work starts with pet listing and the authenticated pet HTTP boundary, followed by weight history, vaccinations, and transactional visits. Mobile patient persistence remains blocked until the physical SQLCipher device sequence passes.
+### Slice 5.4: authenticated encrypted pet profile API — complete
+
+- Added fail-closed runtime loading for a versioned medical encryption keyring using an explicit active key ID and strict base64 32-byte keys; configuration errors exclude secret values.
+- Wired the encrypted pet service into API startup and exposed bearer-protected create, owner-filtered cursor list, get, and full optimistic update routes.
+- Enforced matching create idempotency keys, body/path ID agreement, strict single-object JSON, unknown-field rejection, bounded bodies, date-only DOB parsing, opaque cursor validation, and sanitized 400/404/409/500 behavior.
+- Returned exact nullable decimal weight projections without accepting weight mutations through profile writes.
+- Added an isolated PostgreSQL HTTP flow covering login, authorization rejection, owner creation, encrypted pet creation, strict weight rejection, filtered cursor pagination, get, update, and ciphertext-at-rest verification.
+- Documented required runtime key configuration, rotation safety, implemented patient routes, and the remaining mobile/runtime boundaries.
+
+Verification: `TEST_DATABASE_URL=<local> go test -race ./... -count=1`, `go vet ./...`, `go build ./...`, `npm run api:lint`, and OpenAPI bundle validation.
+
+Remaining Phase 5 backend work starts with the weight-history ledger, followed by vaccinations and transactional visits. Mobile patient persistence remains blocked until the physical SQLCipher device sequence passes.
 
 ### UI-first development track
 
