@@ -625,7 +625,19 @@ Verification: `TEST_DATABASE_URL=<local> go test -race ./... -count=1`, `go vet 
 
 Verification: `TEST_DATABASE_URL=<local> go test -race ./... -count=1`, `go vet ./...`, `go build ./...`, `npm run api:lint`, and OpenAPI bundle validation.
 
-Remaining Phase 5 backend work starts with replay-safe visit amendment semantics, including transactional stock deltas and preserved historical price snapshots. Mobile patient persistence remains blocked until the physical SQLCipher device sequence passes.
+### Slice 5.11: replay-safe transactional visit amendments — complete
+
+- Added optimistic, full-replacement visit amendments that preserve the original creation timestamp, record the amendment event timestamp separately, and increment the visit version.
+- Re-encrypted amended medical fields before persistence and retained plaintext only at authenticated application boundaries.
+- Preserved inventory and price snapshots for retained visit-item IDs while allowing quantity changes, removals, and newly identified lines with client-captured snapshots.
+- Applied deterministic, transactionally locked stock deltas: quantity reductions and removals restore stock, while increases and additions deduct stock only from active inventory with sufficient quantity.
+- Made exact and concurrent retries replay-safe without repeated stock changes or ciphertext churn; rejected stale versions, stale timestamps, altered snapshots, conflicting item IDs, deleted-inventory deductions, and changed replay payloads.
+- Exposed the authenticated `PUT /api/v1/visits/{visitId}` boundary with strict body/path identity, optimistic version parsing, sanitized errors, and OpenAPI schema composition that rejects unknown fields correctly.
+- Added isolated PostgreSQL domain and HTTP coverage for encrypted edits, financial recomputation, stock restoration/deduction, snapshot preservation, exact/concurrent replay, rollback paths, deleted inventory, and authenticated transport behavior.
+
+Verification: `TEST_DATABASE_URL=<local> go test -race ./... -count=1`, `go vet ./...`, `go build ./...`, `npm run api:lint`, and OpenAPI bundle validation.
+
+Remaining Phase 5 backend work starts with retail transaction persistence and its atomic inventory deductions. Mobile patient persistence remains blocked until the physical SQLCipher device sequence passes.
 
 ### UI-first development track
 
