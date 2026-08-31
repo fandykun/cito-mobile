@@ -593,7 +593,17 @@ Verification: `TEST_DATABASE_URL=<local> go test -race ./... -count=1`, `go vet 
 
 Verification: `TEST_DATABASE_URL=<local> go test -race ./... -count=1`, `go vet ./...`, `go build ./...`, `npm run api:lint`, and OpenAPI bundle validation.
 
-Remaining Phase 5 backend work starts with authenticated vaccination HTTP delivery, followed by transactional visits. Mobile patient persistence remains blocked until the physical SQLCipher device sequence passes.
+### Slice 5.8: authenticated vaccination API — complete
+
+- Exposed bearer-protected newest-first vaccination history and replay-safe vaccination creation under `/api/v1/pets/{petId}/vaccinations`.
+- Enforced strict date-only parsing, matching idempotency keys, bounded JSON bodies, supported media types, unknown-field rejection, and one-object decoding.
+- Reused sanitized patient validation, missing-record, conflict, and internal-error responses without exposing persistence details.
+- Verified end-to-end login, creation, exact replay, changed-payload conflict, invalid due-date rejection, and history listing against isolated PostgreSQL.
+- Clarified the OpenAPI ordering guarantee as `(date_given DESC, id DESC)`.
+
+Verification: `TEST_DATABASE_URL=<local> go test -race ./... -count=1`, `go vet ./...`, `go build ./...`, `npm run api:lint`, and OpenAPI bundle validation.
+
+Remaining Phase 5 backend work starts with encrypted transactional visits and immutable visit-item pricing. Mobile patient persistence remains blocked until the physical SQLCipher device sequence passes.
 
 ### UI-first development track
 
