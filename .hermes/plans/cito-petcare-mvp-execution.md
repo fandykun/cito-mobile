@@ -574,7 +574,16 @@ Verification: `TEST_DATABASE_URL=<local> go test -race ./... -count=1`, `go vet 
 
 Verification: `TEST_DATABASE_URL=<local> go test -race ./... -count=1`, `go vet ./...`, `go build ./...`, `npm run api:lint`, and OpenAPI bundle validation.
 
-Remaining Phase 5 backend work starts with authenticated weight-history HTTP delivery, followed by vaccinations and transactional visits. Mobile patient persistence remains blocked until the physical SQLCipher device sequence passes.
+### Slice 5.6: authenticated pet weight-history API — complete
+
+- Exposed bearer-protected newest-first weight history and replay-safe weight creation under `/api/v1/pets/{petId}/weights`.
+- Parsed JSON weight numbers with exact rational arithmetic, accepting exponent notation while rejecting fractional precision beyond one gram, nonpositive values, overflow, malformed values, unknown fields, trailing JSON, and oversized bodies.
+- Enforced matching idempotency keys and reused the patient boundary's sanitized validation, missing-record, conflict, and internal-error responses.
+- Returned exact three-decimal JSON numbers and verified end-to-end login, creation, exact replay, conflict, invalid precision, listing, and pet projection/version updates against isolated PostgreSQL.
+
+Verification: `TEST_DATABASE_URL=<local> go test -race ./... -count=1`, `go vet ./...`, `go build ./...`, `npm run api:lint`, and OpenAPI bundle validation.
+
+Remaining Phase 5 backend work starts with vaccinations, followed by transactional visits. Mobile patient persistence remains blocked until the physical SQLCipher device sequence passes.
 
 ### UI-first development track
 
