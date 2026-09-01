@@ -637,7 +637,7 @@ Verification: `TEST_DATABASE_URL=<local> go test -race ./... -count=1`, `go vet 
 
 Verification: `TEST_DATABASE_URL=<local> go test -race ./... -count=1`, `go vet ./...`, `go build ./...`, `npm run api:lint`, and OpenAPI bundle validation.
 
-Remaining Phase 5 backend work starts with retail transaction persistence and its atomic inventory deductions. Mobile patient persistence remains blocked until the physical SQLCipher device sequence passes.
+The next backend production slice moves to finance records and rollups. Mobile patient persistence remains blocked until the physical SQLCipher device sequence passes.
 
 ### UI-first development track
 
@@ -791,6 +791,20 @@ Verification: `npm run mobile:typecheck`, `npm run mobile:lint`, `npm run mobile
 Split by owner/pet, vaccination, visit editor, transactional stock/financial logic, and sync behavior.
 
 ## Phase 6 — Retail POS and offline PDF receipts
+
+### Slice 6.1: replay-safe transactional retail API — complete
+
+- Added a dedicated retail transaction service with strict client UUID, timestamp, payment-method, receipt, item-count, quantity, and whole-IDR price-snapshot validation.
+- Persisted each sale, immutable client-captured cost/selling prices, derived total/cost/profit, and inventory deductions in one PostgreSQL transaction with deterministic row locking and complete rollback on missing or insufficient stock.
+- Serialized transaction UUID replay checks with an advisory lock so sequential and concurrent exact retries return the original sale without duplicate stock deductions; changed payloads, reused receipt numbers, reused item IDs, and tombstoned IDs conflict.
+- Preserved delayed-upload price snapshots instead of replacing them with current catalog prices, bounded future client timestamps, and used server processing time for inventory metadata.
+- Exposed bearer-protected create, get, and newest-first cursor-paginated list routes with matching idempotency headers, strict bounded JSON parsing, opaque cursors, contract-shaped responses, and sanitized errors.
+- Corrected the strict OpenAPI retail schema so write requests require both price snapshots while response metadata composes without rejecting valid fields.
+- Added unit, isolated PostgreSQL, HTTP boundary, and authenticated PostgreSQL HTTP coverage for validation, financial calculations, exact/concurrent replay, rollback, stock state, get/list pagination, malformed requests, and authorization.
+
+Verification: `TEST_DATABASE_URL=<local> go test -race ./... -count=1`, `go vet ./...`, `go build ./...`, `npm run api:lint`, and OpenAPI bundle validation.
+
+Remaining Phase 6 work is device-local: physical SQLCipher verification, encrypted local checkout/outbox persistence, production POS integration, and offline PDF generation/view/share.
 
 ### UI-first progress
 
@@ -957,7 +971,7 @@ The repository, Expo shell, backend/API foundation, schema, encryption, API cont
 3. **Patient and medical-record UI — complete:** searchable profiles, profile create/edit, weight/vaccination timelines, structured visit create/edit, service fees, item quantities, and saved price/financial presentation are covered with typed demo state.
 4. **Retail POS UI — complete:** typed product discovery, bounded cart controls, saved prices, payment selection, explicit confirmation, success state, and itemized receipt preview are covered with synthetic local state.
 5. **Finance UI — complete:** summaries, trends, distinct expense/owner-draw entry, and cash opening/expected/actual reconciliation with variance are covered by synthetic local state.
-6. **Production integration — next:** close the physical SQLCipher gate, replace fixtures feature-by-feature with encrypted local repositories/API adapters, and complete backend domain slices, transactions, sync, and PDF generation.
+6. **Production integration — next:** the authenticated backend now covers patient records, visits, inventory, and replay-safe retail checkout. Continue with finance domain APIs while separately closing the physical SQLCipher gate, then replace fixtures feature-by-feature with encrypted local repositories/API adapters, sync, and PDF generation.
 7. **Sync reliability:** complete recovery, retry, idempotency, and diagnostics across every core write.
 8. **Login development and activation last:** after the application modules work end to end, finish the username/password login design, reactivate all route guards and sign-out, validate every finished route and offline workflow, then complete accessibility and visual polish.
 
