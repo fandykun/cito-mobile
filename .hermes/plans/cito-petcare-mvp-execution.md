@@ -853,6 +853,18 @@ Verification: `npm run mobile:typecheck`, `npm run mobile:lint`, `npm run mobile
 
 ## Phase 7 — Expenses, owner draw, and financial rollups
 
+### Slice 7.1: replay-safe expense domain service — complete
+
+- Added a dedicated finance service boundary for operating expenses while preserving owner's draw as a separate, unimplemented record type.
+- Enforced canonical client UUIDs, strict clinic-date values, PRD-defined categories, positive whole-IDR amounts, bounded optional notes, and bounded future event timestamps before database access.
+- Made expense creation replay-safe with a transaction-scoped advisory lock: exact sequential and concurrent retries return the original record, while changed payloads and tombstoned IDs conflict.
+- Added active-record reads and deterministic newest-first `(expense_date DESC, id DESC)` cursor pagination with bounded page sizes and tombstone exclusion.
+- Added unit and isolated PostgreSQL coverage for boundary validation, note normalization, exact/concurrent replay, changed replay conflicts, future timestamp rejection, get behavior, stable same-date pagination, and tombstones.
+
+Verification: `TEST_DATABASE_URL=<local> go test -race ./... -count=1`, `go vet ./...`, and `go build ./...`.
+
+Remaining finance backend work starts with the authenticated expense HTTP boundary, followed by the distinct owner-draw domain/API, cash reconciliation, and derived daily/monthly projections.
+
 ### UI-first progress
 
 #### UI Slice 5a: daily/monthly summaries and trends — complete
@@ -971,7 +983,7 @@ The repository, Expo shell, backend/API foundation, schema, encryption, API cont
 3. **Patient and medical-record UI — complete:** searchable profiles, profile create/edit, weight/vaccination timelines, structured visit create/edit, service fees, item quantities, and saved price/financial presentation are covered with typed demo state.
 4. **Retail POS UI — complete:** typed product discovery, bounded cart controls, saved prices, payment selection, explicit confirmation, success state, and itemized receipt preview are covered with synthetic local state.
 5. **Finance UI — complete:** summaries, trends, distinct expense/owner-draw entry, and cash opening/expected/actual reconciliation with variance are covered by synthetic local state.
-6. **Production integration — next:** the authenticated backend now covers patient records, visits, inventory, and replay-safe retail checkout. Continue with finance domain APIs while separately closing the physical SQLCipher gate, then replace fixtures feature-by-feature with encrypted local repositories/API adapters, sync, and PDF generation.
+6. **Production integration — next:** the authenticated backend covers patient records, visits, inventory, and replay-safe retail checkout; the finance backend now has replay-safe expense persistence. Continue with the expense HTTP boundary and remaining finance domains while separately closing the physical SQLCipher gate, then replace fixtures feature-by-feature with encrypted local repositories/API adapters, sync, and PDF generation.
 7. **Sync reliability:** complete recovery, retry, idempotency, and diagnostics across every core write.
 8. **Login development and activation last:** after the application modules work end to end, finish the username/password login design, reactivate all route guards and sign-out, validate every finished route and offline workflow, then complete accessibility and visual polish.
 
