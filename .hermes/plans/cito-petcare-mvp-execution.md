@@ -863,7 +863,18 @@ Verification: `npm run mobile:typecheck`, `npm run mobile:lint`, `npm run mobile
 
 Verification: `TEST_DATABASE_URL=<local> go test -race ./... -count=1`, `go vet ./...`, and `go build ./...`.
 
-Remaining finance backend work starts with the authenticated expense HTTP boundary, followed by the distinct owner-draw domain/API, cash reconciliation, and derived daily/monthly projections.
+### Slice 7.2: authenticated expense API — complete
+
+- Wired the finance service into production API startup and exposed bearer-protected expense creation and newest-first cursor-paginated listing.
+- Enforced matching create idempotency keys, strict date and RFC 3339 timestamp parsing, bounded JSON bodies, supported media types, unknown-field rejection, and one-object decoding.
+- Returned contract-shaped whole-IDR expense records and opaque cursors while keeping operating expenses structurally separate from owner's draw.
+- Corrected the strict OpenAPI expense schema so write requests reject unknown fields while responses compose valid record metadata, and documented malformed-list responses plus ordering.
+- Added handler coverage for authentication, request/response mapping, malformed and oversized requests, cursor continuation, and sanitized domain errors.
+- Added an isolated authenticated PostgreSQL HTTP flow covering login, creation, exact replay without duplicates, changed-payload conflict, nullable notes, and paginated listing.
+
+Verification: `TEST_DATABASE_URL=<local> go test -race ./... -count=1`, `go vet ./...`, `go build ./...`, `npm run api:lint`, and OpenAPI bundle validation.
+
+Remaining finance backend work starts with the distinct owner-draw domain/API, followed by cash reconciliation and derived daily/monthly projections.
 
 ### UI-first progress
 
@@ -983,7 +994,7 @@ The repository, Expo shell, backend/API foundation, schema, encryption, API cont
 3. **Patient and medical-record UI — complete:** searchable profiles, profile create/edit, weight/vaccination timelines, structured visit create/edit, service fees, item quantities, and saved price/financial presentation are covered with typed demo state.
 4. **Retail POS UI — complete:** typed product discovery, bounded cart controls, saved prices, payment selection, explicit confirmation, success state, and itemized receipt preview are covered with synthetic local state.
 5. **Finance UI — complete:** summaries, trends, distinct expense/owner-draw entry, and cash opening/expected/actual reconciliation with variance are covered by synthetic local state.
-6. **Production integration — next:** the authenticated backend covers patient records, visits, inventory, and replay-safe retail checkout; the finance backend now has replay-safe expense persistence. Continue with the expense HTTP boundary and remaining finance domains while separately closing the physical SQLCipher gate, then replace fixtures feature-by-feature with encrypted local repositories/API adapters, sync, and PDF generation.
+6. **Production integration — next:** the authenticated backend covers patient records, visits, inventory, replay-safe retail checkout, and operating-expense creation/listing. Continue with the distinct owner-draw domain/API and remaining finance projections while separately closing the physical SQLCipher gate, then replace fixtures feature-by-feature with encrypted local repositories/API adapters, sync, and PDF generation.
 7. **Sync reliability:** complete recovery, retry, idempotency, and diagnostics across every core write.
 8. **Login development and activation last:** after the application modules work end to end, finish the username/password login design, reactivate all route guards and sign-out, validate every finished route and offline workflow, then complete accessibility and visual polish.
 
