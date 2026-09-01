@@ -132,6 +132,7 @@ Single user: the clinic owner/vet. No role-based access control needed for MVP.
 - **Auto-populated income**: sum of all medical visit incomes + all retail transaction incomes for the day
 - **Manual expense entry**: category (restock, utilities, rent, equipment, misc), amount, note
 - **Payment method breakdown**: cash, QRIS, transfer, card
+- **Payment attribution source of truth**: every medical visit payment, retail sale, operating expense, and owner's draw records exactly one payment method (cash, QRIS, transfer, or card). Legacy records whose method is unknown remain explicitly unattributed and must not be assumed to be cash.
 - **Cash drawer reconciliation**: opening balance, calculated expected closing balance, actual closing balance, variance
 - **Daily summary view**: total income (split: medical vs. retail), total expenses, net for the day
 

@@ -81,6 +81,7 @@ erDiagram
         decimal visit_income
         decimal visit_cost
         decimal visit_profit
+        string payment_method "nullable only for legacy unattributed rows"
         boolean synced
         datetime created_at
         datetime updated_at
@@ -120,6 +121,7 @@ erDiagram
         date expense_date
         string category
         decimal amount
+        string payment_method "nullable only for legacy unattributed rows"
         text note
         boolean synced
     }
@@ -128,6 +130,7 @@ erDiagram
         uuid id PK
         date draw_date
         decimal amount
+        string payment_method "nullable only for legacy unattributed rows"
         text note
         boolean synced
     }
@@ -155,6 +158,7 @@ erDiagram
 
 **Notes on the ERD:**
 - `VISIT_ITEM` and `RETAIL_TRANSACTION_ITEM` both snapshot `cost_price_at_time` / `selling_price_at_time` from `INVENTORY_ITEM` — so historical records stay accurate even if prices change later.
+- Cash-affecting source records use the same constrained payment methods: `cash`, `qris`, `transfer`, or `card`. The server schema temporarily permits `NULL` on visit, expense, and owner-draw rows solely to preserve pre-attribution history during forward upgrades; new writes must provide a method, and unknown legacy rows cannot contribute to authoritative cash reconciliation until backfilled.
 - `DAILY_SUMMARY` and `MONTHLY_SUMMARY` are **derived/computed** tables (materialized for fast reads), not manually entered — rebuilt from `VISIT`, `RETAIL_TRANSACTION`, `EXPENSE`, and `OWNER_DRAW` records.
 - `synced` boolean fields exist on records created offline, to track what's pending upload to the backend.
 - `PET` and `VISIT` include `updated_at` since both are editable after creation (correcting profile info, amending a diagnosis/notes) — `created_at` is preserved as the original record date, `updated_at` reflects the latest edit.

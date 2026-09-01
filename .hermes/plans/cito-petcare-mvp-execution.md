@@ -943,6 +943,18 @@ Verification: `TEST_DATABASE_URL=<local> go test -race ./... -count=1`, `go vet 
 
 The unblocked backend finance projection queue is complete. Cash reconciliation and payment-method breakdown remain deferred until visits and expenses carry authoritative payment attribution.
 
+### Slice 7.9: forward-compatible payment-attribution schema foundation — complete
+
+- Resolved the cash-reconciliation source gap at the product and ERD level: visits, retail sales, operating expenses, and owner draws use the constrained methods `cash`, `qris`, `transfer`, or `card`.
+- Added forward-only migration `000006_payment_attribution.sql` with constrained payment-method columns on visits, expenses, and owner draws.
+- Preserved existing installations without inventing financial facts: pre-attribution rows upgrade with an explicit unknown (`NULL`) method rather than silently becoming cash.
+- Documented that new application writes must provide attribution and that unknown legacy records cannot participate in authoritative cash reconciliation until backfilled.
+- Added fresh-schema constraint coverage and a real five-migration upgrade test proving legacy rows survive, remain unattributed, can be backfilled with valid methods, and tolerate repeated migration execution.
+
+Verification: `TEST_DATABASE_URL=<local> go test ./internal/migrations -count=1` plus the full backend verification gate.
+
+Next implement payment attribution through expense, owner-draw, and visit domain/API writes in small slices; only then enable daily payment breakdown and cash reconciliation.
+
 ### UI-first progress
 
 #### UI Slice 5a: daily/monthly summaries and trends — complete
@@ -1061,7 +1073,7 @@ The repository, Expo shell, backend/API foundation, schema, encryption, API cont
 3. **Patient and medical-record UI — complete:** searchable profiles, profile create/edit, weight/vaccination timelines, structured visit create/edit, service fees, item quantities, and saved price/financial presentation are covered with typed demo state.
 4. **Retail POS UI — complete:** typed product discovery, bounded cart controls, saved prices, payment selection, explicit confirmation, success state, and itemized receipt preview are covered with synthetic local state.
 5. **Finance UI — complete:** summaries, trends, distinct expense/owner-draw entry, and cash opening/expected/actual reconciliation with variance are covered by synthetic local state.
-6. **Production integration — next:** the authenticated backend covers patient records, visits, inventory, replay-safe retail checkout, operating expenses, structurally separate owner draws, and clinic-local daily/monthly summary transport. Resolve cash payment attribution while separately closing the physical SQLCipher gate, then replace fixtures feature-by-feature with encrypted local repositories/API adapters, sync, and PDF generation.
+6. **Production integration — next:** the authenticated backend covers patient records, visits, inventory, replay-safe retail checkout, operating expenses, structurally separate owner draws, and clinic-local daily/monthly summary transport. Payment-attribution schema support is upgrade-safe; continue attribution through expense, owner-draw, and visit writes before cash reconciliation, while separately closing the physical SQLCipher gate and replacing fixtures feature-by-feature with encrypted local repositories/API adapters, sync, and PDF generation.
 7. **Sync reliability:** complete recovery, retry, idempotency, and diagnostics across every core write.
 8. **Login development and activation last:** after the application modules work end to end, finish the username/password login design, reactivate all route guards and sign-out, validate every finished route and offline workflow, then complete accessibility and visual polish.
 
