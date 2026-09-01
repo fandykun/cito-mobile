@@ -894,7 +894,18 @@ Verification: `TEST_DATABASE_URL=<local> go test -race ./... -count=1`, `go vet 
 
 Verification: `TEST_DATABASE_URL=<local> go test -race ./... -count=1`, `go vet ./...`, `go build ./...`, `npm run api:lint`, and OpenAPI bundle validation.
 
-Remaining finance backend work starts with cash reconciliation, followed by derived daily/monthly projections.
+### Slice 7.5: clinic-local monthly financial summary service — complete
+
+- Added a derived monthly finance service that reads active visits, retail transactions, operating expenses, and owner draws directly from source records without creating editable summary rows.
+- Computes medical income, retail income, gross income, operating expenses, net profit, total draw, and retained funds using whole-IDR arithmetic while preserving `net profit = gross income - operating expenses` and `retained = net profit - total draw`.
+- Applies the configured clinic IANA timezone to retail transaction month boundaries while using authoritative clinic-date columns for visits, expenses, and draws.
+- Excludes tombstoned source rows, returns deterministic zero-valued summaries for empty months, rejects malformed `YYYY-MM` inputs, and fails explicitly if aggregate arithmetic exceeds supported integer ranges.
+- Made clinic location a required finance-service setting and wired production startup to the already validated `CITO_CLINIC_TIMEZONE` configuration.
+- Added unit and isolated PostgreSQL coverage for configuration validation, month parsing, timezone boundary inclusion/exclusion, source-type aggregation, tombstones, empty months, owner-draw separation, and retained-funds arithmetic.
+
+Verification: `TEST_DATABASE_URL=<local> go test -race ./... -count=1`, `go vet ./...`, and `go build ./...`.
+
+Cash reconciliation remains intentionally deferred because authoritative expected-cash calculation still lacks payment-method attribution for visits and expenses. The next unblocked finance slice is the authenticated monthly-summary HTTP boundary; resolve the attribution gap before implementing cash expected-closing behavior.
 
 ### UI-first progress
 
@@ -1014,7 +1025,7 @@ The repository, Expo shell, backend/API foundation, schema, encryption, API cont
 3. **Patient and medical-record UI — complete:** searchable profiles, profile create/edit, weight/vaccination timelines, structured visit create/edit, service fees, item quantities, and saved price/financial presentation are covered with typed demo state.
 4. **Retail POS UI — complete:** typed product discovery, bounded cart controls, saved prices, payment selection, explicit confirmation, success state, and itemized receipt preview are covered with synthetic local state.
 5. **Finance UI — complete:** summaries, trends, distinct expense/owner-draw entry, and cash opening/expected/actual reconciliation with variance are covered by synthetic local state.
-6. **Production integration — next:** the authenticated backend covers patient records, visits, inventory, replay-safe retail checkout, operating expenses, and structurally separate owner draws. Continue with cash reconciliation and derived finance projections while separately closing the physical SQLCipher gate, then replace fixtures feature-by-feature with encrypted local repositories/API adapters, sync, and PDF generation.
+6. **Production integration — next:** the authenticated backend covers patient records, visits, inventory, replay-safe retail checkout, operating expenses, and structurally separate owner draws; clinic-local monthly rollups now derive from those source records. Continue with the monthly-summary HTTP boundary and other unblocked projections while resolving cash payment attribution, separately closing the physical SQLCipher gate, then replacing fixtures feature-by-feature with encrypted local repositories/API adapters, sync, and PDF generation.
 7. **Sync reliability:** complete recovery, retry, idempotency, and diagnostics across every core write.
 8. **Login development and activation last:** after the application modules work end to end, finish the username/password login design, reactivate all route guards and sign-out, validate every finished route and offline workflow, then complete accessibility and visual polish.
 
