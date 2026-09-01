@@ -907,6 +907,18 @@ Verification: `TEST_DATABASE_URL=<local> go test -race ./... -count=1`, `go vet 
 
 Cash reconciliation remains intentionally deferred because authoritative expected-cash calculation still lacks payment-method attribution for visits and expenses. The next unblocked finance slice is the authenticated monthly-summary HTTP boundary; resolve the attribution gap before implementing cash expected-closing behavior.
 
+### Slice 7.6: authenticated monthly financial summary API — complete
+
+- Exposed `GET /api/v1/finance/monthly/{month}` behind bearer authentication and wired the production finance service into the HTTP server.
+- Strictly validates canonical `YYYY-MM` path values before database access and maps domain validation failures to sanitized `400 invalid_request` responses.
+- Returns the complete derived accounting breakdown: medical income, retail income, gross income, operating expenses, net profit, total draw, and retained funds.
+- Aligned the OpenAPI contract with actual behavior by adding the income breakdown, documenting malformed-month responses, and removing the incorrect empty-month `404`; valid empty months return zero-valued summaries.
+- Added handler and authenticated PostgreSQL HTTP coverage for authorization, request validation, response mapping, internal-error sanitization, clinic-timezone boundaries, and all accounting fields.
+
+Verification: `TEST_DATABASE_URL=<local> go test -race ./... -count=1`, `go vet ./...`, `go build ./...`, `npm run api:lint`, and OpenAPI bundle validation.
+
+Remaining unblocked finance work starts with the core daily summary fields. Cash reconciliation remains deferred until payment-method attribution is authoritative for every cash-affecting source.
+
 ### UI-first progress
 
 #### UI Slice 5a: daily/monthly summaries and trends — complete
@@ -1025,7 +1037,7 @@ The repository, Expo shell, backend/API foundation, schema, encryption, API cont
 3. **Patient and medical-record UI — complete:** searchable profiles, profile create/edit, weight/vaccination timelines, structured visit create/edit, service fees, item quantities, and saved price/financial presentation are covered with typed demo state.
 4. **Retail POS UI — complete:** typed product discovery, bounded cart controls, saved prices, payment selection, explicit confirmation, success state, and itemized receipt preview are covered with synthetic local state.
 5. **Finance UI — complete:** summaries, trends, distinct expense/owner-draw entry, and cash opening/expected/actual reconciliation with variance are covered by synthetic local state.
-6. **Production integration — next:** the authenticated backend covers patient records, visits, inventory, replay-safe retail checkout, operating expenses, and structurally separate owner draws; clinic-local monthly rollups now derive from those source records. Continue with the monthly-summary HTTP boundary and other unblocked projections while resolving cash payment attribution, separately closing the physical SQLCipher gate, then replacing fixtures feature-by-feature with encrypted local repositories/API adapters, sync, and PDF generation.
+6. **Production integration — next:** the authenticated backend covers patient records, visits, inventory, replay-safe retail checkout, operating expenses, structurally separate owner draws, and clinic-local monthly summary transport. Continue with core daily projections while resolving cash payment attribution, separately closing the physical SQLCipher gate, then replacing fixtures feature-by-feature with encrypted local repositories/API adapters, sync, and PDF generation.
 7. **Sync reliability:** complete recovery, retry, idempotency, and diagnostics across every core write.
 8. **Login development and activation last:** after the application modules work end to end, finish the username/password login design, reactivate all route guards and sign-out, validate every finished route and offline workflow, then complete accessibility and visual polish.
 
