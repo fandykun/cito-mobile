@@ -980,6 +980,19 @@ Verification: `TEST_DATABASE_URL=<local> go test -race ./... -count=1`, `go vet 
 
 Next carry shared payment attribution through visit writes. Daily payment breakdown and cash reconciliation remain blocked until visit attribution is complete and legacy unattributed records are explicitly backfilled or excluded.
 
+### Slice 7.12: required medical-visit payment attribution — complete
+
+- Made the shared `cash`, `qris`, `transfer`, or `card` payment method mandatory for every new encrypted visit create and amendment.
+- Persisted visit attribution in the same PostgreSQL transaction as encrypted clinical fields, financial totals, item price snapshots, and inventory deltas.
+- Included payment method in create and amendment replay matching so changed-method retries conflict without re-encryption, version increments, or repeated stock movement.
+- Preserved readable legacy visits with nullable response attribution, and rejected create replays that would invent attribution for an existing legacy UUID.
+- Updated authenticated visit create/get/list/update responses and strict OpenAPI request/response schemas with explicit legacy-null semantics.
+- Added unit, PostgreSQL service, HTTP boundary, and authenticated HTTP coverage for validation, persistence, create/update mapping, payment amendments, changed-method replay conflicts, legacy reads, and encrypted clinical data.
+
+Verification: `TEST_DATABASE_URL=<local> go test -race ./... -count=1`, `go vet ./...`, `go build ./...`, `npm run api:lint`, and OpenAPI bundle validation.
+
+All new cash-affecting backend writes now carry authoritative payment attribution. The next finance slice can derive clinic-local daily payment-method totals while explicitly excluding legacy unattributed records, followed by cash-reconciliation expected-closing behavior.
+
 ### UI-first progress
 
 #### UI Slice 5a: daily/monthly summaries and trends — complete
@@ -1098,7 +1111,7 @@ The repository, Expo shell, backend/API foundation, schema, encryption, API cont
 3. **Patient and medical-record UI — complete:** searchable profiles, profile create/edit, weight/vaccination timelines, structured visit create/edit, service fees, item quantities, and saved price/financial presentation are covered with typed demo state.
 4. **Retail POS UI — complete:** typed product discovery, bounded cart controls, saved prices, payment selection, explicit confirmation, success state, and itemized receipt preview are covered with synthetic local state.
 5. **Finance UI — complete:** summaries, trends, distinct expense/owner-draw entry, and cash opening/expected/actual reconciliation with variance are covered by synthetic local state.
-6. **Production integration — next:** the authenticated backend covers patient records, visits, inventory, replay-safe retail checkout, payment-attributed operating expenses and owner draws, and clinic-local daily/monthly summary transport. Continue shared payment attribution through visit writes before cash reconciliation, while separately closing the physical SQLCipher gate and replacing fixtures feature-by-feature with encrypted local repositories/API adapters, sync, and PDF generation.
+6. **Production integration — next:** the authenticated backend covers patient records, payment-attributed visits, inventory, replay-safe retail checkout, payment-attributed operating expenses and owner draws, and clinic-local daily/monthly summary transport. Next derive daily payment-method totals and authoritative cash reconciliation while excluding legacy unattributed records, and separately close the physical SQLCipher gate before replacing fixtures feature-by-feature with encrypted local repositories/API adapters, sync, and PDF generation.
 7. **Sync reliability:** complete recovery, retry, idempotency, and diagnostics across every core write.
 8. **Login development and activation last:** after the application modules work end to end, finish the username/password login design, reactivate all route guards and sign-out, validate every finished route and offline workflow, then complete accessibility and visual polish.
 
