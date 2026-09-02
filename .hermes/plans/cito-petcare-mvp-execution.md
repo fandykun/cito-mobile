@@ -968,6 +968,18 @@ Verification: `TEST_DATABASE_URL=<local> go test -race ./... -count=1`, `go vet 
 
 Next carry the shared payment attribution through owner-draw writes, then visit writes; daily payment breakdown and cash reconciliation remain blocked until both are complete.
 
+### Slice 7.11: required owner-draw payment attribution — complete
+
+- Made the shared `cash`, `qris`, `transfer`, or `card` payment method mandatory for every new replay-safe owner-draw write and persisted it separately from operating expenses.
+- Included payment attribution in exact-replay matching so reusing an owner-draw UUID with a changed method conflicts without rewriting financial history.
+- Preserved readable legacy owner draws with nullable response attribution while requiring non-null attribution on all new API requests.
+- Updated authenticated owner-draw create/list responses and the OpenAPI request/response schemas with explicit legacy-null semantics.
+- Added unit, PostgreSQL service, HTTP boundary, and authenticated HTTP coverage for valid methods, missing/invalid methods, persistence, changed-method replay conflicts, pagination, legacy unattributed reads, and owner-draw/expense separation.
+
+Verification: `TEST_DATABASE_URL=<local> go test -race ./... -count=1`, `go vet ./...`, `go build ./...`, `npm run api:lint`, and OpenAPI bundle validation.
+
+Next carry shared payment attribution through visit writes. Daily payment breakdown and cash reconciliation remain blocked until visit attribution is complete and legacy unattributed records are explicitly backfilled or excluded.
+
 ### UI-first progress
 
 #### UI Slice 5a: daily/monthly summaries and trends — complete
@@ -1086,7 +1098,7 @@ The repository, Expo shell, backend/API foundation, schema, encryption, API cont
 3. **Patient and medical-record UI — complete:** searchable profiles, profile create/edit, weight/vaccination timelines, structured visit create/edit, service fees, item quantities, and saved price/financial presentation are covered with typed demo state.
 4. **Retail POS UI — complete:** typed product discovery, bounded cart controls, saved prices, payment selection, explicit confirmation, success state, and itemized receipt preview are covered with synthetic local state.
 5. **Finance UI — complete:** summaries, trends, distinct expense/owner-draw entry, and cash opening/expected/actual reconciliation with variance are covered by synthetic local state.
-6. **Production integration — next:** the authenticated backend covers patient records, visits, inventory, replay-safe retail checkout, payment-attributed operating expenses, structurally separate owner draws, and clinic-local daily/monthly summary transport. Continue shared payment attribution through owner-draw and visit writes before cash reconciliation, while separately closing the physical SQLCipher gate and replacing fixtures feature-by-feature with encrypted local repositories/API adapters, sync, and PDF generation.
+6. **Production integration — next:** the authenticated backend covers patient records, visits, inventory, replay-safe retail checkout, payment-attributed operating expenses and owner draws, and clinic-local daily/monthly summary transport. Continue shared payment attribution through visit writes before cash reconciliation, while separately closing the physical SQLCipher gate and replacing fixtures feature-by-feature with encrypted local repositories/API adapters, sync, and PDF generation.
 7. **Sync reliability:** complete recovery, retry, idempotency, and diagnostics across every core write.
 8. **Login development and activation last:** after the application modules work end to end, finish the username/password login design, reactivate all route guards and sign-out, validate every finished route and offline workflow, then complete accessibility and visual polish.
 
@@ -1103,6 +1115,6 @@ These do not block repository separation, but they must be documented before the
 - Whether the single account is expected to use exactly one device for MVP.
 - Retention and audit policy for edits to medical records beyond `updated_at`.
 - Backup destination, recovery-point objective, and recovery-time objective.
-- Expense payment-method attribution for authoritative cash-drawer reconciliation; the mock UI temporarily treats every daily expense as a cash outflow and labels that assumption.
+- Backfill policy for legacy visit, expense, and owner-draw rows whose payment method is unknown; authoritative cash reconciliation must exclude them until resolved.
 
 When a gap affects product behavior, update `docs/prd.md` and its version history. When it affects implementation only, add an architecture decision record without changing product scope.
