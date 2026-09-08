@@ -90,7 +90,7 @@ describe('MockRecordsScreen', () => {
 
     await user.press(screen.getByRole('button', { name: 'Lihat detail Milo Demo' }));
     await user.press(screen.getByRole('button', { name: 'Edit profil Milo Demo' }));
-    expect(screen.getByText('Edit pasien')).toBeOnTheScreen();
+    expect(screen.getByRole('header', { name: 'Edit: Milo Demo' })).toBeOnTheScreen();
 
     await user.clear(screen.getByLabelText('Nama pasien'));
     await user.type(screen.getByLabelText('Nama pasien'), 'Milo Demo Updated');
@@ -137,7 +137,7 @@ describe('MockRecordsScreen', () => {
 
     await user.press(screen.getByRole('button', { name: 'Lihat detail Luna Demo' }));
     await user.press(screen.getByRole('button', { name: 'Tambah kunjungan Luna Demo' }));
-    expect(screen.getByText('Tambah kunjungan')).toBeOnTheScreen();
+    expect(screen.getByRole('header', { name: 'Tambah kunjungan — Luna Demo' })).toBeOnTheScreen();
 
     await user.press(screen.getByRole('button', { name: 'Simpan kunjungan demo' }));
     expect(screen.getByText('Jenis kunjungan wajib diisi.')).toBeOnTheScreen();
@@ -175,7 +175,7 @@ describe('MockRecordsScreen', () => {
     await user.press(
       screen.getByRole('button', { name: 'Edit kunjungan Kontrol kulit 21 Agu 2026' }),
     );
-    expect(screen.getByText('Edit kunjungan')).toBeOnTheScreen();
+    expect(screen.getByRole('header', { name: 'Edit kunjungan — Luna Demo' })).toBeOnTheScreen();
     await user.clear(screen.getByLabelText('Diagnosis kunjungan'));
     await user.type(screen.getByLabelText('Diagnosis kunjungan'), 'Dermatitis membaik.');
     await user.press(screen.getByRole('button', { name: 'Simpan kunjungan demo' }));

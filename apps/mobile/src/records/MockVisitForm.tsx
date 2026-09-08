@@ -2,7 +2,6 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 import { useMemo, useState } from 'react';
 import {
   Pressable,
-  ScrollView,
   StyleSheet,
   Text,
   TextInput,
@@ -10,6 +9,7 @@ import {
   type KeyboardTypeOptions,
 } from 'react-native';
 
+import { EditorScreen } from '@/src/components/EditorScreen';
 import { colors, radii, spacing, typography } from '@/src/design/tokens';
 import { mockInventoryItems } from '@/src/inventory/mockData';
 import type { MockPatient, MockVisit, MockVisitItem } from '@/src/records/mockData';
@@ -138,25 +138,32 @@ export function MockVisitForm({ initialVisit, patient, onCancel, onSave }: MockV
   }
 
   return (
-    <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled" style={styles.screen}>
-      <View style={styles.header}>
-        <Pressable
-          accessibilityLabel="Kembali ke detail pasien demo"
-          accessibilityRole="button"
-          onPress={onCancel}
-          style={({ pressed }) => [styles.backButton, pressed && styles.pressed]}
-        >
-          <Ionicons color={colors.foreground} name="arrow-back" size={20} />
-        </Pressable>
-        <View style={styles.headerText}>
-          <Text style={styles.heading}>{initialVisit ? 'Edit kunjungan' : 'Tambah kunjungan'}</Text>
-          <Text style={styles.subtitle}>{patient.name}</Text>
+    <EditorScreen
+      backLabel="Kembali ke detail pasien demo"
+      error={error}
+      onCancel={onCancel}
+      title={initialVisit ? `Edit kunjungan — ${patient.name}` : `Tambah kunjungan — ${patient.name}`}
+      footer={
+        <View style={styles.actionRow}>
+          <Pressable
+            accessibilityLabel="Batal kunjungan demo"
+            accessibilityRole="button"
+            onPress={onCancel}
+            style={({ pressed }) => [styles.cancelButton, pressed && styles.pressed]}
+          >
+            <Text style={styles.cancelButtonText}>Batal</Text>
+          </Pressable>
+          <Pressable
+            accessibilityLabel="Simpan kunjungan demo"
+            accessibilityRole="button"
+            onPress={submit}
+            style={({ pressed }) => [styles.saveButton, pressed && styles.pressed]}
+          >
+            <Text style={styles.saveButtonText}>Simpan lokal</Text>
+          </Pressable>
         </View>
-        <View style={styles.demoBadge}>
-          <Text style={styles.demoBadgeText}>Demo</Text>
-        </View>
-      </View>
-
+      }
+    >
       <View style={styles.formCard}>
         <Field
           accessibilityLabel="Jenis kunjungan"
@@ -283,12 +290,6 @@ export function MockVisitForm({ initialVisit, patient, onCancel, onSave }: MockV
           placeholder="Catatan tambahan"
           value={vetNotes}
         />
-
-        {error ? (
-          <Text accessibilityRole="alert" style={styles.errorText}>
-            {error}
-          </Text>
-        ) : null}
       </View>
 
       <View style={styles.notice}>
@@ -298,26 +299,7 @@ export function MockVisitForm({ initialVisit, patient, onCancel, onSave }: MockV
           rekam medis terenkripsi, audit, pengurangan stok, transaksi keuangan, API, atau sinkronisasi.
         </Text>
       </View>
-
-      <View style={styles.actionRow}>
-        <Pressable
-          accessibilityLabel="Batal kunjungan demo"
-          accessibilityRole="button"
-          onPress={onCancel}
-          style={({ pressed }) => [styles.cancelButton, pressed && styles.pressed]}
-        >
-          <Text style={styles.cancelButtonText}>Batal</Text>
-        </Pressable>
-        <Pressable
-          accessibilityLabel="Simpan kunjungan demo"
-          accessibilityRole="button"
-          onPress={submit}
-          style={({ pressed }) => [styles.saveButton, pressed && styles.pressed]}
-        >
-          <Text style={styles.saveButtonText}>Simpan lokal</Text>
-        </Pressable>
-      </View>
-    </ScrollView>
+    </EditorScreen>
   );
 }
 
@@ -375,15 +357,6 @@ function PreviewRow({
 
 const styles = StyleSheet.create({
   actionRow: { flexDirection: 'row', gap: spacing.medium },
-  backButton: {
-    alignItems: 'center',
-    borderColor: colors.border,
-    borderRadius: radii.medium,
-    borderWidth: 1,
-    height: 40,
-    justifyContent: 'center',
-    width: 40,
-  },
   cancelButton: {
     alignItems: 'center',
     backgroundColor: colors.card,
@@ -394,18 +367,11 @@ const styles = StyleSheet.create({
     padding: spacing.medium,
   },
   cancelButtonText: { color: colors.foreground, fontSize: typography.label, fontWeight: '700' },
-  content: { gap: spacing.large, padding: spacing.xlarge, paddingBottom: spacing.xxlarge },
-  demoBadge: {
-    backgroundColor: '#E6F7F5',
-    borderRadius: radii.pill,
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-  },
-  demoBadgeText: { color: '#0F766E', fontSize: typography.caption, fontWeight: '700' },
-  errorText: { color: colors.destructive, fontSize: typography.caption, fontWeight: '700' },
   fieldLabel: {
-    color: colors.foreground,
-    fontSize: typography.caption,
+    color: colors.mutedForeground,
+    fontSize: 10,
+    letterSpacing: 0.5,
+    textTransform: 'uppercase',
     fontWeight: '700',
     marginBottom: spacing.xsmall,
   },
@@ -417,20 +383,10 @@ const styles = StyleSheet.create({
     gap: spacing.small,
     padding: spacing.medium,
   },
-  formCard: {
-    backgroundColor: colors.card,
-    borderColor: colors.border,
-    borderRadius: radii.large,
-    borderWidth: 1,
-    gap: spacing.large,
-    padding: spacing.large,
-  },
-  header: { alignItems: 'center', flexDirection: 'row', gap: spacing.medium },
-  headerText: { flex: 1 },
-  heading: { color: colors.foreground, fontSize: typography.heading, fontWeight: '800' },
+  formCard: { gap: spacing.xlarge },
   helperText: { color: colors.mutedForeground, fontSize: typography.caption, lineHeight: 18 },
   input: {
-    backgroundColor: colors.background,
+    backgroundColor: colors.card,
     borderColor: colors.border,
     borderRadius: radii.medium,
     borderWidth: 1,
@@ -491,6 +447,4 @@ const styles = StyleSheet.create({
     padding: spacing.medium,
   },
   saveButtonText: { color: colors.primaryForeground, fontSize: typography.label, fontWeight: '700' },
-  screen: { backgroundColor: colors.background, flex: 1 },
-  subtitle: { color: colors.mutedForeground, fontSize: typography.caption, marginTop: spacing.xsmall },
 });

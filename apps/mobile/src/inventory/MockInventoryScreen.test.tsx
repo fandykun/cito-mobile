@@ -83,7 +83,7 @@ describe('MockInventoryScreen', () => {
 
     await user.press(screen.getByRole('button', { name: 'Lihat detail Amoxicillin 250mg' }));
     await user.press(screen.getByRole('button', { name: 'Edit Amoxicillin 250mg' }));
-    expect(screen.getByText('Edit item')).toBeOnTheScreen();
+    expect(screen.getByRole('header', { name: 'Edit: Amoxicillin 250mg' })).toBeOnTheScreen();
 
     await user.clear(screen.getByLabelText('Nama item'));
     await user.type(screen.getByLabelText('Nama item'), 'Amoxicillin 500mg Demo');

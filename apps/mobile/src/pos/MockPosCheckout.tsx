@@ -82,6 +82,30 @@ export function MockCheckoutConfirmation({
         </View>
       </View>
 
+      {paymentMethod === 'qris' ? (
+        <View style={styles.qrisCard}>
+          <View
+            accessible
+            accessibilityLabel="Ilustrasi QR, tidak dapat dipindai"
+            accessibilityRole="image"
+            style={styles.qrisIllustration}
+          >
+            <Ionicons color={colors.mutedForeground} name="qr-code-outline" size={48} />
+          </View>
+          <View style={styles.qrisDescription}>
+            <Text style={styles.qrisTitle}>QRIS demo</Text>
+            <Text style={styles.qrisIllustrationLabel}>Ilustrasi · tidak dapat dipindai</Text>
+            <Text style={styles.qrisHelp}>
+              QR merchant asli belum tersedia. Jangan gunakan ilustrasi ini untuk pembayaran.
+              Konfirmasi hanya membuat pratinjau struk lokal, bukan memverifikasi pembayaran QRIS.
+            </Text>
+          </View>
+          <View style={styles.qrisTotalBadge}>
+            <Text style={styles.qrisTotal}>Total QRIS demo: {formatCurrency(total)}</Text>
+          </View>
+        </View>
+      ) : null}
+
       <View style={styles.notice}>
         <Ionicons color="#9A3412" name="warning-outline" size={20} />
         <Text style={styles.noticeText}>
@@ -96,7 +120,9 @@ export function MockCheckoutConfirmation({
         onPress={onConfirm}
         style={({ pressed }) => [styles.primaryButton, pressed && styles.pressed]}
       >
-        <Text style={styles.primaryButtonText}>Konfirmasi demo</Text>
+        <Text style={styles.primaryButtonText}>
+          {paymentMethod === 'qris' ? 'Konfirmasi pembayaran QRIS demo' : 'Konfirmasi demo'}
+        </Text>
       </Pressable>
     </ScrollView>
   );
@@ -231,6 +257,41 @@ const styles = StyleSheet.create({
     padding: spacing.large,
   },
   primaryButtonText: { color: colors.primaryForeground, fontSize: typography.label, fontWeight: '800' },
+  qrisCard: {
+    alignItems: 'center',
+    backgroundColor: colors.card,
+    borderColor: colors.border,
+    borderRadius: radii.large,
+    borderWidth: 1,
+    gap: spacing.medium,
+    padding: spacing.large,
+  },
+  qrisDescription: { alignItems: 'center', gap: spacing.xsmall },
+  qrisHelp: {
+    color: colors.mutedForeground,
+    fontSize: typography.caption,
+    lineHeight: 18,
+    textAlign: 'center',
+  },
+  qrisIllustration: {
+    alignItems: 'center',
+    backgroundColor: colors.card,
+    borderColor: colors.border,
+    borderRadius: radii.large,
+    borderWidth: 2,
+    height: 128,
+    justifyContent: 'center',
+    width: 128,
+  },
+  qrisIllustrationLabel: { color: colors.mutedForeground, fontSize: typography.caption, fontWeight: '700', textAlign: 'center' },
+  qrisTitle: { color: colors.foreground, fontSize: typography.label, fontWeight: '800' },
+  qrisTotal: { color: '#0F766E', fontSize: typography.caption, fontWeight: '800', textAlign: 'center' },
+  qrisTotalBadge: {
+    backgroundColor: '#E6F7F5',
+    borderRadius: radii.medium,
+    paddingHorizontal: spacing.medium,
+    paddingVertical: spacing.small,
+  },
   receiptCard: {
     backgroundColor: colors.card,
     borderColor: colors.border,

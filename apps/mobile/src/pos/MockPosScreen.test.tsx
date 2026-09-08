@@ -79,11 +79,19 @@ describe('MockPosScreen', () => {
 
     expect(screen.getByText('Konfirmasi pembayaran')).toBeOnTheScreen();
     expect(screen.getByText('Metode QRIS')).toBeOnTheScreen();
+    expect(screen.getByText('QRIS demo')).toBeOnTheScreen();
+    expect(screen.getByRole('image', { name: 'Ilustrasi QR, tidak dapat dipindai' })).toBeOnTheScreen();
+    expect(screen.getByText('Ilustrasi · tidak dapat dipindai')).toBeOnTheScreen();
+    expect(screen.getByText(/QR merchant asli belum tersedia/i)).toBeOnTheScreen();
+    expect(screen.getByText('Total QRIS demo: Rp 8.000')).toBeOnTheScreen();
+    expect(screen.getByText('Konfirmasi pembayaran QRIS demo')).toBeOnTheScreen();
     expect(screen.getByText('Total Rp 8.000')).toBeOnTheScreen();
     expect(screen.getByText(/belum menyimpan transaksi/i)).toBeOnTheScreen();
 
     await user.press(screen.getByRole('button', { name: 'Kembali ke keranjang demo' }));
     expect(screen.getByText('Keranjang demo')).toBeOnTheScreen();
+    expect(screen.getByRole('button', { name: 'Pilih pembayaran QRIS', selected: true })).toBeOnTheScreen();
+    expect(screen.getByText('1 × Rp 8.000')).toBeOnTheScreen();
 
     await user.press(screen.getByRole('button', { name: 'Tinjau pembayaran demo' }));
     await user.press(screen.getByRole('button', { name: 'Konfirmasi pembayaran demo' }));
@@ -100,5 +108,24 @@ describe('MockPosScreen', () => {
 
     await user.press(screen.getByRole('button', { name: 'Mulai penjualan demo baru' }));
     expect(screen.getByText('Keranjang masih kosong')).toBeOnTheScreen();
+  });
+
+  it.each(['Tunai', 'Transfer', 'Kartu'])('keeps %s checkout and receipt without a QRIS panel', async (method) => {
+    const user = userEvent.setup();
+    await render(<MockPosScreen />);
+    await user.press(screen.getByRole('button', { name: 'Tambah Amoxicillin 250mg ke keranjang' }));
+    for (const label of ['Tunai', 'QRIS', 'Transfer', 'Kartu']) {
+      expect(screen.getByRole('button', { name: `Pilih pembayaran ${label}` })).toBeOnTheScreen();
+    }
+    await user.press(screen.getByRole('button', { name: `Pilih pembayaran ${method}` }));
+    await user.press(screen.getByRole('button', { name: 'Tinjau pembayaran demo' }));
+    expect(screen.queryByText('QRIS demo')).not.toBeOnTheScreen();
+    expect(screen.queryByRole('image', { name: 'Ilustrasi QR, tidak dapat dipindai' })).not.toBeOnTheScreen();
+    expect(screen.getByText(`Metode ${method}`)).toBeOnTheScreen();
+    expect(screen.getByText('Konfirmasi demo')).toBeOnTheScreen();
+    await user.press(screen.getByRole('button', { name: 'Konfirmasi pembayaran demo' }));
+    expect(screen.getByText(`Metode pembayaran ${method}`)).toBeOnTheScreen();
+    expect(screen.getByText('Total dibayar Rp 8.000')).toBeOnTheScreen();
+    expect(screen.getByText(/Tidak ada pembayaran, transaksi/i)).toBeOnTheScreen();
   });
 });

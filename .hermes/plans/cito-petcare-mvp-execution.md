@@ -1104,6 +1104,22 @@ Additionally:
 
 ## Immediate execution queue
 
+### Updated prototype alignment — editor and QRIS slice complete
+
+Reviewed the updated reference in `prototype/web/src/app/App.tsx` and implemented the next focused UI slice in Expo, without changing backend contracts or importing prototype state:
+
+- Inventory add/edit, patient add/edit, and medical visit add/edit now use a shared full-screen modal editor, covering the tab shell like the reference overlays. Headers and save/cancel controls remain fixed while fields scroll; Android back requests cancel the editor. Keyboard avoidance and safe-area handling are included, but still require physical-device verification.
+- Matched the reference's flat form layout, white bordered inputs, compact uppercase field labels, and record-specific edit titles. Existing medical fields, price snapshots, validation, and local save/cancel behavior remain intact.
+- Kept validation errors visible in the fixed footer rather than below long forms, and retained explicit demo/non-persistence notices.
+- Added a QRIS-specific payment-review card and confirmation text. The QR icon is explicitly a non-scannable illustration: no merchant payment payload, payment verification, or real receipt is fabricated. Cash, transfer, and card checkout remain supported.
+- Corrected ESLint's generated-output exclusion to be global, so lint continues passing after a web export.
+
+Verification: 102 tests across 24 mobile suites pass; mobile TypeScript, ESLint, Android JavaScript export, and web export pass. A Chromium smoke test at 390 × 844 exercised all three editor entry/back paths, checked the pinned inventory save footer and visible visit validation error, completed QRIS confirmation through the receipt preview, and reported no page errors. Screenshots were inspected after modal animations settled.
+
+Environment note: Metro development startup encountered the host file-watcher limit and a React Native DevTools sandbox error. Visual verification used the exported web bundle and a static server instead; no native-device or APK verification is claimed.
+
+Scope decisions: appointment scheduling remains excluded by PRD §1.4; card payments remain supported per PRD §3.6 despite their omission from the latest prototype. Login redesign/activation remains the final integration step. This is a focused editor/checkout alignment, not a claim of complete pixel parity across every screen; remaining reference refinements should be delivered as separate verified slices.
+
 The repository, Expo shell, backend/API foundation, schema, encryption, API contract, and single-account authentication foundations are implemented. The mobile login gate is temporarily disabled so the screens can be reviewed without a finished login design. Continue in these independently revertible product slices, prioritizing the UI-first track requested for the current development cycle:
 
 1. **Dashboard UI — complete:** mock-backed Expo dashboard and reusable presentation primitives without appointment-booking UI.

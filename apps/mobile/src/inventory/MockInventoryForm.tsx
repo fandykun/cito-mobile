@@ -1,7 +1,8 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 
+import { EditorScreen } from '@/src/components/EditorScreen';
 import { colors, radii, spacing, typography } from '@/src/design/tokens';
 import type { MockInventoryCategory, MockInventoryItem } from '@/src/inventory/mockData';
 
@@ -83,26 +84,32 @@ export function MockInventoryForm({ initialItem, onCancel, onSave }: MockInvento
   }
 
   return (
-    <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled" style={styles.screen}>
-      <View style={styles.header}>
-        <Pressable
-          accessibilityLabel="Kembali ke inventaris demo"
-          accessibilityRole="button"
-          hitSlop={8}
-          onPress={onCancel}
-          style={({ pressed }) => [styles.backButton, pressed && styles.pressed]}
-        >
-          <Ionicons color={colors.foreground} name="arrow-back" size={20} />
-        </Pressable>
-        <View style={styles.headerText}>
-          <Text style={styles.heading}>{initialItem ? 'Edit item' : 'Tambah item'}</Text>
-          <Text style={styles.subtitle}>Perubahan lokal sementara</Text>
+    <EditorScreen
+      backLabel="Kembali ke inventaris demo"
+      error={error}
+      onCancel={onCancel}
+      title={initialItem ? `Edit: ${initialItem.name}` : 'Tambah item'}
+      footer={
+        <View style={styles.actionRow}>
+          <Pressable
+            accessibilityLabel="Batal edit item demo"
+            accessibilityRole="button"
+            onPress={onCancel}
+            style={({ pressed }) => [styles.cancelButton, pressed && styles.pressed]}
+          >
+            <Text style={styles.cancelButtonText}>Batal</Text>
+          </Pressable>
+          <Pressable
+            accessibilityLabel="Simpan item demo"
+            accessibilityRole="button"
+            onPress={submit}
+            style={({ pressed }) => [styles.saveButton, pressed && styles.pressed]}
+          >
+            <Text style={styles.saveButtonText}>Simpan lokal</Text>
+          </Pressable>
         </View>
-        <View style={styles.demoBadge}>
-          <Text style={styles.demoBadgeText}>Data demo</Text>
-        </View>
-      </View>
-
+      }
+    >
       <View style={styles.notice}>
         <Ionicons color="#C2410C" name="information-circle-outline" size={19} />
         <Text style={styles.noticeText}>
@@ -204,33 +211,8 @@ export function MockInventoryForm({ initialItem, onCancel, onSave }: MockInvento
           placeholder="contoh: 18 Okt 2026"
           value={expiryLabel}
         />
-
-        {error ? (
-          <Text accessibilityRole="alert" style={styles.errorText}>
-            {error}
-          </Text>
-        ) : null}
       </View>
-
-      <View style={styles.actionRow}>
-        <Pressable
-          accessibilityLabel="Batal edit item demo"
-          accessibilityRole="button"
-          onPress={onCancel}
-          style={({ pressed }) => [styles.cancelButton, pressed && styles.pressed]}
-        >
-          <Text style={styles.cancelButtonText}>Batal</Text>
-        </Pressable>
-        <Pressable
-          accessibilityLabel="Simpan item demo"
-          accessibilityRole="button"
-          onPress={submit}
-          style={({ pressed }) => [styles.saveButton, pressed && styles.pressed]}
-        >
-          <Text style={styles.saveButtonText}>Simpan lokal</Text>
-        </Pressable>
-      </View>
-    </ScrollView>
+    </EditorScreen>
   );
 }
 
@@ -270,15 +252,6 @@ function FormField({
 
 const styles = StyleSheet.create({
   actionRow: { flexDirection: 'row', gap: spacing.medium },
-  backButton: {
-    alignItems: 'center',
-    borderColor: colors.border,
-    borderRadius: radii.medium,
-    borderWidth: 1,
-    height: 40,
-    justifyContent: 'center',
-    width: 40,
-  },
   cancelButton: {
     alignItems: 'center',
     backgroundColor: colors.card,
@@ -290,34 +263,17 @@ const styles = StyleSheet.create({
   },
   cancelButtonText: { color: colors.foreground, fontSize: typography.label, fontWeight: '700' },
   column: { flex: 1 },
-  content: { gap: spacing.large, padding: spacing.xlarge, paddingBottom: spacing.xxlarge },
-  demoBadge: {
-    backgroundColor: '#E6F7F5',
-    borderRadius: radii.pill,
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-  },
-  demoBadgeText: { color: '#0F766E', fontSize: typography.caption, fontWeight: '700' },
-  errorText: { color: colors.destructive, fontSize: typography.caption, fontWeight: '700' },
   fieldLabel: {
-    color: colors.foreground,
-    fontSize: typography.caption,
+    color: colors.mutedForeground,
+    fontSize: 10,
+    letterSpacing: 0.5,
+    textTransform: 'uppercase',
     fontWeight: '700',
     marginBottom: spacing.xsmall,
   },
-  formCard: {
-    backgroundColor: colors.card,
-    borderColor: colors.border,
-    borderRadius: radii.large,
-    borderWidth: 1,
-    gap: spacing.large,
-    padding: spacing.large,
-  },
-  header: { alignItems: 'center', flexDirection: 'row', gap: spacing.medium },
-  headerText: { flex: 1 },
-  heading: { color: colors.foreground, fontSize: typography.heading, fontWeight: '800' },
+  formCard: { gap: spacing.xlarge },
   input: {
-    backgroundColor: colors.background,
+    backgroundColor: colors.card,
     borderColor: colors.border,
     borderRadius: radii.medium,
     borderWidth: 1,
@@ -346,7 +302,6 @@ const styles = StyleSheet.create({
     padding: spacing.medium,
   },
   saveButtonText: { color: colors.primaryForeground, fontSize: typography.label, fontWeight: '700' },
-  screen: { backgroundColor: colors.background, flex: 1 },
   segment: {
     alignItems: 'center',
     backgroundColor: colors.background,
@@ -359,6 +314,5 @@ const styles = StyleSheet.create({
   segmentSelected: { backgroundColor: colors.primary, borderColor: colors.primary },
   segmentText: { color: colors.mutedForeground, fontSize: typography.label, fontWeight: '700' },
   segmentTextSelected: { color: colors.primaryForeground },
-  subtitle: { color: colors.mutedForeground, fontSize: typography.caption, marginTop: spacing.xsmall },
   twoColumnRow: { flexDirection: 'row', gap: spacing.medium },
 });
