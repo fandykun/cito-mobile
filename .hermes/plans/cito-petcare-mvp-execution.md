@@ -1125,6 +1125,12 @@ Scope decisions: appointment scheduling remains excluded by PRD §1.4; card paym
 - [x] Preserve the shortcut card layout through Expo Router's `Link asChild` by supplying a static Pressable style rather than a style callback that is lost in the web export.
 - [x] Verify the navigation/style unit test and Chromium card geometry/navigation at 320px and 390px. Android and web exports pass.
 
+### Reference follow-up — inventory and patient quick edit
+
+- [x] Put one independent pencil edit control on each collapsed inventory/patient card, matching the reference without nesting interactive buttons.
+- [x] Preserve prefilled editors, cancel/expansion state, existing save behavior, histories, and expanded stock-adjustment actions.
+- [x] Verify regression tests, mobile typecheck/lint, Android/web exports, and Chromium edit/cancel flows at 320px and 390px. Edit targets measure at least 44×44px and fit both viewports.
+
 The repository, Expo shell, backend/API foundation, schema, encryption, API contract, and single-account authentication foundations are implemented. The mobile login gate is temporarily disabled so the screens can be reviewed without a finished login design. Continue in these independently revertible product slices, prioritizing the UI-first track requested for the current development cycle:
 
 1. **Dashboard UI — complete:** mock-backed Expo dashboard and reusable presentation primitives without appointment-booking UI.

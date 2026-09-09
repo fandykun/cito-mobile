@@ -251,65 +251,75 @@ function InventoryRow({
 
   return (
     <View style={showDivider ? styles.rowDivider : undefined}>
-      <Pressable
-        accessibilityLabel={`${expanded ? 'Tutup' : 'Lihat'} detail ${item.name}`}
-        accessibilityRole="button"
-        accessibilityState={{ expanded }}
-        onPress={onToggle}
-        style={({ pressed }) => [styles.itemButton, pressed && styles.pressed]}
-      >
-        <View style={styles.itemTitleRow}>
-          <View style={styles.itemTitleGroup}>
-            <Text style={styles.itemName}>{item.name}</Text>
-            <Text style={styles.itemCategory}>
-              {item.categoryLabel} · {item.category === 'medical' ? 'Medis' : 'Ritel'}
-            </Text>
-          </View>
-          <View
-            style={[
-              styles.stockBadge,
-              lowStock && styles.stockBadgeLow,
-              critical && styles.stockBadgeCritical,
-            ]}
-          >
-            <Text
+      <View style={styles.cardHeader}>
+        <Pressable
+          accessibilityLabel={`${expanded ? 'Tutup' : 'Lihat'} detail ${item.name}`}
+          accessibilityRole="button"
+          accessibilityState={{ expanded }}
+          onPress={onToggle}
+          style={({ pressed }) => [styles.itemButton, pressed && styles.pressed]}
+        >
+          <View style={styles.itemTitleRow}>
+            <View style={styles.itemTitleGroup}>
+              <Text style={styles.itemName}>{item.name}</Text>
+              <Text style={styles.itemCategory}>
+                {item.categoryLabel} · {item.category === 'medical' ? 'Medis' : 'Ritel'}
+              </Text>
+            </View>
+            <View
               style={[
-                styles.stockBadgeText,
-                lowStock && styles.stockBadgeTextLow,
-                critical && styles.stockBadgeTextCritical,
+                styles.stockBadge,
+                lowStock && styles.stockBadgeLow,
+                critical && styles.stockBadgeCritical,
               ]}
             >
-              {item.stockQuantity} {item.unit}
-            </Text>
+              <Text
+                style={[
+                  styles.stockBadgeText,
+                  lowStock && styles.stockBadgeTextLow,
+                  critical && styles.stockBadgeTextCritical,
+                ]}
+              >
+                {item.stockQuantity} {item.unit}
+              </Text>
+            </View>
           </View>
-        </View>
 
-        <View style={styles.progressTrack}>
-          <View
-            style={[
-              styles.progressFill,
-              lowStock && styles.progressFillLow,
-              critical && styles.progressFillCritical,
-              { flex: Math.max(stockRatio * 100, 2) },
-            ]}
-          />
-          <View style={{ flex: Math.max((1 - stockRatio) * 100, 0) }} />
-        </View>
-
-        <View style={styles.itemFooter}>
-          <Text style={styles.itemMeta}>
-            batas {item.lowStockThreshold} {item.unit}
-          </Text>
-          <View style={styles.priceRow}>
-            <Text style={styles.itemMeta}>Rp {idrFormatter.format(item.sellingPrice)}/{item.unit}</Text>
-            <Ionicons
-              color={colors.mutedForeground}
-              name={expanded ? 'chevron-up' : 'chevron-down'}
-              size={16}
+          <View style={styles.progressTrack}>
+            <View
+              style={[
+                styles.progressFill,
+                lowStock && styles.progressFillLow,
+                critical && styles.progressFillCritical,
+                { flex: Math.max(stockRatio * 100, 2) },
+              ]}
             />
+            <View style={{ flex: Math.max((1 - stockRatio) * 100, 0) }} />
           </View>
-        </View>
-      </Pressable>
+
+          <View style={styles.itemFooter}>
+            <Text style={styles.itemMeta}>
+              batas {item.lowStockThreshold} {item.unit}
+            </Text>
+            <View style={styles.priceRow}>
+              <Text style={styles.itemMeta}>Rp {idrFormatter.format(item.sellingPrice)}/{item.unit}</Text>
+              <Ionicons
+                color={colors.mutedForeground}
+                name={expanded ? 'chevron-up' : 'chevron-down'}
+                size={16}
+              />
+            </View>
+          </View>
+        </Pressable>
+        <Pressable
+          accessibilityLabel={`Edit ${item.name}`}
+          accessibilityRole="button"
+          onPress={onEdit}
+          style={({ pressed }) => [styles.editButton, pressed && styles.pressed]}
+        >
+          <Ionicons color={colors.primary} name="create-outline" size={18} />
+        </Pressable>
+      </View>
 
       {expanded ? (
         <View style={styles.details}>
@@ -330,15 +340,6 @@ function InventoryRow({
             </View>
           ) : null}
           <View style={styles.detailActions}>
-            <Pressable
-              accessibilityLabel={`Edit ${item.name}`}
-              accessibilityRole="button"
-              onPress={onEdit}
-              style={({ pressed }) => [styles.detailActionButton, pressed && styles.pressed]}
-            >
-              <Ionicons color={colors.primary} name="create-outline" size={16} />
-              <Text style={styles.detailActionText}>Edit</Text>
-            </Pressable>
             <Pressable
               accessibilityLabel={`Sesuaikan stok ${item.name}`}
               accessibilityRole="button"
@@ -365,6 +366,20 @@ function Detail({ label, value }: { label: string; value: string }) {
 }
 
 const styles = StyleSheet.create({
+  cardHeader: {
+    alignItems: 'flex-start',
+    flexDirection: 'row',
+    gap: spacing.small,
+    padding: spacing.large,
+  },
+  editButton: {
+    alignItems: 'center',
+    borderRadius: radii.medium,
+    flexShrink: 0,
+    justifyContent: 'center',
+    minHeight: 44,
+    minWidth: 44,
+  },
   addButton: {
     alignItems: 'center',
     backgroundColor: colors.primary,
@@ -535,7 +550,9 @@ const styles = StyleSheet.create({
     fontWeight: '800',
   },
   itemButton: {
-    padding: spacing.large,
+    flex: 1,
+    minWidth: 0,
+    minHeight: 44,
   },
   itemCategory: {
     color: colors.mutedForeground,
@@ -550,6 +567,8 @@ const styles = StyleSheet.create({
   itemFooter: {
     alignItems: 'center',
     flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: spacing.xsmall,
     justifyContent: 'space-between',
     marginTop: spacing.small,
   },
@@ -563,12 +582,16 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   itemTitleGroup: {
-    flex: 1,
-    marginRight: spacing.medium,
+    flexGrow: 1,
+    flexShrink: 1,
+    flexBasis: 140,
+    minWidth: 0,
   },
   itemTitleRow: {
     alignItems: 'flex-start',
     flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: spacing.small,
     justifyContent: 'space-between',
   },
   listCard: {

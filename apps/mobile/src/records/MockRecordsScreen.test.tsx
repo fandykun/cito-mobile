@@ -1,4 +1,4 @@
-import { render, screen, userEvent } from '@testing-library/react-native';
+import { render, screen, userEvent, within } from '@testing-library/react-native';
 
 import { MockRecordsScreen } from '@/src/records/MockRecordsScreen';
 
@@ -14,6 +14,31 @@ describe('MockRecordsScreen', () => {
     expect(screen.getByText('Cleo Demo')).toBeOnTheScreen();
     expect(screen.getByText(/bukan rekam medis nyata/i)).toBeOnTheScreen();
     expect(screen.getByText(/belum disimpan dalam basis data terenkripsi/i)).toBeOnTheScreen();
+  });
+
+  it('quick-edits a collapsed patient with prefilled values and cancels without expanding', async () => {
+    const user = userEvent.setup();
+    await render(<MockRecordsScreen />);
+
+    const edit = screen.getByRole('button', { name: 'Edit profil Milo Demo' });
+    expect(edit).toHaveStyle({ minWidth: 44, minHeight: 44 });
+    const toggle = screen.getByRole('button', { name: 'Lihat detail Milo Demo' });
+    expect(within(toggle).queryByRole('button', { name: 'Edit profil Milo Demo' })).toBeNull();
+    expect(edit.parent).toBe(toggle.parent);
+    expect(screen.getByRole('button', { name: 'Lihat detail Milo Demo' })).toHaveProp('accessibilityState', { expanded: false });
+    await user.press(edit);
+    expect(screen.getByLabelText('Nama pasien')).toHaveDisplayValue('Milo Demo');
+    expect(screen.getByLabelText('Berat pasien')).toHaveDisplayValue('28.4');
+    expect(screen.getByLabelText('Alergi pasien')).toHaveDisplayValue('Penisilin');
+    await user.clear(screen.getByLabelText('Nama pasien'));
+    await user.type(screen.getByLabelText('Nama pasien'), 'Discarded draft');
+    await user.press(screen.getByRole('button', { name: 'Batal profil pasien demo' }));
+
+    expect(screen.getByRole('button', { name: 'Lihat detail Milo Demo' })).toHaveProp('accessibilityState', { expanded: false });
+    expect(screen.queryByText('Discarded draft')).not.toBeOnTheScreen();
+    expect(screen.queryByText('Riwayat berat')).not.toBeOnTheScreen();
+    await user.press(screen.getByRole('button', { name: 'Lihat detail Milo Demo' }));
+    expect(screen.getAllByRole('button', { name: 'Edit profil Milo Demo' })).toHaveLength(1);
   });
 
   it('searches by patient and owner name', async () => {

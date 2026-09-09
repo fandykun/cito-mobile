@@ -1,4 +1,4 @@
-import { render, screen, userEvent } from '@testing-library/react-native';
+import { render, screen, userEvent, within } from '@testing-library/react-native';
 
 import { MockInventoryScreen } from '@/src/inventory/MockInventoryScreen';
 
@@ -10,6 +10,32 @@ describe('MockInventoryScreen', () => {
     expect(screen.getByText('Amoxicillin 250mg')).toBeOnTheScreen();
     expect(screen.getByText('Royal Canin Adult 4kg')).toBeOnTheScreen();
     expect(screen.getByText(/belum terhubung ke penyimpanan/i)).toBeOnTheScreen();
+  });
+
+  it('quick-edits a collapsed item with prefilled values and cancels without expanding', async () => {
+    const user = userEvent.setup();
+    await render(<MockInventoryScreen />);
+
+    const edit = screen.getByRole('button', { name: 'Edit Amoxicillin 250mg' });
+    expect(edit).toHaveStyle({ minWidth: 44, minHeight: 44 });
+    const toggle = screen.getByRole('button', { name: 'Lihat detail Amoxicillin 250mg' });
+    expect(within(toggle).queryByRole('button', { name: 'Edit Amoxicillin 250mg' })).toBeNull();
+    expect(edit.parent).toBe(toggle.parent);
+    expect(screen.getByRole('button', { name: 'Lihat detail Amoxicillin 250mg' })).toHaveProp('accessibilityState', { expanded: false });
+    expect(screen.queryByRole('button', { name: 'Sesuaikan stok Amoxicillin 250mg' })).not.toBeOnTheScreen();
+    await user.press(edit);
+    expect(screen.getByLabelText('Nama item')).toHaveDisplayValue('Amoxicillin 250mg');
+    expect(screen.getByLabelText('Harga jual')).toHaveDisplayValue('8000');
+    await user.clear(screen.getByLabelText('Nama item'));
+    await user.type(screen.getByLabelText('Nama item'), 'Discarded draft');
+    await user.press(screen.getByRole('button', { name: 'Batal edit item demo' }));
+
+    expect(screen.getByRole('button', { name: 'Lihat detail Amoxicillin 250mg' })).toHaveProp('accessibilityState', { expanded: false });
+    expect(screen.queryByText('Discarded draft')).not.toBeOnTheScreen();
+    expect(screen.queryByText('Harga modal')).not.toBeOnTheScreen();
+    await user.press(screen.getByRole('button', { name: 'Lihat detail Amoxicillin 250mg' }));
+    expect(screen.getAllByRole('button', { name: 'Edit Amoxicillin 250mg' })).toHaveLength(1);
+    expect(screen.getByRole('button', { name: 'Sesuaikan stok Amoxicillin 250mg' })).toBeOnTheScreen();
   });
 
   it('searches inventory by name and category label', async () => {

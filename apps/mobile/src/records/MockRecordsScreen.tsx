@@ -362,43 +362,52 @@ function PatientCard({
 
   return (
     <View style={styles.patientCard}>
-      <Pressable
-        accessibilityLabel={`${expanded ? 'Tutup' : 'Lihat'} detail ${patient.name}`}
-        accessibilityRole="button"
-        accessibilityState={{ expanded }}
-        onPress={onToggle}
-        style={({ pressed }) => [styles.patientButton, pressed && styles.pressed]}
-      >
-        <View style={styles.speciesIcon}>
-          <Ionicons color={colors.primary} name={species.icon} size={22} />
-        </View>
-        <View style={styles.patientIdentity}>
-          <View style={styles.nameRow}>
-            <Text style={styles.patientName}>{patient.name}</Text>
-            {attention ? <View style={styles.attentionDot} /> : null}
+      <View style={styles.cardHeader}>
+        <Pressable
+          accessibilityLabel={`${expanded ? 'Tutup' : 'Lihat'} detail ${patient.name}`}
+          accessibilityRole="button"
+          accessibilityState={{ expanded }}
+          onPress={onToggle}
+          style={({ pressed }) => [styles.patientButton, pressed && styles.pressed]}
+        >
+          <View style={styles.speciesIcon}>
+            <Ionicons color={colors.primary} name={species.icon} size={22} />
           </View>
-          <Text style={styles.patientMeta}>
-            {species.label} · {patient.breed}
-          </Text>
-          <Text style={styles.ownerMeta}>
-            {patient.owner.name} · {patient.owner.phone}
-          </Text>
-        </View>
-        <View style={styles.patientSummary}>
-          <Text style={styles.weightText}>{currentWeight ? formatWeight(currentWeight.kilograms) : '—'}</Text>
-          <Ionicons
-            color={colors.mutedForeground}
-            name={expanded ? 'chevron-up' : 'chevron-down'}
-            size={17}
-          />
-        </View>
-      </Pressable>
+          <View style={styles.patientIdentity}>
+            <View style={styles.nameRow}>
+              <Text style={styles.patientName}>{patient.name}</Text>
+              {attention ? <View style={styles.attentionDot} /> : null}
+            </View>
+            <Text style={styles.patientMeta}>
+              {species.label} · {patient.breed}
+            </Text>
+            <Text style={styles.ownerMeta}>
+              {patient.owner.name} · {patient.owner.phone}
+            </Text>
+          </View>
+          <View style={styles.patientSummary}>
+            <Text style={styles.weightText}>{currentWeight ? formatWeight(currentWeight.kilograms) : '—'}</Text>
+            <Ionicons
+              color={colors.mutedForeground}
+              name={expanded ? 'chevron-up' : 'chevron-down'}
+              size={17}
+            />
+          </View>
+        </Pressable>
+        <Pressable
+          accessibilityLabel={`Edit profil ${patient.name}`}
+          accessibilityRole="button"
+          onPress={onEdit}
+          style={({ pressed }) => [styles.editButton, pressed && styles.pressed]}
+        >
+          <Ionicons color={colors.primary} name="create-outline" size={18} />
+        </Pressable>
+      </View>
 
       {expanded ? (
         <PatientDetails
           onAddVaccination={onAddVaccination}
           onAddVisit={onAddVisit}
-          onEdit={onEdit}
           onEditVisit={onEditVisit}
           patient={patient}
         />
@@ -410,13 +419,11 @@ function PatientCard({
 function PatientDetails({
   onAddVaccination,
   onAddVisit,
-  onEdit,
   onEditVisit,
   patient,
 }: {
   onAddVaccination: () => void;
   onAddVisit: () => void;
-  onEdit: () => void;
   onEditVisit: (visitIndex: number) => void;
   patient: MockPatient;
 }) {
@@ -442,16 +449,6 @@ function PatientDetails({
           ))}
         </View>
       </View>
-
-      <Pressable
-        accessibilityLabel={`Edit profil ${patient.name}`}
-        accessibilityRole="button"
-        onPress={onEdit}
-        style={({ pressed }) => [styles.editButton, pressed && styles.pressed]}
-      >
-        <Ionicons color={colors.primary} name="create-outline" size={16} />
-        <Text style={styles.editButtonText}>Edit profil demo</Text>
-      </Pressable>
 
       <View style={styles.healthCard}>
         <View style={styles.sectionTitleRow}>
@@ -625,6 +622,20 @@ function ClinicalField({ label, value }: { label: string; value: string }) {
 }
 
 const styles = StyleSheet.create({
+  cardHeader: {
+    alignItems: 'flex-start',
+    flexDirection: 'row',
+    gap: spacing.small,
+    padding: spacing.large,
+  },
+  editButton: {
+    alignItems: 'center',
+    borderRadius: radii.medium,
+    flexShrink: 0,
+    justifyContent: 'center',
+    minHeight: 44,
+    minWidth: 44,
+  },
   addButton: {
     alignItems: 'center',
     backgroundColor: colors.primary,
@@ -684,18 +695,6 @@ const styles = StyleSheet.create({
     padding: spacing.xxlarge,
   },
   emptyTitle: { color: colors.foreground, fontSize: typography.body, fontWeight: '800' },
-  editButton: {
-    alignItems: 'center',
-    backgroundColor: colors.card,
-    borderColor: colors.border,
-    borderRadius: radii.medium,
-    borderWidth: 1,
-    flexDirection: 'row',
-    gap: spacing.small,
-    justifyContent: 'center',
-    padding: spacing.small,
-  },
-  editButtonText: { color: colors.primary, fontSize: typography.caption, fontWeight: '700' },
   filterChip: {
     backgroundColor: colors.card,
     borderColor: colors.border,
@@ -741,14 +740,17 @@ const styles = StyleSheet.create({
   },
   medicationRow: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.xsmall },
   medicationText: { color: '#0F766E', fontSize: 11, fontWeight: '700' },
-  nameRow: { alignItems: 'center', flexDirection: 'row', gap: spacing.small },
+  nameRow: { alignItems: 'center', flexDirection: 'row', flexWrap: 'wrap', gap: spacing.small },
   noDataText: { color: colors.mutedForeground, fontSize: typography.caption },
   ownerMeta: { color: colors.mutedForeground, fontSize: 11, marginTop: 2 },
   patientButton: {
+    flex: 1,
+    minWidth: 0,
+    minHeight: 44,
+    flexWrap: 'wrap',
     alignItems: 'center',
     flexDirection: 'row',
-    gap: spacing.medium,
-    padding: spacing.large,
+    gap: spacing.small,
   },
   patientCard: {
     backgroundColor: colors.card,
@@ -758,11 +760,11 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   patientCount: { color: colors.mutedForeground, fontSize: typography.caption, marginTop: spacing.xsmall },
-  patientIdentity: { flex: 1 },
+  patientIdentity: { flexGrow: 1, flexShrink: 1, flexBasis: 120, minWidth: 0 },
   patientList: { gap: spacing.small },
   patientMeta: { color: colors.mutedForeground, fontSize: typography.caption, marginTop: spacing.xsmall },
   patientName: { color: colors.foreground, fontSize: typography.body, fontWeight: '800' },
-  patientSummary: { alignItems: 'flex-end', gap: spacing.xsmall },
+  patientSummary: { alignItems: 'center', flexDirection: 'row', flexWrap: 'wrap', gap: spacing.small },
   pressed: { opacity: 0.65 },
   profileGrid: { flexDirection: 'row', gap: spacing.medium },
   resetButton: {
