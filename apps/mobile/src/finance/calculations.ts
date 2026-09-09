@@ -100,7 +100,11 @@ export function calculateMonthlySummary(source: MonthlyFinanceSource): MonthlyFi
   assertMoney('Owner draw', source.ownerDraw);
 
   const grossIncome = source.medicalIncome + source.retailIncome;
+  assertMoney('Gross income', grossIncome);
   const netProfit = grossIncome - source.operatingExpenses;
+  if (!Number.isSafeInteger(netProfit - source.ownerDraw)) {
+    throw new Error('Retained must be a whole-IDR safe integer.');
+  }
 
   return {
     ...source,

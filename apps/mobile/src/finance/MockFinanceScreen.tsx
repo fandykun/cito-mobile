@@ -5,7 +5,6 @@ import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { colors, radii, spacing, typography } from '@/src/design/tokens';
 import {
   calculateDailySummary,
-  calculateMonthlySummary,
   type CashReconciliation,
   type DailyFinanceSummary,
   type MonthlyFinanceSummary,
@@ -20,7 +19,10 @@ import {
 } from '@/src/finance/MockFinanceEntryForm';
 import { financeMockData, type MonthlyFinanceFixture } from '@/src/finance/mockData';
 
-type FinancePeriod = 'day' | 'month';
+import { OwnerDrawPlanner } from './OwnerDrawPlanner';
+import { applyLocalFinanceEntries, summarizeFinanceMonths } from './planning';
+
+type FinancePeriod = 'day' | 'month' | 'sixMonths';
 type FinanceEntryMode = 'expense' | 'ownerDraw';
 type StoredFinanceEntry = MockFinanceEntryValues & { id: string };
 
@@ -373,7 +375,15 @@ function MonthlyView({
   onAddExpense,
   onAddOwnerDraw,
   summary,
+  periodLabel,
+  monthCount,
+  drawPercent,
+  onDrawPercentChange,
 }: {
+  periodLabel: string;
+  monthCount: 1 | 6;
+  drawPercent: number;
+  onDrawPercentChange: (value: number) => void;
   entries: readonly StoredFinanceEntry[];
   months: readonly MonthlyFinanceFixture[];
   onAddExpense: () => void;
@@ -382,7 +392,7 @@ function MonthlyView({
 }) {
   return (
     <>
-      <Text style={styles.periodTitle}>Ringkasan {financeMockData.monthLabel}</Text>
+      <Text style={styles.periodTitle}>Ringkasan {periodLabel}</Text>
       <View style={styles.metricGrid}>
         <MetricCard
           label="Pendapatan kotor"
@@ -420,6 +430,13 @@ function MonthlyView({
           menjalankan klinik tetap terbaca dengan benar.
         </Text>
       </View>
+      <OwnerDrawPlanner
+        grossIncome={summary.grossIncome}
+        operatingExpenses={summary.operatingExpenses}
+        monthCount={monthCount}
+        percent={drawPercent}
+        onChange={onDrawPercentChange}
+      />
       <FinanceActivity
         entries={entries}
         onAddExpense={onAddExpense}
@@ -437,25 +454,13 @@ export function MockFinanceScreen() {
   const [entryMode, setEntryMode] = useState<FinanceEntryMode | null>(null);
   const [isReconcilingCash, setIsReconcilingCash] = useState(false);
   const [period, setPeriod] = useState<FinancePeriod>('month');
-  const latestBase = financeMockData.months[financeMockData.months.length - 1]!;
-
-  const monthlySummary = useMemo(() => {
-    const augustEntries = entries.filter((entry) => entry.date.startsWith('2026-08-'));
-    const localExpenses = augustEntries.reduce(
-      (total, entry) => total + (entry.kind === 'expense' ? entry.amount : 0),
-      0,
-    );
-    const localOwnerDraw = augustEntries.reduce(
-      (total, entry) => total + (entry.kind === 'ownerDraw' ? entry.amount : 0),
-      0,
-    );
-    return calculateMonthlySummary({
-      medicalIncome: latestBase.medicalIncome,
-      operatingExpenses: latestBase.operatingExpenses + localExpenses,
-      ownerDraw: latestBase.ownerDraw + localOwnerDraw,
-      retailIncome: latestBase.retailIncome,
-    });
-  }, [entries, latestBase]);
+  const [drawPercent, setDrawPercent] = useState(28);
+  const displayedMonths = useMemo(
+    () => applyLocalFinanceEntries(financeMockData.months, entries),
+    [entries],
+  );
+  const monthlySummary = displayedMonths[displayedMonths.length - 1]!;
+  const sixMonthSummary = useMemo(() => summarizeFinanceMonths(displayedMonths), [displayedMonths]);
 
   const dailySummary = useMemo(() => {
     const localExpenses = entries.reduce(
@@ -470,14 +475,6 @@ export function MockFinanceScreen() {
       retailIncome: financeMockData.daily.retailIncome,
     });
   }, [entries]);
-
-  const displayedMonths = useMemo<MonthlyFinanceFixture[]>(
-    () =>
-      financeMockData.months.map((month) =>
-        month.id === latestBase.id ? { ...month, ...monthlySummary } : month,
-      ),
-    [latestBase.id, monthlySummary],
-  );
 
   function saveEntry(values: MockFinanceEntryValues): void {
     setEntries((current) => [
@@ -548,6 +545,17 @@ export function MockFinanceScreen() {
           </Text>
         </Pressable>
         <Pressable
+          accessibilityLabel="Tampilkan ringkasan 6 bulan"
+          accessibilityRole="button"
+          accessibilityState={{ selected: period === 'sixMonths' }}
+          onPress={() => setPeriod('sixMonths')}
+          style={[styles.periodButton, period === 'sixMonths' && styles.periodButtonSelected]}
+        >
+          <Text style={[styles.periodButtonText, period === 'sixMonths' && styles.periodButtonTextSelected]}>
+            6 bulan
+          </Text>
+        </Pressable>
+        <Pressable
           accessibilityLabel="Tampilkan ringkasan hari ini"
           accessibilityRole="button"
           accessibilityState={{ selected: period === 'day' }}
@@ -560,13 +568,17 @@ export function MockFinanceScreen() {
         </Pressable>
       </View>
 
-      {period === 'month' ? (
+      {period !== 'day' ? (
         <MonthlyView
+          periodLabel={period === 'sixMonths' ? 'Mar–Agu 2026 · total 6 bulan' : financeMockData.monthLabel}
+          monthCount={period === 'sixMonths' ? 6 : 1}
+          drawPercent={drawPercent}
+          onDrawPercentChange={setDrawPercent}
           entries={entries}
           months={displayedMonths}
           onAddExpense={() => setEntryMode('expense')}
           onAddOwnerDraw={() => setEntryMode('ownerDraw')}
-          summary={monthlySummary}
+          summary={period === 'sixMonths' ? sixMonthSummary : monthlySummary}
         />
       ) : (
         <DailyView

@@ -1,8 +1,54 @@
-import { render, screen, userEvent } from '@testing-library/react-native';
+import { fireEvent, render, screen, userEvent } from '@testing-library/react-native';
 
 import { MockFinanceScreen } from '@/src/finance/MockFinanceScreen';
 
 describe('MockFinanceScreen', () => {
+  it('switches six-month totals and adjusts a hypothetical plan without recording draws', async () => {
+    const user = userEvent.setup();
+    await render(<MockFinanceScreen />);
+    const control = () => screen.getByRole('adjustable', { name: 'Persentase pengambilan hipotetis' });
+    expect(control()).toHaveProp('accessibilityValue', { min: 10, max: 55, now: 28, text: '28%' });
+    expect(screen.getByText('Proyeksi pengambilan: Rp 26.460.000 / bulan')).toBeOnTheScreen();
+    await user.press(screen.getByRole('button', { name: 'Tambah persentase pengambilan' }));
+    expect(control()).toHaveProp('accessibilityValue', { min: 10, max: 55, now: 29, text: '29%' });
+    await fireEvent(control(), 'accessibilityAction', { nativeEvent: { actionName: 'decrement' } });
+    expect(screen.getByText('Rp 33.000.000')).toBeOnTheScreen();
+    expect(screen.getByText('Belum ada entri lokal pada sesi ini.')).toBeOnTheScreen();
+    await user.press(screen.getByRole('button', { name: 'Tampilkan ringkasan 6 bulan' }));
+    expect(screen.getByText('Ringkasan Mar–Agu 2026 · total 6 bulan')).toBeOnTheScreen();
+    expect(screen.getByText('Rp 776.000.000')).toBeOnTheScreen();
+    expect(screen.getByText('Rp 410.100.000')).toBeOnTheScreen();
+    expect(screen.getByText('Proyeksi pengambilan: Rp 217.280.000 / 6 bulan')).toBeOnTheScreen();
+    expect(screen.getByText('Rata-rata pengambilan: Rp 36.213.333 / bulan')).toBeOnTheScreen();
+    expect(screen.getByText('Proyeksi ditahan setelah beban: Rp 429.820.000')).toBeOnTheScreen();
+    for (let i = 0; i < 30; i++) {
+      await fireEvent(control(), 'accessibilityAction', { nativeEvent: { actionName: 'increment' } });
+    }
+    expect(screen.getByRole('button', { name: 'Tambah persentase pengambilan' })).toBeDisabled();
+    for (let i = 0; i < 50; i++) {
+      await fireEvent(control(), 'accessibilityAction', { nativeEvent: { actionName: 'decrement' } });
+    }
+    expect(screen.getByRole('button', { name: 'Kurangi persentase pengambilan' })).toBeDisabled();
+    await user.press(screen.getByRole('button', { name: 'Tampilkan ringkasan bulan ini' }));
+    expect(screen.getByText('Rp 48.700.000')).toBeOnTheScreen();
+  });
+
+  it('includes a prior-month expense in six-month totals without changing August', async () => {
+    const user = userEvent.setup();
+    await render(<MockFinanceScreen />);
+    await user.press(screen.getByRole('button', { name: 'Catat beban operasional demo' }));
+    await user.clear(screen.getByLabelText('Tanggal entri keuangan'));
+    await user.type(screen.getByLabelText('Tanggal entri keuangan'), '2026-07-31');
+    await user.type(screen.getByLabelText('Jumlah entri keuangan'), '500000');
+    await user.press(screen.getByRole('button', { name: 'Pilih kategori utilitas' }));
+    await user.press(screen.getByRole('button', { name: 'Simpan beban demo' }));
+    expect(screen.getByText('Rp 12.800.000')).toBeOnTheScreen();
+    await user.press(screen.getByRole('button', { name: 'Tampilkan ringkasan 6 bulan' }));
+    expect(screen.getByText('Rp 129.400.000')).toBeOnTheScreen();
+    expect(screen.getByText('Rp 409.600.000')).toBeOnTheScreen();
+    expect(screen.getByText('Proyeksi ditahan setelah beban: Rp 429.320.000')).toBeOnTheScreen();
+  });
+
   it('shows a clearly labeled monthly financial picture with owner draw separated', async () => {
     await render(<MockFinanceScreen />);
 

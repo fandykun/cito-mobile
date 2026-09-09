@@ -1131,6 +1131,14 @@ Scope decisions: appointment scheduling remains excluded by PRD §1.4; card paym
 - [x] Preserve prefilled editors, cancel/expansion state, existing save behavior, histories, and expanded stock-adjustment actions.
 - [x] Verify regression tests, mobile typecheck/lint, Android/web exports, and Chromium edit/cancel flows at 320px and 390px. Edit targets measure at least 44×44px and fit both viewports.
 
+### Reference follow-up — finance periods and hypothetical planning
+
+- [x] Add the six-month aggregate view while retaining daily/monthly review and matching historical entries to the proper month.
+- [x] Add a bounded 10–55% owner-draw planner with accessible controls, explicit hypothetical-only disclosure, exact whole-IDR rounding, separate totals/monthly averages, and retained-after-expenses calculations.
+- [x] Verify all 110 tests across 25 suites, mobile typecheck/lint, Android/web exports, prototype build, and Chromium planner interactions at 320px and 390px.
+
+See [`docs/figma-alignment.md`](../../docs/figma-alignment.md) for the checked reference, delivered alignment, open visual differences, intentional PRD deviations, and production blockers. This review-only planner does not expand production withdrawal behavior or imply all-screen pixel parity.
+
 The repository, Expo shell, backend/API foundation, schema, encryption, API contract, and single-account authentication foundations are implemented. The mobile login gate is temporarily disabled so the screens can be reviewed without a finished login design. Continue in these independently revertible product slices, prioritizing the UI-first track requested for the current development cycle:
 
 1. **Dashboard UI — complete:** mock-backed Expo dashboard and reusable presentation primitives without appointment-booking UI.
