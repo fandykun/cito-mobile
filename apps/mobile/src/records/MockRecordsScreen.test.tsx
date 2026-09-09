@@ -41,6 +41,26 @@ describe('MockRecordsScreen', () => {
     expect(screen.getAllByRole('button', { name: 'Edit profil Milo Demo' })).toHaveLength(1);
   });
 
+  it('prioritizes health alerts and visits before supporting patient histories', async () => {
+    const user = userEvent.setup();
+    await render(<MockRecordsScreen />);
+    await user.press(screen.getByRole('button', { name: 'Lihat detail Milo Demo' }));
+
+    expect(screen.getAllByRole('header').map((header) => header.props.children)).toEqual([
+      'Penanda kesehatan',
+      'Riwayat kunjungan',
+      'Vaksinasi',
+      'Riwayat berat',
+    ]);
+    expect(screen.getByText('Alergi: Penisilin')).toBeOnTheScreen();
+    expect(screen.getByText('DHPP')).toBeOnTheScreen();
+    expect(screen.getByText('14 Agu 2026 · 28,4 kg')).toBeOnTheScreen();
+    await user.press(screen.getByRole('button', { name: 'Tambah kunjungan Milo Demo' }));
+    expect(screen.getByRole('header', { name: 'Tambah kunjungan — Milo Demo' })).toBeOnTheScreen();
+    await user.press(screen.getByRole('button', { name: 'Batal kunjungan demo' }));
+    expect(screen.getByText('Sehat; karang gigi ringan.')).toBeOnTheScreen();
+  });
+
   it('searches by patient and owner name', async () => {
     const user = userEvent.setup();
     await render(<MockRecordsScreen />);

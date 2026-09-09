@@ -1131,6 +1131,12 @@ Scope decisions: appointment scheduling remains excluded by PRD §1.4; card paym
 - [x] Preserve prefilled editors, cancel/expansion state, existing save behavior, histories, and expanded stock-adjustment actions.
 - [x] Verify regression tests, mobile typecheck/lint, Android/web exports, and Chromium edit/cancel flows at 320px and 390px. Edit targets measure at least 44×44px and fit both viewports.
 
+### Reference follow-up — patient detail priority
+
+- [x] Lead expanded patient details with health flags and visit actions/history, before supporting profile, vaccination, and weight information. No clinical history is removed.
+- [x] Add accessible section headings and a regression test for order, visit entry/cancel, and preserved histories; observe RED before implementing.
+- [x] Verify 111 tests across 25 suites, mobile typecheck/lint, Android/web exports, and Chromium flows at 320px/390px with no page errors.
+
 ### Reference follow-up — finance periods and hypothetical planning
 
 - [x] Add the six-month aggregate view while retaining daily/monthly review and matching historical entries to the proper month.

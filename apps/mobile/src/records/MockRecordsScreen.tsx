@@ -431,29 +431,10 @@ function PatientDetails({
 
   return (
     <View style={styles.details}>
-      <View style={styles.profileGrid}>
-        <SummaryField label="Tanggal lahir" value={patient.birthDateLabel} />
-        <SummaryField
-          label="Berat terkini"
-          value={currentWeight ? formatWeight(currentWeight.kilograms) : 'Belum dicatat'}
-        />
-      </View>
-
-      <View>
-        <Text style={styles.sectionTitle}>Riwayat berat</Text>
-        <View style={styles.weightHistory}>
-          {patient.weightHistory.map((entry) => (
-            <Text key={`${entry.dateLabel}-${entry.kilograms}`} style={styles.weightHistoryText}>
-              {entry.dateLabel} · {formatWeight(entry.kilograms)}
-            </Text>
-          ))}
-        </View>
-      </View>
-
       <View style={styles.healthCard}>
         <View style={styles.sectionTitleRow}>
           <Ionicons color="#9A3412" name="alert-circle-outline" size={18} />
-          <Text style={styles.healthTitle}>Penanda kesehatan</Text>
+          <Text accessibilityRole="header" style={styles.healthTitle}>Penanda kesehatan</Text>
         </View>
         <Text style={styles.healthText}>
           Alergi: {patient.allergies.length > 0 ? patient.allergies.join(', ') : 'Tidak ada'}
@@ -466,7 +447,43 @@ function PatientDetails({
 
       <View>
         <View style={styles.sectionHeaderRow}>
-          <Text style={styles.sectionTitle}>Vaksinasi</Text>
+          <Text accessibilityRole="header" style={styles.sectionTitle}>Riwayat kunjungan</Text>
+          <Pressable
+            accessibilityLabel={`Tambah kunjungan ${patient.name}`}
+            accessibilityRole="button"
+            onPress={onAddVisit}
+            style={({ pressed }) => [styles.inlineAddButton, pressed && styles.pressed]}
+          >
+            <Ionicons color={colors.primary} name="add" size={15} />
+            <Text style={styles.inlineAddText}>Tambah</Text>
+          </Pressable>
+        </View>
+        {patient.visits.length > 0 ? (
+          <View style={styles.sectionList}>
+            {patient.visits.map((visit, visitIndex) => (
+              <VisitTimelineCard
+                key={`${visit.dateLabel}-${visit.type}`}
+                onEdit={() => onEditVisit(visitIndex)}
+                visit={visit}
+              />
+            ))}
+          </View>
+        ) : (
+          <Text style={styles.noDataText}>Belum ada kunjungan pada data demo.</Text>
+        )}
+      </View>
+
+      <View style={styles.profileGrid}>
+        <SummaryField label="Tanggal lahir" value={patient.birthDateLabel} />
+        <SummaryField
+          label="Berat terkini"
+          value={currentWeight ? formatWeight(currentWeight.kilograms) : 'Belum dicatat'}
+        />
+      </View>
+
+      <View>
+        <View style={styles.sectionHeaderRow}>
+          <Text accessibilityRole="header" style={styles.sectionTitle}>Vaksinasi</Text>
           <Pressable
             accessibilityLabel={`Tambah vaksinasi ${patient.name}`}
             accessibilityRole="button"
@@ -504,31 +521,14 @@ function PatientDetails({
       </View>
 
       <View>
-        <View style={styles.sectionHeaderRow}>
-          <Text style={styles.sectionTitle}>Riwayat kunjungan</Text>
-          <Pressable
-            accessibilityLabel={`Tambah kunjungan ${patient.name}`}
-            accessibilityRole="button"
-            onPress={onAddVisit}
-            style={({ pressed }) => [styles.inlineAddButton, pressed && styles.pressed]}
-          >
-            <Ionicons color={colors.primary} name="add" size={15} />
-            <Text style={styles.inlineAddText}>Tambah</Text>
-          </Pressable>
+        <Text accessibilityRole="header" style={styles.sectionTitle}>Riwayat berat</Text>
+        <View style={styles.weightHistory}>
+          {patient.weightHistory.map((entry) => (
+            <Text key={`${entry.dateLabel}-${entry.kilograms}`} style={styles.weightHistoryText}>
+              {entry.dateLabel} · {formatWeight(entry.kilograms)}
+            </Text>
+          ))}
         </View>
-        {patient.visits.length > 0 ? (
-          <View style={styles.sectionList}>
-            {patient.visits.map((visit, visitIndex) => (
-              <VisitTimelineCard
-                key={`${visit.dateLabel}-${visit.type}`}
-                onEdit={() => onEditVisit(visitIndex)}
-                visit={visit}
-              />
-            ))}
-          </View>
-        ) : (
-          <Text style={styles.noDataText}>Belum ada kunjungan pada data demo.</Text>
-        )}
       </View>
     </View>
   );
