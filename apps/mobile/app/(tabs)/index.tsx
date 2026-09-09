@@ -83,7 +83,7 @@ export default function DashboardScreen() {
               <Pressable
                 accessibilityLabel={shortcut.accessibilityLabel}
                 accessibilityRole="link"
-                style={({ pressed }) => [styles.shortcut, pressed && styles.pressed]}
+                style={styles.shortcut}
               >
                 <View style={styles.shortcutIcon}>
                   <Ionicons color={colors.primary} name={shortcut.icon} size={21} />
@@ -261,9 +261,6 @@ const styles = StyleSheet.create({
     fontSize: typography.heading,
     fontWeight: '800',
     marginTop: spacing.small,
-  },
-  pressed: {
-    opacity: 0.65,
   },
   progressFill: {
     backgroundColor: '#FB923C',

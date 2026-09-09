@@ -18,7 +18,10 @@ describe('DashboardScreen', () => {
   it('keeps every dashboard action navigable and excludes appointment UI', async () => {
     await render(<DashboardScreen />);
 
-    expect(screen.getByRole('link', { name: /buka inventaris/i })).toBeOnTheScreen();
+    expect(screen.getByRole('link', { name: /buka inventaris/i })).toHaveStyle({
+      borderWidth: 1,
+      flexDirection: 'row',
+    });
     expect(screen.getByRole('link', { name: /buka rekam medis/i })).toBeOnTheScreen();
     expect(screen.getByRole('link', { name: /buka kasir/i })).toBeOnTheScreen();
     expect(screen.queryByText(/jadwal hari ini/i)).not.toBeOnTheScreen();

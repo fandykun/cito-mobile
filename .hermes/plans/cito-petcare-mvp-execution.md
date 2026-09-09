@@ -1120,6 +1120,11 @@ Environment note: Metro development startup encountered the host file-watcher li
 
 Scope decisions: appointment scheduling remains excluded by PRD §1.4; card payments remain supported per PRD §3.6 despite their omission from the latest prototype. Login redesign/activation remains the final integration step. This is a focused editor/checkout alignment, not a claim of complete pixel parity across every screen; remaining reference refinements should be delivered as separate verified slices.
 
+### Reference follow-up — dashboard navigation cards
+
+- [x] Preserve the shortcut card layout through Expo Router's `Link asChild` by supplying a static Pressable style rather than a style callback that is lost in the web export.
+- [x] Verify the navigation/style unit test and Chromium card geometry/navigation at 320px and 390px. Android and web exports pass.
+
 The repository, Expo shell, backend/API foundation, schema, encryption, API contract, and single-account authentication foundations are implemented. The mobile login gate is temporarily disabled so the screens can be reviewed without a finished login design. Continue in these independently revertible product slices, prioritizing the UI-first track requested for the current development cycle:
 
 1. **Dashboard UI — complete:** mock-backed Expo dashboard and reusable presentation primitives without appointment-booking UI.
