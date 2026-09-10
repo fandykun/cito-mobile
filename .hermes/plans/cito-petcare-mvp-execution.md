@@ -1131,6 +1131,12 @@ Scope decisions: appointment scheduling remains excluded by PRD §1.4; card paym
 - [x] Preserve prefilled editors, cancel/expansion state, existing save behavior, histories, and expanded stock-adjustment actions.
 - [x] Verify regression tests, mobile typecheck/lint, Android/web exports, and Chromium edit/cancel flows at 320px and 390px. Edit targets measure at least 44×44px and fit both viewports.
 
+### Reference follow-up — inventory display categories
+
+- [x] Add display-category chips derived from current item labels, separate from Medical/Retail classification; combine with search and existing filters.
+- [x] Preserve filter selection on cancel, reset all filters after save or empty-state reset, and discover categories introduced by local edits.
+- [x] Verify RED/GREEN regression, 114 tests across 25 suites, typecheck/lint, Android/web exports, and Chromium checks at 320px/390px.
+
 ### Reference follow-up — dashboard financial consistency
 
 - [x] Derive dashboard financial amounts/date from the Finance baseline rather than duplicated values. Label retained funds correctly after expenses and actual owner draw.

@@ -54,6 +54,41 @@ describe('MockInventoryScreen', () => {
     expect(screen.queryByText('Vaksin Rabies 1 tahun')).not.toBeOnTheScreen();
   });
 
+  it('combines display categories with search and domain filters, then resets all filters', async () => {
+    const user = userEvent.setup();
+    await render(<MockInventoryScreen />);
+    await user.press(screen.getByRole('button', { name: 'Tampilkan kategori Vaksin' }));
+    expect(screen.getByText('Vaksin Rabies 1 tahun')).toBeOnTheScreen();
+    expect(screen.getByText('Vaksin DHPP')).toBeOnTheScreen();
+    expect(screen.queryByText('Amoxicillin 250mg')).not.toBeOnTheScreen();
+    await user.type(screen.getByLabelText('Cari inventaris'), 'rabies');
+    expect(screen.queryByText('Vaksin DHPP')).not.toBeOnTheScreen();
+    await user.press(screen.getByRole('button', { name: 'Tampilkan inventaris ritel' }));
+    expect(screen.getByText('Item tidak ditemukan')).toBeOnTheScreen();
+    await user.press(screen.getByRole('button', { name: 'Reset filter inventaris' }));
+    expect(screen.getByRole('button', { name: 'Tampilkan semua kategori' })).toHaveProp('accessibilityState', { selected: true });
+    expect(screen.getByLabelText('Cari inventaris')).toHaveDisplayValue('');
+    expect(screen.getByText('Amoxicillin 250mg')).toBeOnTheScreen();
+    expect(screen.getByText('Royal Canin Adult 4kg')).toBeOnTheScreen();
+  });
+
+  it('updates category choices from edited items and preserves discovery when cancelling', async () => {
+    const user = userEvent.setup();
+    await render(<MockInventoryScreen />);
+    await user.press(screen.getByRole('button', { name: 'Tampilkan kategori Obat' }));
+    await user.press(screen.getByRole('button', { name: 'Edit Amoxicillin 250mg' }));
+    await user.press(screen.getByRole('button', { name: 'Batal edit item demo' }));
+    expect(screen.getByRole('button', { name: 'Tampilkan kategori Obat' })).toHaveProp('accessibilityState', { selected: true });
+    await user.press(screen.getByRole('button', { name: 'Edit Amoxicillin 250mg' }));
+    await user.clear(screen.getByLabelText('Kategori tampilan'));
+    await user.type(screen.getByLabelText('Kategori tampilan'), 'Antibiotik');
+    await user.press(screen.getByRole('button', { name: 'Simpan item demo' }));
+    expect(screen.getByRole('button', { name: 'Tampilkan semua kategori' })).toHaveProp('accessibilityState', { selected: true });
+    await user.press(screen.getByRole('button', { name: 'Tampilkan kategori Antibiotik' }));
+    expect(screen.getByText('Amoxicillin 250mg')).toBeOnTheScreen();
+    expect(screen.queryByText('Doxycycline 100mg')).not.toBeOnTheScreen();
+  });
+
   it('filters low stock and expands item details', async () => {
     const user = userEvent.setup();
     await render(<MockInventoryScreen />);

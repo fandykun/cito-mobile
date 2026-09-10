@@ -30,12 +30,24 @@ function isLowStock(item: MockInventoryItem): boolean {
 
 export function MockInventoryScreen() {
   const [activeFilter, setActiveFilter] = useState<InventoryFilter>('all');
+  const [activeCategory, setActiveCategory] = useState<string | null>(null);
   const [adjustmentItem, setAdjustmentItem] = useState<MockInventoryItem | null>(null);
   const [adjustments, setAdjustments] = useState<Record<string, MockStockAdjustmentValues>>({});
   const [editorItem, setEditorItem] = useState<MockInventoryItem | 'new' | null>(null);
   const [expandedItemId, setExpandedItemId] = useState<string | null>(null);
   const [items, setItems] = useState<MockInventoryItem[]>(() => [...mockInventoryItems]);
   const [search, setSearch] = useState('');
+
+  const displayCategories = useMemo(() => {
+    const labels = new Map<string, string>();
+    for (const item of items) {
+      const label = item.categoryLabel.trim();
+      const key = label.toLocaleLowerCase('id-ID');
+      if (key && !labels.has(key)) labels.set(key, label);
+    }
+    return [...labels].map(([key, label]) => ({ key, label }))
+      .sort((a, b) => a.label.localeCompare(b.label, 'id-ID'));
+  }, [items]);
 
   const visibleItems = useMemo(() => {
     const query = search.trim().toLocaleLowerCase('id-ID');
@@ -47,12 +59,15 @@ export function MockInventoryScreen() {
       const matchesFilter =
         activeFilter === 'all' ||
         (activeFilter === 'low' ? isLowStock(item) : item.category === activeFilter);
-      return matchesQuery && matchesFilter;
+      const matchesCategory = activeCategory === null ||
+        item.categoryLabel.trim().toLocaleLowerCase('id-ID') === activeCategory;
+      return matchesQuery && matchesFilter && matchesCategory;
     });
-  }, [activeFilter, items, search]);
+  }, [activeCategory, activeFilter, items, search]);
 
   function resetFilters(): void {
     setActiveFilter('all');
+    setActiveCategory(null);
     setExpandedItemId(null);
     setSearch('');
   }
@@ -72,6 +87,7 @@ export function MockInventoryScreen() {
       setExpandedItemId(editorItem.id);
     }
     setActiveFilter('all');
+    setActiveCategory(null);
     setSearch('');
     setEditorItem(null);
   }
@@ -188,6 +204,34 @@ export function MockInventoryScreen() {
           );
         })}
       </ScrollView>
+
+      <View>
+        <Text style={styles.filterText}>Kategori tampilan</Text>
+        <ScrollView
+          contentContainerStyle={styles.categoryContent}
+          horizontal
+          showsHorizontalScrollIndicator={false}
+        >
+          {[{ key: null, label: 'Semua kategori' }, ...displayCategories].map((category) => {
+            const selected = activeCategory === category.key;
+            return (
+              <Pressable
+                accessibilityLabel={category.key === null ? 'Tampilkan semua kategori' : `Tampilkan kategori ${category.label}`}
+                accessibilityRole="button"
+                accessibilityState={{ selected }}
+                key={category.key === null ? 'all' : `category-${category.key}`}
+                onPress={() => {
+                  setActiveCategory(category.key);
+                  setExpandedItemId(null);
+                }}
+                style={({ pressed }) => [styles.filterChip, styles.categoryChip, selected && styles.filterChipActive, pressed && styles.pressed]}
+              >
+                <Text style={[styles.filterText, selected && styles.filterTextActive]}>{category.label}</Text>
+              </Pressable>
+            );
+          })}
+        </ScrollView>
+      </View>
 
       {visibleItems.length > 0 ? (
         <View style={styles.listCard}>
@@ -366,6 +410,8 @@ function Detail({ label, value }: { label: string; value: string }) {
 }
 
 const styles = StyleSheet.create({
+  categoryContent: { gap: spacing.small, paddingTop: spacing.small },
+  categoryChip: { minHeight: 44, justifyContent: 'center' },
   cardHeader: {
     alignItems: 'flex-start',
     flexDirection: 'row',
