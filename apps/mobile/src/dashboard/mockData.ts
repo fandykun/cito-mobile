@@ -1,8 +1,14 @@
+import { financeMockData } from '@/src/finance/mockData';
+
+const latestMonth = financeMockData.months.at(-1);
+if (!latestMonth) {
+  throw new Error('Dashboard demo requires a monthly finance fixture.');
+}
+
 export type DashboardMetric = {
   label: string;
   value: number;
   supportingText: string;
-  trend?: string;
 };
 
 export type DashboardShortcut = {
@@ -20,25 +26,24 @@ export type LowStockItem = {
 };
 
 export const dashboardMockData = {
-  displayDate: "JUM'AT, 22 AGUSTUS 2026",
+  displayDate: financeMockData.businessDateLabel.toLocaleUpperCase('id-ID'),
   greeting: 'Selamat pagi, drh. Rivera',
   metrics: [
     {
       label: 'Pendapatan Hari Ini',
-      supportingText: 'dibanding rata-rata harian',
-      trend: '+12%',
-      value: 7_260_000,
+      supportingText: 'layanan medis + ritel',
+      value: financeMockData.daily.totalIncome,
     },
     {
-      label: 'Net Klinik (Agu)',
-      supportingText: 'setelah pengambilan pribadi',
-      value: 61_500_000,
+      label: `Ditahan di Klinik (${latestMonth.label})`,
+      supportingText: 'laba bersih − pengambilan pemilik',
+      value: latestMonth.retained,
     },
   ] satisfies DashboardMetric[],
   ownerDraw: {
-    grossIncome: 94_500_000,
-    month: 'Agu',
-    value: 33_000_000,
+    grossIncome: latestMonth.grossIncome,
+    month: latestMonth.label,
+    value: latestMonth.ownerDraw,
   },
   shortcuts: [
     {

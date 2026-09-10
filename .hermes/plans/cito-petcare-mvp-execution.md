@@ -1131,6 +1131,12 @@ Scope decisions: appointment scheduling remains excluded by PRD §1.4; card paym
 - [x] Preserve prefilled editors, cancel/expansion state, existing save behavior, histories, and expanded stock-adjustment actions.
 - [x] Verify regression tests, mobile typecheck/lint, Android/web exports, and Chromium edit/cancel flows at 320px and 390px. Edit targets measure at least 44×44px and fit both viewports.
 
+### Reference follow-up — dashboard financial consistency
+
+- [x] Derive dashboard financial amounts/date from the Finance baseline rather than duplicated values. Label retained funds correctly after expenses and actual owner draw.
+- [x] Remove the unsupported percentage trend and disclose that the dashboard is a baseline, not a live projection of local tab edits.
+- [x] Verify RED/GREEN regression, 112 tests across 25 suites, mobile typecheck/lint, Android/web exports, and Chromium baseline/edit-disclosure checks at 320px/390px.
+
 ### Reference follow-up — patient detail priority
 
 - [x] Lead expanded patient details with health flags and visit actions/history, before supporting profile, vaccination, and weight information. No clinical history is removed.

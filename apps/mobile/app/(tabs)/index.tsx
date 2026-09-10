@@ -44,12 +44,6 @@ export default function DashboardScreen() {
             <Text style={styles.metricLabel}>{metric.label}</Text>
             <Text style={styles.metricValue}>{formatShortIdr(metric.value)}</Text>
             <View style={styles.metricSupportingRow}>
-              {metric.trend ? (
-                <>
-                  <Ionicons color={colors.primary} name="arrow-up-outline" size={13} />
-                  <Text style={styles.metricTrend}>{metric.trend}</Text>
-                </>
-              ) : null}
               <Text numberOfLines={2} style={styles.metricSupportingText}>
                 {metric.supportingText}
               </Text>
@@ -124,8 +118,8 @@ export default function DashboardScreen() {
       </View>
 
       <Text style={styles.disclaimer}>
-        Angka dan nama pada beranda ini hanya untuk pengembangan tampilan. Belum terhubung ke data
-        klinik atau API produksi.
+        Angka awal demo yang sama dengan Keuangan, bukan saldo langsung. Entri lokal di tab lain belum
+        mengubah beranda. Belum terhubung ke data klinik atau API produksi.
       </Text>
     </ScrollView>
   );
@@ -250,11 +244,6 @@ const styles = StyleSheet.create({
     color: colors.mutedForeground,
     fontSize: 10,
     lineHeight: 14,
-  },
-  metricTrend: {
-    color: colors.primary,
-    fontSize: typography.caption,
-    fontWeight: '700',
   },
   metricValue: {
     color: colors.foreground,
