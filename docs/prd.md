@@ -133,6 +133,7 @@ Single user: the clinic owner/vet. No role-based access control needed for MVP.
 - **Manual expense entry**: category (restock, utilities, rent, equipment, misc), amount, note
 - **Payment method breakdown**: cash, QRIS, transfer, card
 - **Payment attribution source of truth**: every medical visit payment, retail sale, operating expense, and owner's draw records exactly one payment method (cash, QRIS, transfer, or card). Legacy records whose method is unknown remain explicitly unattributed and must not be assumed to be cash.
+- **Daily payment breakdown**: show medical income, retail income, operating expenses, and owner's draw separately for each payment method. Include legacy unknown amounts in overall accounting totals but never in a known-method bucket. Explicitly report whether attribution is complete, including zero-amount legacy records, so partial cash totals cannot be mistaken for a fully reconciled drawer.
 - **Cash drawer reconciliation**: opening balance, calculated expected closing balance, actual closing balance, variance
 - **Daily summary view**: total income (split: medical vs. retail), total expenses, net for the day
 
@@ -199,5 +200,6 @@ Single user: the clinic owner/vet. No role-based access control needed for MVP.
 | v1.8 | Removed "Future Considerations" section; added this version history for tracking changes going forward. |
 | v1.9 | Authentication limited to username and password for the current product; removed PIN and biometric re-lock requirements. |
 | v2.0 | Defined the configurable clinic business timezone (`Asia/Jakarta` default) and the inventory expiry-alert window (30-day default, including expired items). |
+| v2.1 | Clarified daily per-method financial breakdowns, separate owner draws, explicit legacy-unattributed totals, and completeness reporting before authoritative cash reconciliation. |
 
 **Process going forward**: new feature requests should be added directly into the relevant section of this PRD (Goals, User Stories, Feature Specifications, Data Entities) rather than creating a separate PRD document — this keeps one source of truth for the product, especially since `AGENTS.md` and the architecture doc both reference this file. Log each meaningful change as a new row above.

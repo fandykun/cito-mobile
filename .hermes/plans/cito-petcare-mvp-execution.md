@@ -993,6 +993,16 @@ Verification: `TEST_DATABASE_URL=<local> go test -race ./... -count=1`, `go vet 
 
 All new cash-affecting backend writes now carry authoritative payment attribution. The next finance slice can derive clinic-local daily payment-method totals while explicitly excluding legacy unattributed records, followed by cash-reconciliation expected-closing behavior.
 
+### Slice 7.13: daily payment-method breakdown — complete
+
+- [x] Extend `GET /api/v1/finance/daily/{date}` with `total_draw` and fixed cash/QRIS/transfer/card payment buckets, each separating medical income, retail income, operating expense, and owner draw.
+- [x] Derive all buckets and overall totals in one PostgreSQL statement/snapshot. Preserve clinic-local business dates, half-open retail timestamp boundaries, tombstone exclusion, and daily net independent of owner draws.
+- [x] Keep legacy unknown amounts in overall accounting totals and a separate `unattributed` bucket, never in cash. Expose `unattributed_counts` by source so even zero-value legacy visits report incomplete attribution. Attribution is complete only when every count is zero.
+- [x] Reject per-bucket, cross-method, and combined-income int64 overflow rather than returning wrapped or partial totals. Return deterministic zero-valued buckets for empty days.
+- [x] Verify full PostgreSQL-backed race-enabled Go tests, vet/build, OpenAPI lint/bundle, and the unchanged mobile's 114 tests across 25 suites, TypeScript, and ESLint.
+
+Cash opening/actual closing persistence, authoritative reconciliation, legacy backfill, and mobile finance integration remain unfinished. This slice changes the authenticated backend contract only; it does not connect mock Finance UI to production data or claim native SQLCipher validation.
+
 ### UI-first progress
 
 #### UI Slice 5a: daily/monthly summaries and trends — complete
@@ -1164,7 +1174,7 @@ The repository, Expo shell, backend/API foundation, schema, encryption, API cont
 3. **Patient and medical-record UI — complete:** searchable profiles, profile create/edit, weight/vaccination timelines, structured visit create/edit, service fees, item quantities, and saved price/financial presentation are covered with typed demo state.
 4. **Retail POS UI — complete:** typed product discovery, bounded cart controls, saved prices, payment selection, explicit confirmation, success state, and itemized receipt preview are covered with synthetic local state.
 5. **Finance UI — complete:** summaries, trends, distinct expense/owner-draw entry, and cash opening/expected/actual reconciliation with variance are covered by synthetic local state.
-6. **Production integration — next:** the authenticated backend covers patient records, payment-attributed visits, inventory, replay-safe retail checkout, payment-attributed operating expenses and owner draws, and clinic-local daily/monthly summary transport. Next derive daily payment-method totals and authoritative cash reconciliation while excluding legacy unattributed records, and separately close the physical SQLCipher gate before replacing fixtures feature-by-feature with encrypted local repositories/API adapters, sync, and PDF generation.
+6. **Production integration — next:** the authenticated backend covers patient records, payment-attributed visits, inventory, replay-safe retail checkout, payment-attributed operating expenses and owner draws, and clinic-local daily/monthly summary transport. Daily payment-method totals now distinguish all four known methods and explicit legacy-unattributed amounts/counts. Next implement authoritative cash reconciliation with an explicit incomplete-attribution state, and separately close the physical SQLCipher gate before replacing fixtures feature-by-feature with encrypted local repositories/API adapters, sync, and PDF generation.
 7. **Sync reliability:** complete recovery, retry, idempotency, and diagnostics across every core write.
 8. **Login development and activation last:** after the application modules work end to end, finish the username/password login design, reactivate all route guards and sign-out, validate every finished route and offline workflow, then complete accessibility and visual polish.
 
