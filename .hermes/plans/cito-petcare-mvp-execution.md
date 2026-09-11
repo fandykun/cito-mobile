@@ -1018,6 +1018,15 @@ Cash opening/actual closing persistence, authoritative reconciliation, legacy ba
 
 Next implement replay-safe persisted drawer closes and their authenticated write/read boundaries; define snapshot/amendment behavior before storing an expected closing that can become stale after source edits. Mobile encrypted repositories, sync, and login-release gates remain separate prerequisites.
 
+### Slice 7.15: authenticated mobile finance read integration — complete
+
+- [x] Add a timeout-bounded authenticated Finance API client for daily/monthly summaries and cash-reconciliation preview. Validate request dates/amounts before transport and exact server payload shapes, accounting identities, per-method reconciliation, status/null semantics, and response size at the mobile boundary.
+- [x] Replace Finance fixtures only when an online authenticated session exists: render server daily/monthly totals, per-method cash/QRIS/transfer/card movements, clinic-day navigation, and a non-persisting server reconciliation preview. Preserve the labeled synthetic review UI when no session exists.
+- [x] Expose truthful loading, retry/error, offline-gate, incomplete-attribution, negative-expected-cash, over/short, and not-saved states. Do not enable expense/draw writes before encrypted offline repositories and outbox transactions exist.
+- [x] Verify 190 tests across 28 mobile suites, TypeScript, ESLint, Android/web exports, Finance route switching/sign-in access, Finance client payload/error regressions, and Live Finance interaction tests.
+
+Next connect additional read-only authenticated modules where server contracts already exist, while physical-device SQLCipher remains the prerequisite for replacing local write fixtures. Login remains deliberately bypassed for unauthenticated design review; authenticated Finance is reachable when a session is established, and no real data is exposed anonymously.
+
 ### UI-first progress
 
 #### UI Slice 5a: daily/monthly summaries and trends — complete
