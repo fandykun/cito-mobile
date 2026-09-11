@@ -155,6 +155,11 @@ Results: all dependency checks passed, all 10 mobile tests passed, Android expor
 
 Commit: `feat(mobile): scaffold expo application shell`
 
+### Foundation maintenance: Expo SDK 57 patch alignment — complete
+
+- [x] Updated Expo core, Constants, Dev Client, Font, Linking, Router, and Secure Store to the patch ranges currently required by Expo SDK 57 without changing native plugin behavior.
+- [x] Verified clean npm install, Expo dependency compatibility, all Expo Doctor checks, mobile tests/typecheck/lint, Android export, and the high-severity audit gate.
+
 ### Slice 1.2: encrypted local database spike — native validation pending
 
 Completed foundations:
