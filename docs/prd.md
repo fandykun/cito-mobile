@@ -135,6 +135,11 @@ Single user: the clinic owner/vet. No role-based access control needed for MVP.
 - **Payment attribution source of truth**: every medical visit payment, retail sale, operating expense, and owner's draw records exactly one payment method (cash, QRIS, transfer, or card). Legacy records whose method is unknown remain explicitly unattributed and must not be assumed to be cash.
 - **Daily payment breakdown**: show medical income, retail income, operating expenses, and owner's draw separately for each payment method. Include legacy unknown amounts in overall accounting totals but never in a known-method bucket. Explicitly report whether attribution is complete, including zero-amount legacy records, so partial cash totals cannot be mistaken for a fully reconciled drawer.
 - **Cash drawer reconciliation**: opening balance, calculated expected closing balance, actual closing balance, variance
+  - Expected closing cash = opening cash + cash medical income + cash retail income − cash operating expenses − cash owner's draw. QRIS, transfer, and card payments never affect drawer cash.
+  - A read-only preview may use operator-entered opening and counted balances without saving a drawer close. Variance = actual closing − expected closing; positive means over, negative means short.
+  - Any unattributed source record blocks an authoritative preview, including zero-value legacy records: expected cash and variance remain unavailable until attribution is resolved.
+  - A negative calculated closing balance is an explicit inconsistent-cash state, not zero or a successful reconciliation. Expose the negative projection for diagnosis but withhold variance. Do not persist it into the nonnegative reconciliation schema.
+  - Preview is based on currently recorded server data, not proof that every offline transaction has synced. Final persisted reconciliation and offline client integration remain separate delivery gates.
 - **Daily summary view**: total income (split: medical vs. retail), total expenses, net for the day
 
 ### 3.9 Monthly Financial Overview
@@ -201,5 +206,6 @@ Single user: the clinic owner/vet. No role-based access control needed for MVP.
 | v1.9 | Authentication limited to username and password for the current product; removed PIN and biometric re-lock requirements. |
 | v2.0 | Defined the configurable clinic business timezone (`Asia/Jakarta` default) and the inventory expiry-alert window (30-day default, including expired items). |
 | v2.1 | Clarified daily per-method financial breakdowns, separate owner draws, explicit legacy-unattributed totals, and completeness reporting before authoritative cash reconciliation. |
+| v2.2 | Defined read-only cash-reconciliation preview, cash-only expected/variance formulas, unavailable results for incomplete attribution, and explicit negative-expected-cash handling. |
 
 **Process going forward**: new feature requests should be added directly into the relevant section of this PRD (Goals, User Stories, Feature Specifications, Data Entities) rather than creating a separate PRD document — this keeps one source of truth for the product, especially since `AGENTS.md` and the architecture doc both reference this file. Log each meaningful change as a new row above.

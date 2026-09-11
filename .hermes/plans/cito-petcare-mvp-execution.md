@@ -1003,6 +1003,16 @@ All new cash-affecting backend writes now carry authoritative payment attributio
 
 Cash opening/actual closing persistence, authoritative reconciliation, legacy backfill, and mobile finance integration remain unfinished. This slice changes the authenticated backend contract only; it does not connect mock Finance UI to production data or claim native SQLCipher validation.
 
+### Slice 7.14: authenticated read-only cash-reconciliation preview — complete
+
+- [x] Add a pure tested calculation for opening + cash medical income + cash retail income − cash expenses − cash owner draws, with signed actual-minus-expected variance and exact intermediate arithmetic/int64 output overflow checks.
+- [x] Block authoritative closing/variance when any source has unknown payment attribution, including zero-value legacy visits. Surface negative expected cash explicitly with no variance; never clamp it or save it to the nonnegative reconciliation schema.
+- [x] Expose bearer-protected `POST /api/v1/finance/daily/{date}/cash-reconciliation-preview` using one existing database-summary snapshot. Require canonical date and exactly two bounded integer money inputs, reject malformed/duplicate/unknown fields before querying, bound the body to 4096 bytes, and return no-store responses with explicit nulls.
+- [x] Verify database-backed preview recalculation after source changes, cash/noncash separation, empty days, unknown attribution, negative cash, no reconciliation writes, HTTP validation/authentication/error sanitization, full race-enabled PostgreSQL tests, Go vet/build, and OpenAPI lint/bundle.
+- [x] Update PRD and README to distinguish a server-data preview from persisted drawer close or proof of completed offline synchronization.
+
+Next implement replay-safe persisted drawer closes and their authenticated write/read boundaries; define snapshot/amendment behavior before storing an expected closing that can become stale after source edits. Mobile encrypted repositories, sync, and login-release gates remain separate prerequisites.
+
 ### UI-first progress
 
 #### UI Slice 5a: daily/monthly summaries and trends — complete
@@ -1174,7 +1184,7 @@ The repository, Expo shell, backend/API foundation, schema, encryption, API cont
 3. **Patient and medical-record UI — complete:** searchable profiles, profile create/edit, weight/vaccination timelines, structured visit create/edit, service fees, item quantities, and saved price/financial presentation are covered with typed demo state.
 4. **Retail POS UI — complete:** typed product discovery, bounded cart controls, saved prices, payment selection, explicit confirmation, success state, and itemized receipt preview are covered with synthetic local state.
 5. **Finance UI — complete:** summaries, trends, distinct expense/owner-draw entry, and cash opening/expected/actual reconciliation with variance are covered by synthetic local state.
-6. **Production integration — next:** the authenticated backend covers patient records, payment-attributed visits, inventory, replay-safe retail checkout, payment-attributed operating expenses and owner draws, and clinic-local daily/monthly summary transport. Daily payment-method totals now distinguish all four known methods and explicit legacy-unattributed amounts/counts. Next implement authoritative cash reconciliation with an explicit incomplete-attribution state, and separately close the physical SQLCipher gate before replacing fixtures feature-by-feature with encrypted local repositories/API adapters, sync, and PDF generation.
+6. **Production integration — next:** the authenticated backend covers patient records, payment-attributed visits, inventory, replay-safe retail checkout, payment-attributed operating expenses and owner draws, and clinic-local daily/monthly summary transport. Daily payment-method totals now distinguish all four known methods and explicit legacy-unattributed amounts/counts. The authenticated cash-reconciliation preview now derives cash-only expected closing and variance with explicit incomplete-attribution/negative-cash states. Next implement replay-safe persisted drawer closes and their snapshot/amendment policy, and separately close the physical SQLCipher gate before replacing fixtures feature-by-feature with encrypted local repositories/API adapters, sync, and PDF generation.
 7. **Sync reliability:** complete recovery, retry, idempotency, and diagnostics across every core write.
 8. **Login development and activation last:** after the application modules work end to end, finish the username/password login design, reactivate all route guards and sign-out, validate every finished route and offline workflow, then complete accessibility and visual polish.
 
