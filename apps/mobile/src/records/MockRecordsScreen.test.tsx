@@ -1,4 +1,4 @@
-import { render, screen, userEvent, within } from '@testing-library/react-native';
+import { fireEvent, render, screen, userEvent, within } from '@testing-library/react-native';
 
 import { MockRecordsScreen } from '@/src/records/MockRecordsScreen';
 
@@ -187,21 +187,21 @@ describe('MockRecordsScreen', () => {
     await user.press(screen.getByRole('button', { name: 'Simpan kunjungan demo' }));
     expect(screen.getByText('Jenis kunjungan wajib diisi.')).toBeOnTheScreen();
 
-    await user.type(screen.getByLabelText('Jenis kunjungan'), 'Kontrol kulit');
-    await user.type(screen.getByLabelText('Tanggal kunjungan'), '21 Agu 2026');
-    await user.type(screen.getByLabelText('Keluhan kunjungan'), 'Gatal ringan.');
-    await user.type(screen.getByLabelText('Observasi kunjungan'), 'Kulit sedikit kemerahan.');
-    await user.type(screen.getByLabelText('Diagnosis kunjungan'), 'Dermatitis ringan.');
-    await user.type(screen.getByLabelText('Rencana terapi kunjungan'), 'Sampo medikasi dua kali seminggu.');
-    await user.type(screen.getByLabelText('Biaya jasa kunjungan'), '150000');
+    await fireEvent.changeText(screen.getByLabelText('Jenis kunjungan'), 'Kontrol kulit');
+    await fireEvent.changeText(screen.getByLabelText('Tanggal kunjungan'), '21 Agu 2026');
+    await fireEvent.changeText(screen.getByLabelText('Keluhan kunjungan'), 'Gatal ringan.');
+    await fireEvent.changeText(screen.getByLabelText('Observasi kunjungan'), 'Kulit sedikit kemerahan.');
+    await fireEvent.changeText(screen.getByLabelText('Diagnosis kunjungan'), 'Dermatitis ringan.');
+    await fireEvent.changeText(screen.getByLabelText('Rencana terapi kunjungan'), 'Sampo medikasi dua kali seminggu.');
+    await fireEvent.changeText(screen.getByLabelText('Biaya jasa kunjungan'), '150000');
     await user.press(
       screen.getByRole('button', { name: 'Tambah Amoxicillin 250mg ke kunjungan' }),
     );
     await user.press(
       screen.getByRole('button', { name: 'Tambah Amoxicillin 250mg ke kunjungan' }),
     );
-    await user.type(screen.getByLabelText('Obat kunjungan'), 'Sampo demo, Omega 3 demo');
-    await user.type(screen.getByLabelText('Catatan dokter'), 'Evaluasi ulang dalam dua minggu.');
+    await fireEvent.changeText(screen.getByLabelText('Obat kunjungan'), 'Sampo demo, Omega 3 demo');
+    await fireEvent.changeText(screen.getByLabelText('Catatan dokter'), 'Evaluasi ulang dalam dua minggu.');
     await user.press(screen.getByRole('button', { name: 'Simpan kunjungan demo' }));
 
     expect(screen.getByText('Kontrol kulit')).toBeOnTheScreen();
@@ -221,8 +221,7 @@ describe('MockRecordsScreen', () => {
       screen.getByRole('button', { name: 'Edit kunjungan Kontrol kulit 21 Agu 2026' }),
     );
     expect(screen.getByRole('header', { name: 'Edit kunjungan — Luna Demo' })).toBeOnTheScreen();
-    await user.clear(screen.getByLabelText('Diagnosis kunjungan'));
-    await user.type(screen.getByLabelText('Diagnosis kunjungan'), 'Dermatitis membaik.');
+    await fireEvent.changeText(screen.getByLabelText('Diagnosis kunjungan'), 'Dermatitis membaik.');
     await user.press(screen.getByRole('button', { name: 'Simpan kunjungan demo' }));
 
     expect(screen.getByText('Dermatitis membaik.')).toBeOnTheScreen();
