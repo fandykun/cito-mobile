@@ -36,7 +36,7 @@ These are open tasks, not claims that every screen is fully synchronized.
 - Owner draw is separate from operating expenses: net profit is gross income minus operating expenses, and retained funds are net profit minus actual draws. The hypothetical planner is a separate scenario, not withdrawal advice.
 - Login activation remains the final integration step. No preview/production release may expose clinic data without restored authentication guards.
 - Review data is synthetic/in-memory. Inventory's authenticated API-backed list is a distinct read-only path; mock editors are not production writes. Encrypted domain persistence, cross-module integration, sync, PDF receipts, and physical-device SQLCipher verification remain unfinished.
-- Cash reconciliation still discloses an all-expenses-are-cash mock assumption. Production reconciliation must instead use authoritative payment attribution.
+- Synthetic Finance still uses its explicitly labeled all-expenses-are-cash fixture assumption. Authenticated Finance uses authoritative payment attribution and includes only cash-attributed movements in reconciliation previews.
 
 ## Verification
 

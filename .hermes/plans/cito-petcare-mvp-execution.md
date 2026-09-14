@@ -34,7 +34,7 @@ These are the smallest concrete decisions consistent with the authoritative docu
 - **Prototype:** preserve the existing Vite app under `prototype/web`; do not incrementally turn React DOM components into React Native components.
 - **API:** Go with Echo, `pgx`, explicit service/repository boundaries, and SQL migrations. Avoid an ORM that obscures transactions and price/stock invariants.
 - **Database:** PostgreSQL in Docker Compose for local development; production credentials only through environment variables or a secret manager.
-- **API contract:** OpenAPI document under `api/openapi.yaml`; generated or validated typed clients must not drift from handlers.
+- **API contract:** OpenAPI document under `api/openapi.yaml`; it documents shipped handlers only, and route-conformance tests prevent drift. Planned operations are added with their implementation.
 - **Local persistence:** encrypted SQLite through an Expo development build. A Phase 1 spike must prove the selected native SQLite/SQLCipher adapter works with the current Expo/EAS toolchain before domain implementation.
 - **Money:** use integer IDR values in TypeScript and explicit fixed-precision PostgreSQL numeric columns; never use floating-point arithmetic for persisted money.
 - **Identifiers and time:** UUIDs generated on-device for offline records; UTC timestamps in storage and explicit clinic timezone for display/day boundaries.
@@ -299,11 +299,12 @@ Commit: `feat(security): encrypt sensitive medical fields`
 
 Completed:
 
-- Added an OpenAPI 3.1 contract for implemented health probes and planned authentication, synchronization, inventory, owner, pet, weight, vaccination, visit, retail, expense, owner-draw, cash-reconciliation, and financial-summary resources.
+- Added an OpenAPI 3.1 contract for implemented health, authentication, inventory, owner, pet, weight, vaccination, visit, retail, expense, owner-draw, cash-reconciliation-preview, and financial-summary resources. Deferred synchronization and persisted drawer-close operations remain in this execution plan until their handlers ship.
 - Required bearer authentication for all clinic-data operations while explicitly leaving health, login, and refresh public; no registration or sign-up route exists.
-- Defined client UUIDs, idempotency headers, optimistic versions, opaque checkpoints, bounded batches/pages, whole-IDR money values, medical payload limits, price snapshots, generated financial results, and sanitized error responses.
-- Kept PDF receipt generation device-local while representing only portable transaction metadata in the backend contract.
+- Defined client UUIDs, idempotency headers, optimistic versions, bounded pages, whole-IDR money values, medical payload limits, price snapshots, generated financial results, and sanitized error responses.
+- Kept PDF receipt generation device-local. The current retail contract carries an opaque device receipt reference; portable backup/restore semantics must be resolved before production receipt recovery is claimed.
 - Added a pinned Redocly validator, root `api:lint` command, and mandatory CI contract-validation step.
+- Added a Go route-conformance test that compares every OpenAPI operation with statically registered Echo routes and fails on missing or undocumented handlers.
 
 Verification:
 
@@ -1065,7 +1066,7 @@ Verification: `npm run mobile:typecheck`, `npm run mobile:lint`, `npm run mobile
 - Added a live expected-closing calculation and signed variance preview: `expected = opening + cash income − cash expenses`; `variance = actual − expected`.
 - Added saved daily reconciliation presentation for opening, expected, actual, variance, and balanced/short/over status.
 - Added working edit/cancel behavior that preloads saved balances while preserving the prior reconciliation when an edit is cancelled.
-- Explicitly disclosed the mock-only assumption that all daily expenses are treated as cash outflows because the current `Expense` entity does not capture payment method. Production reconciliation must resolve this before integration.
+- Explicitly disclosed the historical mock-only assumption that all fixture expenses are cash outflows. Production records now carry authoritative payment attribution, and the connected reconciliation preview uses only cash-attributed movements.
 - Kept the reconciliation snapshot local to screen memory and avoided production cash closing, encrypted persistence, audit events, APIs, and sync writes.
 - Added calculation, validation, preview, save, presentation, and edit-state tests.
 
@@ -1210,7 +1211,7 @@ The temporary mobile bypass applies only to local screen development: keep backe
 These do not block repository separation, but they must be documented before the affected migration or behavior is committed:
 
 - Currency formatting policy beyond the established whole-IDR storage rule. The clinic timezone is resolved by ADR 0004.
-- Chosen encrypted SQLite adapter after the native build spike.
+- Physical-device validation of the selected first-party Expo SQLite SQLCipher adapter; adapter selection itself is complete in ADR 0001.
 - Production secret-manager integration and encrypted key-backup procedure. The envelope, initial environment keyring, and rotation sequence are defined by ADR 0003.
 - Server-to-device checkpoint format and tombstone retention duration. Tombstone deletion behavior is defined by ADR 0002.
 - Whether the single account is expected to use exactly one device for MVP.

@@ -82,7 +82,6 @@ erDiagram
         decimal visit_cost
         decimal visit_profit
         string payment_method "nullable only for legacy unattributed rows"
-        boolean synced
         datetime created_at
         datetime updated_at
     }
@@ -103,7 +102,6 @@ erDiagram
         string payment_method
         string receipt_number
         string pdf_receipt_path
-        boolean synced
         datetime created_at
     }
 
@@ -123,7 +121,6 @@ erDiagram
         decimal amount
         string payment_method "nullable only for legacy unattributed rows"
         text note
-        boolean synced
     }
 
     OWNER_DRAW {
@@ -132,7 +129,6 @@ erDiagram
         decimal amount
         string payment_method "nullable only for legacy unattributed rows"
         text note
-        boolean synced
     }
 
     DAILY_SUMMARY {
@@ -159,8 +155,8 @@ erDiagram
 **Notes on the ERD:**
 - `VISIT_ITEM` and `RETAIL_TRANSACTION_ITEM` both snapshot `cost_price_at_time` / `selling_price_at_time` from `INVENTORY_ITEM` — so historical records stay accurate even if prices change later.
 - Cash-affecting source records use the same constrained payment methods: `cash`, `qris`, `transfer`, or `card`. The server schema temporarily permits `NULL` on visit, expense, and owner-draw rows solely to preserve pre-attribution history during forward upgrades; new writes must provide a method, and unknown legacy rows cannot contribute to authoritative cash reconciliation until backfilled.
-- `DAILY_SUMMARY` and `MONTHLY_SUMMARY` are **derived/computed** tables (materialized for fast reads), not manually entered — rebuilt from `VISIT`, `RETAIL_TRANSACTION`, `EXPENSE`, and `OWNER_DRAW` records.
-- `synced` boolean fields exist on records created offline, to track what's pending upload to the backend.
+- `DAILY_SUMMARY` and `MONTHLY_SUMMARY` are **derived/computed projections**, not manually entered. The current backend computes them from `VISIT`, `RETAIL_TRANSACTION`, `EXPENSE`, and `OWNER_DRAW` source records on demand; a future materialization is an optimization, not a separate source of truth.
+- Sync state belongs to the encrypted mobile outbox/checkpoint store, not authoritative PostgreSQL domain rows. The server-side operation ledger and checkpoint format remain part of the unfinished sync design.
 - `PET` and `VISIT` include `updated_at` since both are editable after creation (correcting profile info, amending a diagnosis/notes) — `created_at` is preserved as the original record date, `updated_at` reflects the latest edit.
 - Medical fields shown as `binary` are plaintext only at authenticated application boundaries; PostgreSQL stores versioned authenticated-encryption envelopes in `BYTEA` columns as defined by ADR 0003.
 - `APP_USER` is a standalone entity (not connected by foreign key to clinic data) — it exists purely to gate login access. Since there's only one user and no roles/scopes, clinic records don't need a `user_id` ownership column; the account is provisioned manually (no self-registration flow) and simply controls whether the app can be opened at all.
