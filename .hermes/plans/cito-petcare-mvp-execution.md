@@ -157,8 +157,9 @@ Commit: `feat(mobile): scaffold expo application shell`
 
 ### Foundation maintenance: Expo SDK 57 patch alignment — complete
 
-- [x] Updated Expo core, Constants, Dev Client, Font, Linking, Router, and Secure Store to the patch ranges currently required by Expo SDK 57 without changing native plugin behavior.
-- [x] Verified clean npm install, Expo dependency compatibility, all Expo Doctor checks, mobile tests/typecheck/lint, Android export, and the high-severity audit gate.
+- [x] Updated Expo core, Constants, Dev Client, Font, Linking, Router, Secure Store, Splash Screen, SQLite, and Web Browser to the patch ranges currently required by Expo SDK 57 without changing native plugin behavior.
+- [x] Pinned the shared Expo peer packages at the workspace root so npm resolves one native module graph, and added the React Native `SourceCode` Jest compatibility shim required by the updated test runtime.
+- [x] Verified a clean npm 10 install, Expo dependency compatibility, all 21 Expo Doctor checks, all 190 mobile tests across 28 suites, strict TypeScript, ESLint, Android export, the prototype build, and the high-severity production audit gate.
 
 ### Slice 1.2: encrypted local database spike — native validation pending
 
