@@ -1,9 +1,9 @@
-# Product Requirements Document: Vet Clinic Management System (MVP)
+# Product Requirements Document: Vet Clinic Management System
 
 ## 1. Overview
 
 ### 1.1 Purpose
-An internal mobile application for a single-owner veterinary clinic to manage inventory, record detailed and secure pet medical history, process fast retail transactions, and monitor financial performance — with a specific focus on distinguishing clinic income from personal (owner's draw) income.
+A mobile-first internal system for a single-owner veterinary clinic to manage inventory, record detailed and secure pet medical history, process fast retail transactions, and monitor financial performance — with a specific focus on distinguishing clinic income from personal (owner's draw) income. The production mobile app remains the offline-capable operational client. A later authenticated desktop web companion provides large-screen review and analysis without replacing the mobile workflows.
 
 ### 1.2 Background
 The clinic currently operates with mixed personal/business finances and no digital system for tracking inventory, patient history, retail sales, or profitability. Bookings are handled externally via WhatsApp. The owner needs visibility into how much the clinic actually earns versus what can safely be withdrawn as personal income each month, along with a reliable, secure medical record system and a quick way to handle over-the-counter medicine/food sales with a shareable receipt.
@@ -17,6 +17,7 @@ The clinic currently operates with mixed personal/business finances and no digit
 - Clearly separate clinic-retained funds from owner's draw (personal income)
 - Work offline, syncing when connectivity returns
 - Require login before any data (stock, financials, patient records) is accessible, protecting sensitive clinic and financial information
+- Provide an authenticated desktop web companion for large-screen financial review, inventory alerts, and patient-history lookup after the mobile MVP is production-ready
 
 ### 1.4 Non-Goals (Out of Scope for MVP)
 - In-app appointment booking (booking remains on WhatsApp for MVP)
@@ -24,9 +25,13 @@ The clinic currently operates with mixed personal/business finances and no digit
 - Multi-branch/franchise support
 - Staff scheduling, shift management, or commission tracking
 - Insurance/claims processing
+- Public customer/pet-owner portal, self-service account creation, and public access to clinic data
 
-### 1.5 Target Platform
-Native mobile app for **Android and iOS**, with **offline support** (local storage with sync-on-reconnect).
+### 1.5 Target Platforms
+- **Primary operational client (MVP):** native mobile app for Android and iOS, with encrypted offline storage and sync-on-reconnect.
+- **Web companion (post-MVP):** authenticated desktop-first browser application for the same clinic owner and the same backend data. Its first production release is online-only and read-only: dashboard/financial review, inventory alerts, patient lookup, and visit-history review. It must not silently claim offline capability, cache medical records in browser storage, or replace the mobile app's offline visit, checkout, receipt, expense, draw, or stock-mutation workflows.
+
+The web companion is a separate production client, not a conversion of the existing `prototype/web` Figma export. A dedicated prototype may be created under `prototype/web-console`; production code will live under `apps/web` only after its security and acceptance gates are defined.
 
 Business dates use a configurable IANA clinic timezone, defaulting to `Asia/Jakarta`. This timezone governs inventory expiry alerts and future daily/monthly financial boundaries.
 
@@ -56,6 +61,7 @@ Single user: the clinic owner/vet. No role-based access control needed for MVP.
 15. As the owner, I want to update or correct a pet's profile or past visit record, so I can fix mistakes or add follow-up information without creating a duplicate record.
 16. As the owner, I want to log in before accessing the app, so my stock, financial, and patient data stay private if my device is lost or someone else picks it up.
 17. As the owner, I want to stay logged in for a configurable period (e.g., 1–3 days) instead of logging in every time I open the app, so daily use stays convenient without sacrificing security.
+18. As the owner, I want to review financial performance, inventory alerts, and patient history on a larger desktop screen, so I can audit and plan without using the phone for every read-only task.
 
 ---
 
@@ -155,8 +161,17 @@ Single user: the clinic owner/vet. No role-based access control needed for MVP.
 - Core actions available offline: creating/viewing visit records, viewing patient history, viewing inventory, logging expenses, processing retail transactions, generating PDF receipts
 - PDF receipt generation works fully offline since it doesn't depend on a connected printer or internet — the PDF can be shared/synced once connectivity returns
 - Local data storage on-device, encrypted, with automatic sync to the backend when connectivity is restored
-- Since there is only one user/device, conflict resolution between concurrent edits is not a concern for MVP
+- The mobile MVP assumes one writable mobile client, so concurrent-edit conflict resolution is not required for its initial sync implementation. The first web companion is read-only; any later web writes require an explicit multi-client conflict policy.
 - **Login while offline**: since the account is manually provisioned (not tied to a live registration server check), the app should support offline login using a locally cached, securely stored session/credential — so the owner isn't locked out of their own data when there's no internet
+
+### 3.11 Desktop Web Companion (Post-MVP)
+- **Purpose:** complement the mobile app with a desktop-optimized clinic console; do not duplicate the mobile UI one-for-one.
+- **Initial read-only scope:** overview dashboard, daily/monthly financial views, payment-method and reconciliation status, inventory low-stock/expiry alerts, patient search, pet profile review, and chronological visit/vaccination/weight history.
+- **Explicitly excluded from the first web release:** visit creation/editing, retail checkout, receipt generation, inventory/expense/draw mutations, offline mode, background sync, and browser-persisted medical data.
+- **Access:** use the same manually provisioned clinic account and existing authorization boundary. No registration, roles, public pages containing clinic data, or separate web-only account system.
+- **Security:** production web pages require authentication before rendering clinic data; sensitive responses must not be written to `localStorage`, IndexedDB, service-worker caches, analytics, or client logs. Browser session and CSRF protection must be designed and reviewed before production implementation; a visual prototype must use synthetic data only.
+- **Concurrency:** the first release is read-only so it cannot conflict with offline mobile writes. Any future web mutation requires an explicit multi-client conflict policy using optimistic versions/idempotency rather than relying on the current single-writer assumption.
+- **Responsive target:** optimize for laptop/desktop widths first, with a usable tablet layout. Phone-sized operation remains the responsibility of the mobile app.
 
 ---
 
@@ -187,6 +202,7 @@ Single user: the clinic owner/vet. No role-based access control needed for MVP.
 - Inventory stock levels stay accurate without manual recounting, due to auto-deduction from both visits and retail sales
 - Owner can view an accurate monthly financial picture (medical vs. retail income, expenses, profit, draw, retained) without manual spreadsheet work
 - App remains usable (core actions, including retail checkout and PDF receipt generation) with no internet connection, syncing cleanly afterward
+- Web companion presents the agreed read-only desktop views from authenticated backend data without persisting medical or financial records in browser storage
 
 ---
 
@@ -207,5 +223,6 @@ Single user: the clinic owner/vet. No role-based access control needed for MVP.
 | v2.0 | Defined the configurable clinic business timezone (`Asia/Jakarta` default) and the inventory expiry-alert window (30-day default, including expired items). |
 | v2.1 | Clarified daily per-method financial breakdowns, separate owner draws, explicit legacy-unattributed totals, and completeness reporting before authoritative cash reconciliation. |
 | v2.2 | Defined read-only cash-reconciliation preview, cash-only expected/variance formulas, unavailable results for incomplete attribution, and explicit negative-expected-cash handling. |
+| v2.3 | Added a post-MVP authenticated, desktop-first, online-only read-only web companion; preserved mobile as the offline operational client and prohibited browser persistence of sensitive clinic data. |
 
 **Process going forward**: new feature requests should be added directly into the relevant section of this PRD (Goals, User Stories, Feature Specifications, Data Entities) rather than creating a separate PRD document — this keeps one source of truth for the product, especially since `AGENTS.md` and the architecture doc both reference this file. Log each meaningful change as a new row above.

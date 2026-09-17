@@ -32,6 +32,7 @@ These are the smallest concrete decisions consistent with the authoritative docu
 - **Repository layout:** npm workspace for JavaScript projects plus an independent Go module.
 - **Mobile:** Expo + TypeScript with Expo Router; production features live under `apps/mobile`.
 - **Prototype:** preserve the existing Vite app under `prototype/web`; do not incrementally turn React DOM components into React Native components.
+- **Web companion:** keep the future production React client in `apps/web` within this monorepo. Preserve `prototype/web` as the mobile-design reference; a synthetic desktop-console prototype belongs in `prototype/web-console`. The first production web release is authenticated, online-only, and read-only.
 - **API:** Go with Echo, `pgx`, explicit service/repository boundaries, and SQL migrations. Avoid an ORM that obscures transactions and price/stock invariants.
 - **Database:** PostgreSQL in Docker Compose for local development; production credentials only through environment variables or a secret manager.
 - **API contract:** OpenAPI document under `api/openapi.yaml`; it documents shipped handlers only, and route-conformance tests prevent drift. Planned operations are added with their implementation.
@@ -52,20 +53,21 @@ These are the smallest concrete decisions consistent with the authoritative docu
 ├── api/
 │   └── openapi.yaml
 ├── apps/
-│   └── mobile/
-│       ├── app/
-│       ├── src/
-│       │   ├── db/
-│       │   ├── modules/
-│       │   │   ├── auth/
-│       │   │   ├── inventory/
-│       │   │   ├── patients/
-│       │   │   ├── visits/
-│       │   │   ├── pos/
-│       │   │   ├── finance/
-│       │   │   └── sync/
-│       │   └── shared/
-│       └── package.json
+│   ├── mobile/
+│   │   ├── app/
+│   │   ├── src/
+│   │   │   ├── db/
+│   │   │   ├── modules/
+│   │   │   │   ├── auth/
+│   │   │   │   ├── inventory/
+│   │   │   │   ├── patients/
+│   │   │   │   ├── visits/
+│   │   │   │   ├── pos/
+│   │   │   │   ├── finance/
+│   │   │   │   └── sync/
+│   │   │   └── shared/
+│   │   └── package.json
+│   └── web/                     # future production desktop companion
 ├── services/
 │   └── api/
 │       ├── cmd/api/
@@ -81,7 +83,8 @@ These are the smallest concrete decisions consistent with the authoritative docu
 │       ├── migrations/
 │       └── go.mod
 ├── prototype/
-│   └── web/
+│   ├── web/                     # existing mobile-design reference
+│   └── web-console/             # future synthetic desktop prototype
 ├── infra/
 │   └── compose.yaml
 └── docs/
@@ -1138,6 +1141,35 @@ Additionally:
 - Manual provisioning is exercised, and the shipped app exposes no registration, sign-up, create-account, role, permission, PIN, biometric, or automated credential-recovery flow.
 - Production migration and rollback procedures are exercised on a disposable environment.
 - MVP acceptance criteria in `docs/prd.md` are checked individually.
+
+## Post-MVP Track W — Cito Clinic Console
+
+This track does not replace or weaken the mobile MVP release gates. A synthetic desktop prototype may be explored earlier, but production web implementation starts only after its browser-security design is accepted and must not divert the physical SQLCipher, mobile sync, receipt, and login-release work.
+
+### W0: synthetic desktop prototype
+
+- Create an isolated `prototype/web-console` workspace; do not repurpose `prototype/web`.
+- Prototype desktop information architecture for overview/financial review, inventory alerts, patient search, and chronological medical-history review.
+- Use synthetic typed fixtures only. Do not call clinic APIs, include credentials, or copy real clinic data.
+- Design for laptop/desktop first and verify a usable tablet layout; mobile phone operation remains in Expo.
+
+### W1: production read-only web companion
+
+- Create `apps/web` as a separate React + TypeScript application consuming the shared OpenAPI contract.
+- Add a reviewed browser-session design with HttpOnly/Secure/SameSite cookie or equivalent protection, CSRF defense, authenticated route guards, and safe expiration/logout behavior. Never persist bearer or refresh tokens in `localStorage`.
+- Keep clinic responses out of `localStorage`, IndexedDB, service-worker caches, analytics, error telemetry, and logs; verify appropriate `Cache-Control: no-store` behavior.
+- Implement only authenticated dashboard/finance views, inventory alerts, patient search/profile, and visit/vaccination/weight history.
+- Keep every domain operation read-only. Web writes require a later PRD/ADR change covering conflicts with pending offline mobile writes, optimistic versions, and idempotency.
+- Add independent web build/deployment artifacts and CI gates while keeping source, docs, and API conformance in this repository.
+
+### W1 acceptance gates
+
+- Unauthenticated navigation cannot render or retain clinic data.
+- Refresh, back/forward navigation, logout, expiry, and direct-route entry do not leak protected content.
+- Browser storage and service-worker inspection finds no clinic records or long-lived bearer/refresh tokens.
+- All data comes from authenticated API responses and matches the shared contract; prototype fixtures are not imported into `apps/web`.
+- Desktop and tablet accessibility, loading, empty, error, and session-expiry states are tested.
+- Production web deployment is independently reversible without redeploying the API or mobile application.
 
 ## Immediate execution queue
 

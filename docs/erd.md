@@ -177,6 +177,11 @@ flowchart TB
         SYNCQ[Sync Queue<br/>Manager]
     end
 
+    subgraph Web["Web Companion (Desktop Browser — React)"]
+        WEBUI[Desktop UI<br/>Read-only first release]
+        WEBSESSION[Authenticated Browser Session<br/>No clinic-data persistence]
+    end
+
     subgraph Backend["Backend (Go API)"]
         API[REST API<br/>Gin/Echo]
         AUTH[Auth Middleware<br/>Username/Password + JWT]
@@ -194,6 +199,8 @@ flowchart TB
     LOGIC --> PDFGEN
     LOGIC --> SYNCQ
     SYNCQ -.->|when online| API
+    WEBUI --> WEBSESSION
+    WEBSESSION -->|TLS, online only| API
     API --> AUTH
     AUTH --> BIZLOGIC
     BIZLOGIC --> SYNCSVC
@@ -280,7 +287,7 @@ flowchart LR
 
 - **Local-first writes**: every create/update (visit, retail transaction, expense, draw) writes to the local encrypted DB first, so the UI never blocks on network
 - **Sync queue**: unsynced records are queued and pushed to the backend API in the background whenever connectivity is detected
-- **Single-user simplification**: since there's only one user/device, there's no concurrent-edit conflict resolution needed — sync is a straightforward "push local changes, pull any backend-side derived data (e.g., recalculated summaries)"
+- **Current mobile-writer simplification**: the MVP assumes one mobile writer, so sync is a straightforward "push local changes, pull any backend-side derived data (e.g., recalculated summaries)." The initial web companion is read-only. Any future second writable client requires an explicit conflict policy rather than inheriting this assumption.
 - **Derived summaries**: daily/monthly summaries can be computed locally for immediate display, and recomputed/verified server-side once synced, as the source of truth
 - **PDF receipts**: generated entirely on-device (no server dependency), so retail checkout speed is unaffected by connectivity
 
@@ -290,6 +297,7 @@ flowchart LR
 |---|---|
 | App login | Required at launch — single, manually-provisioned account (username/password); no self-registration. Session token persists for a **configurable duration** (default ~1–3 days); supports offline login via securely cached credentials |
 | Local storage | Encrypted local DB (e.g., SQLCipher) — no plaintext medical data at rest on device |
+| Web browser | Authenticated before clinic data renders; first release is read-only and online-only. Do not persist clinic records or tokens in `localStorage`/IndexedDB/service-worker caches; define cookie/CSRF and no-store behavior before production implementation |
 | Transport | TLS/HTTPS for all API calls |
 | Backend storage | Encrypted PostgreSQL (at-rest encryption), access restricted to authenticated API |
 | Backups | Automated, encrypted backups of the backend database |
@@ -301,6 +309,7 @@ flowchart LR
 | Layer | Choice |
 |---|---|
 | Mobile framework | React Native via **Expo** (cross-platform Android/iOS, reuses React/TS knowledge) |
+| Web companion | React + TypeScript, desktop-first; separate `apps/web` client consuming the same OpenAPI contract |
 | Build/distribution | **Expo EAS Build** — compiles and signs iOS apps in the cloud, no Mac/Xcode required; distributes via TestFlight or direct install |
 | Local DB | SQLite via Expo SQLite with SQLCipher |
 | PDF generation | On-device library (e.g., `react-native-html-to-pdf` or `pdf-lib`) |
