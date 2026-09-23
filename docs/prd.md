@@ -31,7 +31,7 @@ The clinic currently operates with mixed personal/business finances and no digit
 - **Primary operational client (MVP):** native mobile app for Android and iOS, with encrypted offline storage and sync-on-reconnect.
 - **Web companion (post-MVP):** authenticated desktop-first browser application for the same clinic owner and the same backend data. Its first production release is online-only and read-only: dashboard/financial review, inventory alerts, patient lookup, and visit-history review. It must not silently claim offline capability, cache medical records in browser storage, or replace the mobile app's offline visit, checkout, receipt, expense, draw, or stock-mutation workflows.
 
-The web companion is a separate production client, not a conversion of the existing `prototype/web` Figma export. A dedicated prototype may be created under `prototype/web-console`; production code will live under `apps/web` only after its security and acceptance gates are defined.
+The web companion is a separate production client, not a conversion of the existing `prototype/web` Figma export. The synthetic desktop prototype lives under `prototype/web-console`; production code will live under `apps/web` only after ADR 0006's backend cookie, origin, CSRF, and no-store gates are implemented and verified.
 
 Business dates use a configurable IANA clinic timezone, defaulting to `Asia/Jakarta`. This timezone governs inventory expiry alerts and future daily/monthly financial boundaries.
 
@@ -169,7 +169,7 @@ Single user: the clinic owner/vet. No role-based access control needed for MVP.
 - **Initial read-only scope:** overview dashboard, daily/monthly financial views, payment-method and reconciliation status, inventory low-stock/expiry alerts, patient search, pet profile review, and chronological visit/vaccination/weight history.
 - **Explicitly excluded from the first web release:** visit creation/editing, retail checkout, receipt generation, inventory/expense/draw mutations, offline mode, background sync, and browser-persisted medical data.
 - **Access:** use the same manually provisioned clinic account and existing authorization boundary. No registration, roles, public pages containing clinic data, or separate web-only account system.
-- **Security:** production web pages require authentication before rendering clinic data; sensitive responses must not be written to `localStorage`, IndexedDB, service-worker caches, analytics, or client logs. Browser session and CSRF protection must be designed and reviewed before production implementation; a visual prototype must use synthetic data only.
+- **Security:** production web pages require authentication before rendering clinic data. ADR 0006 defines a same-origin HTTPS deployment, separate browser-auth endpoints, Secure/HttpOnly/SameSite session cookies, exact-origin and double-submit CSRF enforcement, no-store API responses, safe refresh/logout behavior, and route-authorization tests. Sensitive responses must not be written to `localStorage`, sessionStorage, IndexedDB, service-worker caches, analytics, telemetry, or client logs; a visual prototype must use synthetic data only.
 - **Concurrency:** the first release is read-only so it cannot conflict with offline mobile writes. Any future web mutation requires an explicit multi-client conflict policy using optimistic versions/idempotency rather than relying on the current single-writer assumption.
 - **Responsive target:** optimize for laptop/desktop widths first, with a usable tablet layout. Phone-sized operation remains the responsibility of the mobile app.
 
@@ -224,5 +224,6 @@ Single user: the clinic owner/vet. No role-based access control needed for MVP.
 | v2.1 | Clarified daily per-method financial breakdowns, separate owner draws, explicit legacy-unattributed totals, and completeness reporting before authoritative cash reconciliation. |
 | v2.2 | Defined read-only cash-reconciliation preview, cash-only expected/variance formulas, unavailable results for incomplete attribution, and explicit negative-expected-cash handling. |
 | v2.3 | Added a post-MVP authenticated, desktop-first, online-only read-only web companion; preserved mobile as the offline operational client and prohibited browser persistence of sensitive clinic data. |
+| v2.4 | Accepted the production browser security model: same-origin HTTPS, separate cookie-based web sessions, exact-origin and CSRF checks, no-store API responses, no persistent browser clinic data, and fail-closed route/session behavior. |
 
 **Process going forward**: new feature requests should be added directly into the relevant section of this PRD (Goals, User Stories, Feature Specifications, Data Entities) rather than creating a separate PRD document — this keeps one source of truth for the product, especially since `AGENTS.md` and the architecture doc both reference this file. Log each meaningful change as a new row above.

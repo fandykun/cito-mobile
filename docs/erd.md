@@ -297,7 +297,7 @@ flowchart LR
 |---|---|
 | App login | Required at launch — single, manually-provisioned account (username/password); no self-registration. Session token persists for a **configurable duration** (default ~1–3 days); supports offline login via securely cached credentials |
 | Local storage | Encrypted local DB (e.g., SQLCipher) — no plaintext medical data at rest on device |
-| Web browser | Authenticated before clinic data renders; first release is read-only and online-only. Do not persist clinic records or tokens in `localStorage`/IndexedDB/service-worker caches; define cookie/CSRF and no-store behavior before production implementation |
+| Web browser | Authenticated before clinic data renders; first release is read-only and online-only. ADR 0006 requires same-origin Secure/HttpOnly/SameSite session cookies, exact-origin and CSRF enforcement, no-store API responses, and no clinic records or tokens in `localStorage`/sessionStorage/IndexedDB/service-worker caches |
 | Transport | TLS/HTTPS for all API calls |
 | Backend storage | Encrypted PostgreSQL (at-rest encryption), access restricted to authenticated API |
 | Backups | Automated, encrypted backups of the backend database |

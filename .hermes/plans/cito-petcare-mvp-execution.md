@@ -1162,12 +1162,19 @@ W0 accessibility/visual completion: added a keyboard-visible skip link and focus
 
 ### W1: production read-only web companion
 
-- Create `apps/web` as a separate React + TypeScript application consuming the shared OpenAPI contract.
-- Add a reviewed browser-session design with HttpOnly/Secure/SameSite cookie or equivalent protection, CSRF defense, authenticated route guards, and safe expiration/logout behavior. Never persist bearer or refresh tokens in `localStorage`.
-- Keep clinic responses out of `localStorage`, IndexedDB, service-worker caches, analytics, error telemetry, and logs; verify appropriate `Cache-Control: no-store` behavior.
-- Implement only authenticated dashboard/finance views, inventory alerts, patient search/profile, and visit/vaccination/weight history.
-- Keep every domain operation read-only. Web writes require a later PRD/ADR change covering conflicts with pending offline mobile writes, optimistic versions, and idempotency.
-- Add independent web build/deployment artifacts and CI gates while keeping source, docs, and API conformance in this repository.
+- [x] Accept the browser security architecture in ADR 0006: same-origin HTTPS, browser-specific auth endpoints, Secure/HttpOnly/SameSite cookies, exact-origin and centralized CSRF checks, cookie/bearer exclusivity, no-store API responses, no persistent clinic data, coordinated refresh, and fail-closed route behavior.
+- [ ] Implement and test the backend browser boundary without changing existing mobile bearer contracts.
+- [ ] Create `apps/web` as a separate React + TypeScript application consuming the shared OpenAPI contract only after the backend cookie/origin/CSRF/no-store gates pass.
+- [ ] Implement only authenticated dashboard/finance views, inventory alerts, patient search/profile, and visit/vaccination/weight history.
+- [ ] Keep every domain operation read-only. Web writes require a later PRD/ADR change covering conflicts with pending offline mobile writes, optimistic versions, and idempotency.
+- [ ] Add independent web build/deployment artifacts and CI gates while keeping source, docs, and API conformance in this repository.
+
+#### W1.0: browser security design — complete
+
+- ADR 0006 preserves the mobile JSON bearer/refresh endpoints and reuses the singleton account, session rotation, replay response, and absolute-expiry service underneath separate `/api/v1/web-auth/*` handlers.
+- Production browser authentication uses host-only `__Host-` cookies, exact configured origin checks, rotating double-submit CSRF, cookie-versus-bearer exclusivity, and central unsafe-method enforcement.
+- Every API response is no-store. The React app may keep clinic records only in memory for the current page lifetime and must clear them synchronously on logout or expiry; no service worker is permitted in the first release.
+- The next implementation slice is test-first API configuration and no-store/exact-origin middleware, followed by browser-auth handlers/cookies and cookie-aware protected-route middleware.
 
 ### W1 acceptance gates
 
