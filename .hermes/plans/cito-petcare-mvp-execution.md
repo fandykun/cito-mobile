@@ -1152,11 +1152,13 @@ This track does not replace or weaken the mobile MVP release gates. A synthetic 
 - [x] Establish desktop information architecture for overview/financial review, inventory alerts, and patient search with responsive laptop/tablet navigation.
 - [x] Use synthetic typed fixtures only. Do not call clinic APIs, include credentials, or copy real clinic data.
 - [x] Extend patient profiles with chronological visit, vaccination, and weight-history review.
-- [ ] Complete browser accessibility and visual QA across the supported laptop and tablet viewport matrix.
+- [x] Complete browser accessibility and visual QA across the supported laptop and tablet viewport matrix.
 
 Initial W0 slice: implemented the navigable desktop shell, synthetic dashboard and accounting review, stock alerts, patient directory/search, explicit prototype/read-only labeling, responsive layout, and focused interaction tests. Production API integration remains prohibited until W1 browser-session, CSRF, route authorization, and no-store gates are designed and accepted.
 
 Patient-history slice: added selectable read-only profiles with owner/current-weight/health-flag context and a newest-first timeline that distinguishes visits, vaccinations, and weight readings. All records remain typed synthetic fixtures with no storage or API transport.
+
+W0 accessibility/visual completion: added a keyboard-visible skip link and focus treatment, active navigation state, live section announcements, semantic patient lists, reduced-motion handling, and a functional global patient search. Verified all four console sections plus the patient profile at 1440px, 1024px, and 768px in Chromium with no horizontal overflow, runtime errors, or failed resources; the 768px visual matrix was inspected for clipping and responsive defects.
 
 ### W1: production read-only web companion
 
