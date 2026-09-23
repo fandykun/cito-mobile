@@ -1148,10 +1148,13 @@ This track does not replace or weaken the mobile MVP release gates. A synthetic 
 
 ### W0: synthetic desktop prototype
 
-- Create an isolated `prototype/web-console` workspace; do not repurpose `prototype/web`.
-- Prototype desktop information architecture for overview/financial review, inventory alerts, patient search, and chronological medical-history review.
-- Use synthetic typed fixtures only. Do not call clinic APIs, include credentials, or copy real clinic data.
-- Design for laptop/desktop first and verify a usable tablet layout; mobile phone operation remains in Expo.
+- [x] Create an isolated `prototype/web-console` React + TypeScript workspace; do not repurpose `prototype/web`.
+- [x] Establish desktop information architecture for overview/financial review, inventory alerts, and patient search with responsive laptop/tablet navigation.
+- [x] Use synthetic typed fixtures only. Do not call clinic APIs, include credentials, or copy real clinic data.
+- [ ] Extend patient profiles with chronological visit, vaccination, and weight-history review.
+- [ ] Complete browser accessibility and visual QA across the supported laptop and tablet viewport matrix.
+
+Initial W0 slice: implemented the navigable desktop shell, synthetic dashboard and accounting review, stock alerts, patient directory/search, explicit prototype/read-only labeling, responsive layout, and focused interaction tests. Production API integration remains prohibited until W1 browser-session, CSRF, route authorization, and no-store gates are designed and accepted.
 
 ### W1: production read-only web companion
 
