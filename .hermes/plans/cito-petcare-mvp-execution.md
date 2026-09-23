@@ -1176,6 +1176,14 @@ W0 accessibility/visual completion: added a keyboard-visible skip link and focus
 - Every API response is no-store. The React app may keep clinic records only in memory for the current page lifetime and must clear them synchronously on logout or expiry; no service worker is permitted in the first release.
 - The next implementation slice is test-first API configuration and no-store/exact-origin middleware, followed by browser-auth handlers/cookies and cookie-aware protected-route middleware.
 
+#### W1.1: API browser security foundation — complete
+
+- Added optional fail-closed `WEB_PUBLIC_ORIGIN` configuration. Absence keeps browser authentication disabled; configured values must be one absolute HTTPS origin and are canonicalized across host case and the default port while rejecting credentials, paths, queries, fragments, wildcards, insecure schemes, and invalid ports.
+- Added central `Cache-Control: no-store` coverage for every `/api/v1` success and error response, plus `Pragma: no-cache` on mobile and future browser authentication paths. Health and lookalike non-API paths remain unaffected.
+- Added exact-origin middleware that rejects missing, foreign, insecure, wrong-port, suffix-confusion, malformed, or multiply serialized origins before a protected handler runs.
+- Preserved all existing mobile routes and bearer behavior. No `/api/v1/web-auth/*` endpoint or cookie authentication is exposed by this foundation slice.
+- Verified the origin utility, configuration boundary, API cache middleware, and exact-origin middleware with focused tests. Next implement browser login/refresh/logout/session handlers, secure cookie issuance/clearing, CSRF rotation, and cookie-aware protected-route authentication.
+
 ### W1 acceptance gates
 
 - Unauthenticated navigation cannot render or retain clinic data.
