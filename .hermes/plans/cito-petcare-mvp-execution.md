@@ -1240,6 +1240,13 @@ W0 patient-history follow-up: added accessible record-type filters with counts f
 - Added semantic primary navigation with active-page state, standard modified-click behavior, skip navigation, and focus transfer when the current route changes. Placeholder routes state that they request and retain no clinic records until their API slices ship.
 - Route, direct-entry, post-login return, navigation, history, and return-location tests run in the production web CI suite.
 
+#### W1.9: production inventory alerts — complete
+
+- Connected `/inventory` to the same-origin authenticated `GET /api/v1/inventory-items` contract through the coordinated-refresh API client. Requests support low-stock, expiring, and all-active filters plus bounded cursor pagination.
+- Added strict runtime validation for the complete page and item response instead of trusting TypeScript casts. Malformed UUIDs, categories, stock invariants, money/integer bounds, dates, timestamps, deleted records, and inconsistent pagination fail closed into a recoverable UI error.
+- Added read-only responsive results for current stock, reorder threshold, expiry, category, and alert state. The view provides explicit loading, empty, first-page error, pagination error, retry, and load-more states; changing filter or leaving the route aborts stale requests and drops in-memory results.
+- Production tests cover parsing failures, encoded request construction, loading, filtering, request abortion, empty results, cursor append, and recovery. No write endpoint, synthetic fixture, or browser persistence was introduced.
+
 ### W1 acceptance gates
 
 - Unauthenticated navigation cannot render or retain clinic data.
