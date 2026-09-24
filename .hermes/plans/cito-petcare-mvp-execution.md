@@ -1212,6 +1212,13 @@ W0 patient-history follow-up: added accessible record-type filters with counts f
 - Unexpected backend failures return an error without clearing cookies so the browser can retry revocation; rejected origin/CSRF requests cannot reach the session service or mutate cookies.
 - Preserved mobile bearer-authenticated JSON logout behavior and published only the implemented browser-logout contract. Session bootstrap, cookie-aware protected-route authentication, cookie/bearer exclusivity, and central CSRF enforcement for future unsafe domain routes remain next.
 
+#### W1.5: browser session bootstrap — complete
+
+- Added opt-in `GET /api/v1/web-auth/session` for fail-closed protected-route startup. It requires the exact configured origin, exactly one valid access cookie, and exactly one active refresh-session cookie.
+- Added read-only refresh-session inspection to the authentication service. Bootstrap verifies the strict access JWT, verifies that the refresh record is active and unexpired, and requires both credentials to identify the same singleton account.
+- Successful bootstrap returns only account ID and access/session expiry metadata. Missing, ambiguous, invalid, revoked, expired, or cross-account credentials return terminal `401 invalid_session` and clear all browser cookies; unexpected database failures preserve cookies for retry.
+- Bearer-plus-cookie ambiguity is rejected before either credential is verified. Existing mobile contracts remain unchanged, and the browser-session contract is now published. Cookie-aware domain-route authentication, cookie/bearer exclusivity across protected API routes, and central unsafe-method CSRF enforcement remain next.
+
 ### W1 acceptance gates
 
 - Unauthenticated navigation cannot render or retain clinic data.
