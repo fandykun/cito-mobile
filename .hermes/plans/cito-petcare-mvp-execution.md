@@ -1160,6 +1160,8 @@ Patient-history slice: added selectable read-only profiles with owner/current-we
 
 W0 accessibility/visual completion: added a keyboard-visible skip link and focus treatment, active navigation state, live section announcements, semantic patient lists, reduced-motion handling, and a functional global patient search. Verified all four console sections plus the patient profile at 1440px, 1024px, and 768px in Chromium with no horizontal overflow, runtime errors, or failed resources; the 768px visual matrix was inspected for clipping and responsive defects.
 
+W0 inventory-review follow-up: expanded the synthetic alert set to match the displayed 2 critical, 4 low-stock, and 1 expiring totals; added accessible status filters, selectable alert rows, and a responsive read-only item detail with current stock, reorder threshold, expiry, storage location, and truthful mobile-only adjustment guidance. Interaction coverage was observed failing before implementation and now verifies filtering, detail review, return-state preservation, and the no-write boundary. Desktop and tablet Chromium checks confirm seven alerts, no horizontal overflow, no runtime errors, and no API requests.
+
 ### W1: production read-only web companion
 
 - [x] Accept the browser security architecture in ADR 0006: same-origin HTTPS, browser-specific auth endpoints, Secure/HttpOnly/SameSite cookies, exact-origin and centralized CSRF checks, cookie/bearer exclusivity, no-store API responses, no persistent clinic data, coordinated refresh, and fail-closed route behavior.
