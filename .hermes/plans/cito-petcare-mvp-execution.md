@@ -1198,6 +1198,13 @@ W0 patient-history follow-up: added accessible record-type filters with counts f
 - Disabled mode, exact/default-port origin acceptance, foreign/missing/insecure origin rejection before authentication, failed-login cookie absence, cookie attributes, no-store/no-cache headers, token non-disclosure, and mobile compatibility have focused tests.
 - Published only the implemented browser-login contract. Refresh, logout, session bootstrap, cookie-aware protected-route authentication, cookie/bearer exclusivity, CSRF validation/rotation, and cookie clearing remain the next backend slices.
 
+#### W1.3: browser refresh boundary — complete
+
+- Added opt-in `POST /api/v1/web-auth/refresh`, available only with configured browser origin and protected by exact-origin validation plus a strict 256-bit double-submit CSRF cookie/header comparison.
+- Refresh credentials are accepted only from exactly one host-only refresh cookie. Successful refresh reuses the replay-safe backend rotation service, rotates access/refresh/CSRF cookies, and returns expiry metadata without exposing token strings.
+- Missing, ambiguous, invalid, replayed, revoked, or expired refresh sessions clear access, refresh, and CSRF cookies with the same host-only Secure/SameSite attributes and return terminal `401 invalid_session`; origin and CSRF failures are rejected before the session service runs.
+- Preserved mobile JSON refresh behavior and published only the implemented browser-refresh contract. Browser logout, session bootstrap, cookie-aware protected-route authentication, cookie/bearer exclusivity, and central CSRF enforcement for future unsafe domain routes remain next.
+
 ### W1 acceptance gates
 
 - Unauthenticated navigation cannot render or retain clinic data.
