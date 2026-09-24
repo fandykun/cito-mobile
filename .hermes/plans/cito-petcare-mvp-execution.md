@@ -1190,6 +1190,14 @@ W0 patient-history follow-up: added accessible record-type filters with counts f
 - Preserved all existing mobile routes and bearer behavior. No `/api/v1/web-auth/*` endpoint or cookie authentication is exposed by this foundation slice.
 - Verified the origin utility, configuration boundary, API cache middleware, and exact-origin middleware with focused tests. Next implement browser login/refresh/logout/session handlers, secure cookie issuance/clearing, CSRF rotation, and cookie-aware protected-route authentication.
 
+#### W1.2: browser login boundary — complete
+
+- Added opt-in `POST /api/v1/web-auth/login`, registered only when validated `WEB_PUBLIC_ORIGIN` configuration reaches the HTTP server.
+- The handler requires the exact configured HTTPS origin, reuses the singleton `SessionService` and login-rate policy, and preserves the existing mobile JSON login contract unchanged.
+- Successful login returns only access/session expiry metadata in JSON. Access and refresh credentials are issued as host-only Secure/HttpOnly/SameSite=Strict `__Host-` cookies; a cryptographically random 256-bit CSRF value is issued as a Secure, JavaScript-readable, SameSite=Strict `__Host-` cookie. Every cookie uses `Path=/` and no `Domain` attribute.
+- Disabled mode, exact/default-port origin acceptance, foreign/missing/insecure origin rejection before authentication, failed-login cookie absence, cookie attributes, no-store/no-cache headers, token non-disclosure, and mobile compatibility have focused tests.
+- Published only the implemented browser-login contract. Refresh, logout, session bootstrap, cookie-aware protected-route authentication, cookie/bearer exclusivity, CSRF validation/rotation, and cookie clearing remain the next backend slices.
+
 ### W1 acceptance gates
 
 - Unauthenticated navigation cannot render or retain clinic data.
