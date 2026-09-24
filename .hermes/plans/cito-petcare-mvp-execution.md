@@ -1219,6 +1219,13 @@ W0 patient-history follow-up: added accessible record-type filters with counts f
 - Successful bootstrap returns only account ID and access/session expiry metadata. Missing, ambiguous, invalid, revoked, expired, or cross-account credentials return terminal `401 invalid_session` and clear all browser cookies; unexpected database failures preserve cookies for retry.
 - Bearer-plus-cookie ambiguity is rejected before either credential is verified. Existing mobile contracts remain unchanged, and the browser-session contract is now published. Cookie-aware domain-route authentication, cookie/bearer exclusivity across protected API routes, and central unsafe-method CSRF enforcement remain next.
 
+#### W1.6: cookie-aware protected routes — complete
+
+- Protected domain routes now accept exactly one authentication mode: the existing mobile `Authorization: Bearer` access JWT or the browser `__Host-cito_access` cookie when browser authentication is configured. Presenting any browser-session cookie together with Authorization fails before token verification.
+- Safe cookie-authenticated reads use the same strict JWT verification as mobile and do not require CSRF. Invalid or ambiguous browser access credentials fail closed; terminal token failure clears access, refresh, and CSRF cookies.
+- Every cookie-authenticated unsafe method is centrally gated by exact configured origin plus the strict 256-bit double-submit CSRF cookie/header comparison before JWT verification or handler execution. Bearer-authenticated mobile writes remain exempt from browser CSRF and retain their existing idempotency rules.
+- Server wiring tests prove the browser cookie path reaches a real protected domain route, while focused middleware tests cover safe reads, unsafe origin/CSRF rejection, bearer compatibility, ambiguity, disabled mode, and terminal cleanup. OpenAPI now publishes bearer and cookie authentication as alternatives and keeps mobile logout explicitly bearer-only.
+
 ### W1 acceptance gates
 
 - Unauthenticated navigation cannot render or retain clinic data.
