@@ -1233,6 +1233,13 @@ W0 patient-history follow-up: added accessible record-type filters with counts f
 - Added same-origin cookie-only login/logout and a typed in-memory API client. Concurrent protected-read `401` responses share one CSRF-protected refresh, retry once after rotation, and notify the app once on terminal refresh failure.
 - The responsive, accessible shell exposes no clinic data yet. Credentials and clinic records are never written to localStorage, sessionStorage, IndexedDB, Cache Storage, service-worker state, logs, or analytics; no service worker is registered.
 
+#### W1.8: protected production route map — complete
+
+- Added explicit internal Overview, Inventory, Patients, and Finance paths without adding a broad redirect mechanism. Only exact approved paths resolve; unknown, absolute, protocol-relative, query-bearing, hash-bearing, and traversal-like candidates fail closed to Overview.
+- Direct protected entry remains behind neutral session bootstrap and returns to the same approved route after login. Browser history events update the authenticated view without bypassing the authorization boundary.
+- Added semantic primary navigation with active-page state, standard modified-click behavior, skip navigation, and focus transfer when the current route changes. Placeholder routes state that they request and retain no clinic records until their API slices ship.
+- Route, direct-entry, post-login return, navigation, history, and return-location tests run in the production web CI suite.
+
 ### W1 acceptance gates
 
 - Unauthenticated navigation cannot render or retain clinic data.
