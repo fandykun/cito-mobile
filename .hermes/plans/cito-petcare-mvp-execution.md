@@ -1205,6 +1205,13 @@ W0 patient-history follow-up: added accessible record-type filters with counts f
 - Missing, ambiguous, invalid, replayed, revoked, or expired refresh sessions clear access, refresh, and CSRF cookies with the same host-only Secure/SameSite attributes and return terminal `401 invalid_session`; origin and CSRF failures are rejected before the session service runs.
 - Preserved mobile JSON refresh behavior and published only the implemented browser-refresh contract. Browser logout, session bootstrap, cookie-aware protected-route authentication, cookie/bearer exclusivity, and central CSRF enforcement for future unsafe domain routes remain next.
 
+#### W1.4: browser logout boundary — complete
+
+- Added opt-in `POST /api/v1/web-auth/logout` with the same exact-origin and strict double-submit CSRF boundary used by browser refresh.
+- Exactly one refresh cookie is revoked through the existing replay-safe session service. Missing, ambiguous, already-revoked, or otherwise invalid refresh sessions are idempotent success cases, and successful terminal handling clears access, refresh, and CSRF cookies.
+- Unexpected backend failures return an error without clearing cookies so the browser can retry revocation; rejected origin/CSRF requests cannot reach the session service or mutate cookies.
+- Preserved mobile bearer-authenticated JSON logout behavior and published only the implemented browser-logout contract. Session bootstrap, cookie-aware protected-route authentication, cookie/bearer exclusivity, and central CSRF enforcement for future unsafe domain routes remain next.
+
 ### W1 acceptance gates
 
 - Unauthenticated navigation cannot render or retain clinic data.
