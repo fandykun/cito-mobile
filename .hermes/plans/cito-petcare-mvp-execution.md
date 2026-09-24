@@ -1162,6 +1162,8 @@ W0 accessibility/visual completion: added a keyboard-visible skip link and focus
 
 W0 inventory-review follow-up: expanded the synthetic alert set to match the displayed 2 critical, 4 low-stock, and 1 expiring totals; added accessible status filters, selectable alert rows, and a responsive read-only item detail with current stock, reorder threshold, expiry, storage location, and truthful mobile-only adjustment guidance. Interaction coverage was observed failing before implementation and now verifies filtering, detail review, return-state preservation, and the no-write boundary. Desktop and tablet Chromium checks confirm seven alerts, no horizontal overflow, no runtime errors, and no API requests.
 
+W0 finance-review follow-up: added accessible August/September period selection backed by typed synthetic income and expense fixtures. Gross income, operating expenses, net profit, retained funds, percentages, and category totals are derived for the selected period rather than duplicated; owner draw remains explicitly separate. Added income/expense breakdowns and a reconciliation explanation. RED/GREEN interaction coverage verifies period switching and known totals. Chromium checks at 1440px, 768px, and 390px confirm synchronized period labels, reconciled values, no horizontal overflow, no runtime errors, and no API requests.
+
 ### W1: production read-only web companion
 
 - [x] Accept the browser security architecture in ADR 0006: same-origin HTTPS, browser-specific auth endpoints, Secure/HttpOnly/SameSite cookies, exact-origin and centralized CSRF checks, cookie/bearer exclusivity, no-store API responses, no persistent clinic data, coordinated refresh, and fail-closed route behavior.
