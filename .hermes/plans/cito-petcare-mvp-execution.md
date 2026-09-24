@@ -1169,8 +1169,8 @@ W0 patient-history follow-up: added accessible record-type filters with counts f
 ### W1: production read-only web companion
 
 - [x] Accept the browser security architecture in ADR 0006: same-origin HTTPS, browser-specific auth endpoints, Secure/HttpOnly/SameSite cookies, exact-origin and centralized CSRF checks, cookie/bearer exclusivity, no-store API responses, no persistent clinic data, coordinated refresh, and fail-closed route behavior.
-- [ ] Implement and test the backend browser boundary without changing existing mobile bearer contracts.
-- [ ] Create `apps/web` as a separate React + TypeScript application consuming the shared OpenAPI contract only after the backend cookie/origin/CSRF/no-store gates pass.
+- [x] Implement and test the backend browser boundary without changing existing mobile bearer contracts.
+- [x] Create `apps/web` as a separate React + TypeScript application consuming the shared OpenAPI contract only after the backend cookie/origin/CSRF/no-store gates pass.
 - [ ] Implement only authenticated dashboard/finance views, inventory alerts, patient search/profile, and visit/vaccination/weight history.
 - [ ] Keep every domain operation read-only. Web writes require a later PRD/ADR change covering conflicts with pending offline mobile writes, optimistic versions, and idempotency.
 - [ ] Add independent web build/deployment artifacts and CI gates while keeping source, docs, and API conformance in this repository.
@@ -1225,6 +1225,13 @@ W0 patient-history follow-up: added accessible record-type filters with counts f
 - Safe cookie-authenticated reads use the same strict JWT verification as mobile and do not require CSRF. Invalid or ambiguous browser access credentials fail closed; terminal token failure clears access, refresh, and CSRF cookies.
 - Every cookie-authenticated unsafe method is centrally gated by exact configured origin plus the strict 256-bit double-submit CSRF cookie/header comparison before JWT verification or handler execution. Bearer-authenticated mobile writes remain exempt from browser CSRF and retain their existing idempotency rules.
 - Server wiring tests prove the browser cookie path reaches a real protected domain route, while focused middleware tests cover safe reads, unsafe origin/CSRF rejection, bearer compatibility, ambiguity, disabled mode, and terminal cleanup. OpenAPI now publishes bearer and cookie authentication as alternatives and keeps mobile logout explicitly bearer-only.
+
+#### W1.7: production web authentication shell — complete
+
+- Created the independent `apps/web` React 19 + TypeScript + Vite workspace without importing prototype fixtures or synthetic clinic state. Root scripts and CI now test and build it independently.
+- Added a fail-closed authorization boundary: direct entry renders only neutral session-checking UI until `/api/v1/web-auth/session` confirms the cookie session, then selects either credential login or the protected shell.
+- Added same-origin cookie-only login/logout and a typed in-memory API client. Concurrent protected-read `401` responses share one CSRF-protected refresh, retry once after rotation, and notify the app once on terminal refresh failure.
+- The responsive, accessible shell exposes no clinic data yet. Credentials and clinic records are never written to localStorage, sessionStorage, IndexedDB, Cache Storage, service-worker state, logs, or analytics; no service worker is registered.
 
 ### W1 acceptance gates
 
