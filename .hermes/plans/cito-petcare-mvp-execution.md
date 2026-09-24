@@ -1164,6 +1164,8 @@ W0 inventory-review follow-up: expanded the synthetic alert set to match the dis
 
 W0 finance-review follow-up: added accessible August/September period selection backed by typed synthetic income and expense fixtures. Gross income, operating expenses, net profit, retained funds, percentages, and category totals are derived for the selected period rather than duplicated; owner draw remains explicitly separate. Added income/expense breakdowns and a reconciliation explanation. RED/GREEN interaction coverage verifies period switching and known totals. Chromium checks at 1440px, 768px, and 390px confirm synchronized period labels, reconciled values, no horizontal overflow, no runtime errors, and no API requests.
 
+W0 patient-history follow-up: added accessible record-type filters with counts for all history, visits, vaccinations, and weight readings. Filtered results preserve newest-first ordering, expose semantic list/status announcements, and remain synthetic and read-only. The concise completed/remaining web backlog now lives in `docs/web-development-status.md`; production work remains ordered behind the browser-auth backend gate.
+
 ### W1: production read-only web companion
 
 - [x] Accept the browser security architecture in ADR 0006: same-origin HTTPS, browser-specific auth endpoints, Secure/HttpOnly/SameSite cookies, exact-origin and centralized CSRF checks, cookie/bearer exclusivity, no-store API responses, no persistent clinic data, coordinated refresh, and fail-closed route behavior.
