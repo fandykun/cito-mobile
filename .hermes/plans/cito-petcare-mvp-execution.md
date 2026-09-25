@@ -1272,6 +1272,14 @@ W0 patient-history follow-up: added accessible record-type filters with counts f
 - Added fail-closed loading, dedicated not-found, retryable error, request-abort, internal back navigation, active Patients navigation, and direct-route post-login behavior. Unmounting destroys patient, owner, and medical narrative state.
 - Production tests cover route allowlisting and rejection, identifier rejection, sequential request construction, owner validation, directory-to-profile navigation, successful sensitive rendering, not-found, retry, abortion, back navigation, and direct-route authentication.
 
+#### W1.13: production vaccination and weight history review — complete
+
+- Added parallel authenticated reads for `/api/v1/pets/{petId}/vaccinations` and `/api/v1/pets/{petId}/weights` after entering the protected patient profile.
+- Added bounded runtime validation for active records, lowercase UUIDs, patient associations, vaccine labels, calendar dates, nullable due dates, decimal weight precision, timestamps, versions, and newest-first ordering before any history reaches React state.
+- Added independent profile-history loading so a recoverable history failure never removes an already validated patient and owner profile. Retry clears failed history, and route exit aborts both profile and history requests and destroys their state.
+- Added responsive vaccination and weight panels with explicit empty states, due-date handling, accessible record lists, and no browser mutations or persistence.
+- Production tests cover fail-first transport and UI behavior, malformed and cross-patient records, authenticated request construction, independent loading, empty state, retry with profile retention, direct protected routes, and cancellation on unmount.
+
 ### W1 acceptance gates
 
 - Unauthenticated navigation cannot render or retain clinic data.
