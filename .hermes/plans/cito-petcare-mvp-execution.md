@@ -1255,6 +1255,15 @@ W0 patient-history follow-up: added accessible record-type filters with counts f
 - Direct item URLs remain behind session bootstrap and survive login without exposing item data beforehand. Inventory stays active in primary navigation, standard modified link clicks remain available, and the internal back link returns to alerts.
 - Production tests cover route allowlisting, route rejection, request construction, identifier rejection, direct-route authentication, successful rendering, not-found, retry, abortion, list navigation, and back navigation.
 
+#### W1.11: production patient directory browse — complete
+
+- Connected `/patients` to authenticated, bounded, cursor-paginated `GET /api/v1/pets` reads through the coordinated browser API client.
+- Added strict runtime validation for page consistency, UUIDs, names, species, breeds, dates, decimal weights, timestamps, versions, active-record state, and the API's encrypted-medical-field plaintext bounds.
+- The parsed directory model deliberately drops allergies and chronic-condition narratives before React state receives a record. The responsive view exposes only patient identity, species, breed, date of birth, current weight, and a bounded owner reference.
+- Added explicit loading, empty, first-page error, pagination error, retry, duplicate-safe append, and load-more states. Leaving the route aborts pending reads and destroys in-memory directory records.
+- Production tests cover malformed responses, narrative-field exclusion, encoded pagination, fail-closed loading, empty and retry states, duplicate-safe cursor append, and route-exit abortion.
+- Server-side patient/owner search does not exist in the current OpenAPI contract. This slice does not misrepresent filtering only loaded pages as complete directory search; backend search remains a prerequisite for the search UX.
+
 ### W1 acceptance gates
 
 - Unauthenticated navigation cannot render or retain clinic data.
