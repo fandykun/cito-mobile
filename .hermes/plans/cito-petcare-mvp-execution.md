@@ -1247,6 +1247,14 @@ W0 patient-history follow-up: added accessible record-type filters with counts f
 - Added read-only responsive results for current stock, reorder threshold, expiry, category, and alert state. The view provides explicit loading, empty, first-page error, pagination error, retry, and load-more states; changing filter or leaving the route aborts stale requests and drops in-memory results.
 - Production tests cover parsing failures, encoded request construction, loading, filtering, request abortion, empty results, cursor append, and recovery. No write endpoint, synthetic fixture, or browser persistence was introduced.
 
+#### W1.10: production inventory item review — complete
+
+- Added exact `/inventory/{inventoryItemId}` routes restricted to lowercase RFC 4122 UUIDs. Unknown, malformed, uppercase, nested, query-bearing, and external return locations still fail closed to Overview.
+- Connected direct and list-originated item review to authenticated `GET /api/v1/inventory-items/{inventoryItemId}` reads. The existing full item parser validates the response before React state receives it.
+- Added responsive read-only stock, price, expiry, supplier, effective-time, update-time, and version review with distinct loading, not-found, and retryable-error states. Route exit aborts the read and unmounting clears item state.
+- Direct item URLs remain behind session bootstrap and survive login without exposing item data beforehand. Inventory stays active in primary navigation, standard modified link clicks remain available, and the internal back link returns to alerts.
+- Production tests cover route allowlisting, route rejection, request construction, identifier rejection, direct-route authentication, successful rendering, not-found, retry, abortion, list navigation, and back navigation.
+
 ### W1 acceptance gates
 
 - Unauthenticated navigation cannot render or retain clinic data.
