@@ -1264,6 +1264,14 @@ W0 patient-history follow-up: added accessible record-type filters with counts f
 - Production tests cover malformed responses, narrative-field exclusion, encoded pagination, fail-closed loading, empty and retry states, duplicate-safe cursor append, and route-exit abortion.
 - Server-side patient/owner search does not exist in the current OpenAPI contract. This slice does not misrepresent filtering only loaded pages as complete directory search; backend search remains a prerequisite for the search UX.
 
+#### W1.12: production patient and owner profile review — complete
+
+- Added exact `/patients/{patientId}` routes restricted to lowercase RFC 4122 UUIDs. Malformed, uppercase, nested, query-bearing, and external locations continue to fail closed to Overview.
+- Added sequential authenticated patient and linked-owner reads. Both payloads are fully validated, the returned owner ID must match the patient's owner reference, and no partial profile enters React state.
+- Added responsive read-only profile sections for patient identity, demographics, weight, owner contact, record metadata, allergies, and chronic conditions. Medical narratives appear only in the explicitly sensitive detail route, never in directory state.
+- Added fail-closed loading, dedicated not-found, retryable error, request-abort, internal back navigation, active Patients navigation, and direct-route post-login behavior. Unmounting destroys patient, owner, and medical narrative state.
+- Production tests cover route allowlisting and rejection, identifier rejection, sequential request construction, owner validation, directory-to-profile navigation, successful sensitive rendering, not-found, retry, abortion, back navigation, and direct-route authentication.
+
 ### W1 acceptance gates
 
 - Unauthenticated navigation cannot render or retain clinic data.
