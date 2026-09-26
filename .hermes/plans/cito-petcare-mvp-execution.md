@@ -1302,6 +1302,14 @@ W0 patient-history follow-up: added accessible record-type filters with counts f
 - Initial and pagination requests abort on route exit. Patient-to-patient navigation remounts the sensitive profile boundary so the prior patient's medical data is cleared synchronously before the next route renders. Clinical records remain in React memory only, and the production source contains no browser persistence, service-worker caching, or clinical logging.
 - Production tests cover fail-closed loading, empty and error recovery, complete visit rendering, legacy-unattributed payment display, duplicate-safe pagination, duplicate-request suppression, cross-page ordering rejection, direct protected-route integration, and cancellation on unmount.
 
+#### W1.16: production owner household workflow — complete
+
+- Added an owner-filtered patient reader to the protected profile and reject any returned record whose owner association does not match the requested owner before it enters React state.
+- Added an independently recoverable, cursor-paginated owner-patient section that preserves the current validated profile when the related list fails, identifies the current patient, and navigates to sibling profiles through the protected route boundary.
+- Added an existing-owner patient command that reuses the validated owner identity instead of duplicating owner contact data. An unknown result freezes the in-memory draft and exact UUID command and blocks cancellation, sign-out, protected links, and browser-history navigation until exact replay resolves it. Conflicts retire the stale command but keep replacement submission blocked until owner patients reload successfully; a failed refresh remains independently retryable.
+- Create and update responses are accepted only when their identifiers, owner association, normalized semantic fields, event timestamp, and expected result version match the submitted command. All profile mutation entry points remain mutually gated while retryable intent is open.
+- Production tests cover owner-filter request construction and cross-owner rejection, sibling navigation, exact patient-command retry, navigation locking, deferred and failed conflict refreshes, new identity after review, response-command mismatch rejection, original-version enforcement, pagination retry/repeated cursors/conflicting duplicates, protected routing, and focused form entry.
+
 ### W1 acceptance gates
 
 - Unauthenticated navigation cannot render or retain clinic data.
