@@ -287,7 +287,7 @@ flowchart LR
 
 - **Local-first writes**: every create/update (visit, retail transaction, expense, draw) writes to the local encrypted DB first, so the UI never blocks on network
 - **Sync queue**: unsynced records are queued and pushed to the backend API in the background whenever connectivity is detected
-- **Inventory multi-client exception**: ADR 0007 permits online web inventory create, metadata update, and stock adjustment commands. Creates/adjustments use client UUID idempotency and updates/adjustments require optimistic versions. A stale offline mobile inventory operation remains queued after a server `409`, pulls current state, and requires operator resolution; it is never silently rebased or marked synced. Other domains retain the single-mobile-writer simplification.
+- **Multi-client command policy**: ADR 0008 permits approved online web commands across domain services. Creates and append-only commands use client UUID idempotency; mutable updates use optimistic versions. A stale offline mobile operation remains queued after a server `409`, pulls current state, and requires operator resolution; it is never silently rebased or marked synced. Derived projections and append-only ledgers remain writable only through their owning commands.
 - **Derived summaries**: daily/monthly summaries can be computed locally for immediate display, and recomputed/verified server-side once synced, as the source of truth
 - **PDF receipts**: generated entirely on-device (no server dependency), so retail checkout speed is unaffected by connectivity
 

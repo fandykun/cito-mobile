@@ -32,7 +32,7 @@ These are the smallest concrete decisions consistent with the authoritative docu
 - **Repository layout:** npm workspace for JavaScript projects plus an independent Go module.
 - **Mobile:** Expo + TypeScript with Expo Router; production features live under `apps/mobile`.
 - **Prototype:** preserve the existing Vite app under `prototype/web`; do not incrementally turn React DOM components into React Native components.
-- **Web companion:** keep the production React client in `apps/web` within this monorepo. Preserve `prototype/web` as the mobile-design reference; a synthetic desktop-console prototype belongs in `prototype/web-console`. The web client is authenticated and online-only; ADR 0007 permits inventory create/edit/adjust commands while every other domain remains read-only.
+- **Web companion:** keep the production React client in `apps/web` within this monorepo. Preserve `prototype/web` as the mobile-design reference; a synthetic desktop-console prototype belongs in `prototype/web-console`. The web client is authenticated, online-only, and writable through ADR 0008's command matrix; mobile remains the offline-capable client.
 - **API:** Go with Echo, `pgx`, explicit service/repository boundaries, and SQL migrations. Avoid an ORM that obscures transactions and price/stock invariants.
 - **Database:** PostgreSQL in Docker Compose for local development; production credentials only through environment variables or a secret manager.
 - **API contract:** OpenAPI document under `api/openapi.yaml`; it documents shipped handlers only, and route-conformance tests prevent drift. Planned operations are added with their implementation.
@@ -1171,8 +1171,8 @@ W0 patient-history follow-up: added accessible record-type filters with counts f
 - [x] Accept the browser security architecture in ADR 0006: same-origin HTTPS, browser-specific auth endpoints, Secure/HttpOnly/SameSite cookies, exact-origin and centralized CSRF checks, cookie/bearer exclusivity, no-store API responses, no persistent clinic data, coordinated refresh, and fail-closed route behavior.
 - [x] Implement and test the backend browser boundary without changing existing mobile bearer contracts.
 - [x] Create `apps/web` as a separate React + TypeScript application consuming the shared OpenAPI contract only after the backend cookie/origin/CSRF/no-store gates pass.
-- [ ] Implement authenticated dashboard/finance views, inventory review and ADR 0007 inventory commands, patient search/profile, and visit/vaccination/weight history.
-- [x] Accept ADR 0007 for online inventory create/edit/adjust commands with client-UUID idempotency, optimistic versions, and explicit stale offline-mobile conflicts. Keep every other domain operation read-only.
+- [ ] Implement authenticated dashboard/finance views plus the ADR 0008 operational command rollout: inventory, owners/pets, weight/vaccination, visits, expenses/draws, then retail after receipt gates.
+- [x] Accept ADR 0008 for a writable online web console using replay-safe creates/appends, optimistic mutable updates, and explicit stale offline-mobile conflicts. Preserve append-only and derived-record ownership instead of generic CRUD.
 - [ ] Add independent web build/deployment artifacts and CI gates while keeping source, docs, and API conformance in this repository.
 
 #### W1.0: browser security design — complete

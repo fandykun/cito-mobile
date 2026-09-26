@@ -3,7 +3,7 @@
 ## 1. Overview
 
 ### 1.1 Purpose
-A mobile-first internal system for a single-owner veterinary clinic to manage inventory, record detailed and secure pet medical history, process fast retail transactions, and monitor financial performance — with a specific focus on distinguishing clinic income from personal (owner's draw) income. The production mobile app remains the offline-capable operational client. A later authenticated desktop web companion provides large-screen review and analysis without replacing the mobile workflows.
+A mobile-first internal system for a single-owner veterinary clinic to manage inventory, record detailed and secure pet medical history, process fast retail transactions, and monitor financial performance — with a specific focus on distinguishing clinic income from personal (owner's draw) income. The production mobile app remains the offline-capable operational client. The authenticated desktop web console is an online operational client for supported create, update, and append commands as well as large-screen review.
 
 ### 1.2 Background
 The clinic currently operates with mixed personal/business finances and no digital system for tracking inventory, patient history, retail sales, or profitability. Bookings are handled externally via WhatsApp. The owner needs visibility into how much the clinic actually earns versus what can safely be withdrawn as personal income each month, along with a reliable, secure medical record system and a quick way to handle over-the-counter medicine/food sales with a shareable receipt.
@@ -17,7 +17,7 @@ The clinic currently operates with mixed personal/business finances and no digit
 - Clearly separate clinic-retained funds from owner's draw (personal income)
 - Work offline, syncing when connectivity returns
 - Require login before any data (stock, financials, patient records) is accessible, protecting sensitive clinic and financial information
-- Provide an authenticated desktop web companion for large-screen financial review, inventory alerts, and patient-history lookup after the mobile MVP is production-ready
+- Provide an authenticated desktop web console for supported online clinic operations plus large-screen financial, inventory, and patient-history workflows
 
 ### 1.4 Non-Goals (Out of Scope for MVP)
 - In-app appointment booking (booking remains on WhatsApp for MVP)
@@ -29,7 +29,7 @@ The clinic currently operates with mixed personal/business finances and no digit
 
 ### 1.5 Target Platforms
 - **Primary operational client (MVP):** native mobile app for Android and iOS, with encrypted offline storage and sync-on-reconnect.
-- **Web companion (post-MVP):** authenticated desktop-first browser application for the same clinic owner and the same backend data. It is online-only and provides dashboard/financial review, inventory review and management, patient lookup, and visit-history review. Inventory create, metadata edit, and manual stock adjustment are the only approved web mutations; it must not silently claim offline capability, cache clinic records in browser storage, or replace the mobile app's offline visit, checkout, receipt, expense, or draw workflows.
+- **Web console (post-MVP):** authenticated desktop-first browser application for the same clinic owner and backend data. It is an online operational client for the create, update, and append commands approved by ADR 0008, plus dashboard/financial review and patient-history workflows. It must not claim offline capability, persist clinic records or drafts in browser storage, bypass command-specific audit rules, or replace the mobile app's encrypted offline queue and on-device receipt workflow.
 
 The web companion is a separate production client, not a conversion of the existing `prototype/web` Figma export. The synthetic desktop prototype lives under `prototype/web-console`; production code will live under `apps/web` only after ADR 0006's backend cookie, origin, CSRF, and no-store gates are implemented and verified.
 
@@ -61,7 +61,7 @@ Single user: the clinic owner/vet. No role-based access control needed for MVP.
 15. As the owner, I want to update or correct a pet's profile or past visit record, so I can fix mistakes or add follow-up information without creating a duplicate record.
 16. As the owner, I want to log in before accessing the app, so my stock, financial, and patient data stay private if my device is lost or someone else picks it up.
 17. As the owner, I want to stay logged in for a configurable period (e.g., 1–3 days) instead of logging in every time I open the app, so daily use stays convenient without sacrificing security.
-18. As the owner, I want to review financial performance, inventory alerts, and patient history on a larger desktop screen, so I can audit and plan without using the phone for every read-only task.
+18. As the owner, I want to review and perform supported clinic operations on a larger desktop screen, so I can manage online work without using the phone for every task.
 
 ---
 
@@ -161,17 +161,18 @@ Single user: the clinic owner/vet. No role-based access control needed for MVP.
 - Core actions available offline: creating/viewing visit records, viewing patient history, viewing inventory, logging expenses, processing retail transactions, generating PDF receipts
 - PDF receipt generation works fully offline since it doesn't depend on a connected printer or internet — the PDF can be shared/synced once connectivity returns
 - Local data storage on-device, encrypted, with automatic sync to the backend when connectivity is restored
-- The mobile MVP began with one writable mobile client. ADR 0007 now permits online web inventory writes using client UUID idempotency and optimistic versions. A stale offline mobile inventory command must remain queued and surface a conflict after pulling current server state; it must never overwrite, auto-rebase, or be marked synced. Other domains retain the single-mobile-writer assumption until explicitly revised.
+- ADR 0008 defines mobile and web as shared writers for approved commands. Web writes are online-only; mobile writes remain local-first. A stale offline mobile command must remain queued and surface a conflict after pulling current server state; it must never overwrite, auto-rebase, mutate its original UUID, or be marked synced without explicit resolution.
 - **Login while offline**: since the account is manually provisioned (not tied to a live registration server check), the app should support offline login using a locally cached, securely stored session/credential — so the owner isn't locked out of their own data when there's no internet
 
 ### 3.11 Desktop Web Companion (Post-MVP)
-- **Purpose:** complement the mobile app with a desktop-optimized clinic console; do not duplicate the mobile UI one-for-one.
+- **Purpose:** provide a desktop-optimized online operational console that shares the API and domain rules with mobile; do not duplicate the mobile UI one-for-one or claim browser offline support.
 - **Review scope:** overview dashboard, daily/monthly financial views, payment-method and reconciliation status, inventory low-stock/expiry alerts, patient search, pet profile review, and chronological visit/vaccination/weight history.
-- **Approved mutation scope:** online inventory creation, inventory metadata editing, and auditable manual stock adjustments as defined by ADR 0007. No optimistic UI or browser-side offline queue is allowed.
-- **Explicitly excluded:** visit creation/editing, retail checkout, receipt generation, patient/medical/expense/draw mutations, offline mode, background sync, and browser-persisted clinic data.
+- **Approved commands:** inventory create/edit/adjust; owner and pet create/update; weight and vaccination append; visit create/amend; retail, expense, and owner-draw creation. Each command ships only after its runtime validation, idempotency/version, conflict, protected-route, and domain-invariant tests pass.
+- **Command ownership:** derived summaries are never written directly; current weight changes through the weight ledger; stock changes through adjustments, visits, and retail; completed retail and financial records remain append-only until dedicated audited correction commands exist.
+- **Explicitly excluded:** browser offline mode, background sync, browser-persisted clinic data/drafts, generic delete-and-recreate correction flows, direct projection writes, and authoritative cash closing until its persisted command is specified.
 - **Access:** use the same manually provisioned clinic account and existing authorization boundary. No registration, roles, public pages containing clinic data, or separate web-only account system.
 - **Security:** production web pages require authentication before rendering clinic data. ADR 0006 defines a same-origin HTTPS deployment, separate browser-auth endpoints, Secure/HttpOnly/SameSite session cookies, exact-origin and double-submit CSRF enforcement, no-store API responses, safe refresh/logout behavior, and route-authorization tests. Sensitive responses must not be written to `localStorage`, sessionStorage, IndexedDB, service-worker caches, analytics, telemetry, or client logs; a visual prototype must use synthetic data only.
-- **Concurrency:** inventory creates and stock adjustments use client-generated UUIDs and idempotency keys; inventory edits and adjustments require the latest server version. Stale web or offline-mobile commands receive an explicit conflict and require operator review. Silent last-write-wins and automatic rebasing are forbidden. Other web domains remain read-only.
+- **Concurrency:** creates and append-only commands use client-generated UUIDs and idempotency; mutable updates require the latest server version. Stale web or offline-mobile commands receive an explicit conflict and require operator review. Silent last-write-wins, automatic rebasing, and optimistic rendering of stock/financial/medical changes are forbidden.
 - **Responsive target:** optimize for laptop/desktop widths first, with a usable tablet layout. Phone-sized operation remains the responsibility of the mobile app.
 
 ---
@@ -203,7 +204,7 @@ Single user: the clinic owner/vet. No role-based access control needed for MVP.
 - Inventory stock levels stay accurate without manual recounting, due to auto-deduction from both visits and retail sales
 - Owner can view an accurate monthly financial picture (medical vs. retail income, expenses, profit, draw, retained) without manual spreadsheet work
 - App remains usable (core actions, including retail checkout and PDF receipt generation) with no internet connection, syncing cleanly afterward
-- Web companion presents authenticated desktop views and the approved inventory commands without persisting clinic records, credentials, or drafts in browser storage
+- Web console performs the ADR 0008 command set and presents authenticated desktop views without persisting clinic records, credentials, or drafts in browser storage
 
 ---
 
@@ -227,5 +228,6 @@ Single user: the clinic owner/vet. No role-based access control needed for MVP.
 | v2.3 | Added a post-MVP authenticated, desktop-first, online-only read-only web companion; preserved mobile as the offline operational client and prohibited browser persistence of sensitive clinic data. |
 | v2.4 | Accepted the production browser security model: same-origin HTTPS, separate cookie-based web sessions, exact-origin and CSRF checks, no-store API responses, no persistent browser clinic data, and fail-closed route/session behavior. |
 | v2.5 | Approved online web inventory create/edit/adjust commands with client-UUID idempotency, optimistic versions, and explicit stale offline-mobile conflict handling; all other web domains remain read-only. |
+| v2.6 | Made the web console an online writable operational client for command-safe creates, updates, and append-only records; retained mobile-only offline queues, command-specific audit rules, and explicit multi-client conflict handling. |
 
 **Process going forward**: new feature requests should be added directly into the relevant section of this PRD (Goals, User Stories, Feature Specifications, Data Entities) rather than creating a separate PRD document — this keeps one source of truth for the product, especially since `AGENTS.md` and the architecture doc both reference this file. Log each meaningful change as a new row above.
