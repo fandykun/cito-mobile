@@ -32,7 +32,7 @@ These are the smallest concrete decisions consistent with the authoritative docu
 - **Repository layout:** npm workspace for JavaScript projects plus an independent Go module.
 - **Mobile:** Expo + TypeScript with Expo Router; production features live under `apps/mobile`.
 - **Prototype:** preserve the existing Vite app under `prototype/web`; do not incrementally turn React DOM components into React Native components.
-- **Web companion:** keep the future production React client in `apps/web` within this monorepo. Preserve `prototype/web` as the mobile-design reference; a synthetic desktop-console prototype belongs in `prototype/web-console`. The first production web release is authenticated, online-only, and read-only.
+- **Web companion:** keep the production React client in `apps/web` within this monorepo. Preserve `prototype/web` as the mobile-design reference; a synthetic desktop-console prototype belongs in `prototype/web-console`. The web client is authenticated and online-only; ADR 0007 permits inventory create/edit/adjust commands while every other domain remains read-only.
 - **API:** Go with Echo, `pgx`, explicit service/repository boundaries, and SQL migrations. Avoid an ORM that obscures transactions and price/stock invariants.
 - **Database:** PostgreSQL in Docker Compose for local development; production credentials only through environment variables or a secret manager.
 - **API contract:** OpenAPI document under `api/openapi.yaml`; it documents shipped handlers only, and route-conformance tests prevent drift. Planned operations are added with their implementation.
@@ -1166,13 +1166,13 @@ W0 finance-review follow-up: added accessible August/September period selection 
 
 W0 patient-history follow-up: added accessible record-type filters with counts for all history, visits, vaccinations, and weight readings. Filtered results preserve newest-first ordering, expose semantic list/status announcements, and remain synthetic and read-only. The concise completed/remaining web backlog now lives in `docs/web-development-status.md`; production work remains ordered behind the browser-auth backend gate.
 
-### W1: production read-only web companion
+### W1: production web companion
 
 - [x] Accept the browser security architecture in ADR 0006: same-origin HTTPS, browser-specific auth endpoints, Secure/HttpOnly/SameSite cookies, exact-origin and centralized CSRF checks, cookie/bearer exclusivity, no-store API responses, no persistent clinic data, coordinated refresh, and fail-closed route behavior.
 - [x] Implement and test the backend browser boundary without changing existing mobile bearer contracts.
 - [x] Create `apps/web` as a separate React + TypeScript application consuming the shared OpenAPI contract only after the backend cookie/origin/CSRF/no-store gates pass.
-- [ ] Implement only authenticated dashboard/finance views, inventory alerts, patient search/profile, and visit/vaccination/weight history.
-- [ ] Keep every domain operation read-only. Web writes require a later PRD/ADR change covering conflicts with pending offline mobile writes, optimistic versions, and idempotency.
+- [ ] Implement authenticated dashboard/finance views, inventory review and ADR 0007 inventory commands, patient search/profile, and visit/vaccination/weight history.
+- [x] Accept ADR 0007 for online inventory create/edit/adjust commands with client-UUID idempotency, optimistic versions, and explicit stale offline-mobile conflicts. Keep every other domain operation read-only.
 - [ ] Add independent web build/deployment artifacts and CI gates while keeping source, docs, and API conformance in this repository.
 
 #### W1.0: browser security design — complete
