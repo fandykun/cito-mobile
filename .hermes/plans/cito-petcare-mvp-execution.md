@@ -1280,6 +1280,14 @@ W0 patient-history follow-up: added accessible record-type filters with counts f
 - Added responsive vaccination and weight panels with explicit empty states, due-date handling, accessible record lists, and no browser mutations or persistence.
 - Production tests cover fail-first transport and UI behavior, malformed and cross-patient records, authenticated request construction, independent loading, empty state, retry with profile retention, direct protected routes, and cancellation on unmount.
 
+#### W1.14: production vaccination and weight append commands — complete
+
+- Added append-only weight and vaccination forms to the protected patient profile without exposing edit/delete controls or direct writes to the derived current-weight projection.
+- Each command uses one client-generated UUID in both the JSON body and `Idempotency-Key` header. Recoverable or unknown-result failures retain the exact command and draft for explicit retry; editing the draft retires the pending identity and creates a new command on submission.
+- Successful responses are strictly validated against the patient and submitted semantic payload before acceptance. Accepted commands retire their pending identity before authoritative reloads; weight creation reloads the full profile and both history feeds, while vaccination creation reloads both history feeds.
+- Command acceptance and projection refresh are separate states. A failed post-acceptance reload reports that the record was saved and offers a read-only refresh rather than incorrectly replaying the write.
+- Duplicate submits are disabled, all profile/history mutation entry points are mutually gated, in-flight commands abort on route exit, and sensitive drafts remain in React memory only. Conflicts retire the stale command identity, reload authoritative profile/history state, preserve the draft for explicit review, and require a newly identified resubmission. Newly opened append forms receive keyboard focus. Production tests cover request identity, strict timestamps, semantic response matching, exact retry, conflicts, authoritative refresh, accepted-command refresh failure, draft changes, duplicate suppression, focus, and cancellation.
+
 ### W1 acceptance gates
 
 - Unauthenticated navigation cannot render or retain clinic data.
