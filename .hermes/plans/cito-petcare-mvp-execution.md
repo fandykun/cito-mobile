@@ -1291,8 +1291,16 @@ W0 patient-history follow-up: added accessible record-type filters with counts f
 #### W1.15a: production patient visit-history transport — complete
 
 - Added a dedicated production web visit-history reader for authenticated, patient-filtered cursor pages from `GET /api/v1/visits` without importing prototype fixtures or retaining records outside React memory.
-- The transport validates exact page and visit shapes, patient association, active-record state, clinical UTF-8 byte limits, calendar dates, strict timestamps, payment attribution, item identifiers and quantities, immutable price snapshots, deterministic newest-first order, cursor consistency, and complete income/cost/profit reconciliation before data can enter a view.
-- Contract tests cover encoded patient/cursor requests, malformed relationships and medical fields, impossible dates and timestamps, financial inconsistency, item bounds, deletion state, pagination invariants, ordering, and rejection before transport. Rendering, pagination state, cancellation, and responsive patient-profile integration remain the next independently shippable step.
+- The transport validates closed page and visit shapes while normalizing contract-optional clinical fields, active-record deletion metadata, and terminal cursors. It also validates patient association, active-record state, clinical UTF-8 byte limits, calendar dates, strict timestamps, payment attribution, item identifiers and quantities, immutable price snapshots, deterministic newest-first order, cursor consistency, and complete income/cost/profit reconciliation before data can enter a view.
+- Contract tests cover encoded patient/cursor requests, malformed relationships and medical fields, impossible dates and timestamps, financial inconsistency, item bounds, deletion state, pagination invariants, ordering, and rejection before transport.
+
+#### W1.15b: production patient visit-history rendering — complete
+
+- Integrated the strict visit reader into the protected patient profile with independent loading, empty, initial-error, and pagination-error states so a visit-history failure never removes an already validated patient, owner, vaccination, or weight view.
+- Added responsive newest-first visit records for clinical observations, diagnosis, treatment, veterinarian notes, payment attribution, service fee, reconciled income/cost/profit, and immutable visit-time item price snapshots. Long clinical narratives remain available in bounded scroll regions rather than being truncated.
+- Cursor pagination treats cursors as opaque, suppresses duplicate requests, merges records by stable UUID, rejects conflicting duplicates and cross-page ordering violations, preserves validated records after pagination failures, and offers a targeted retry for older visits.
+- Initial and pagination requests abort on route exit. Patient-to-patient navigation remounts the sensitive profile boundary so the prior patient's medical data is cleared synchronously before the next route renders. Clinical records remain in React memory only, and the production source contains no browser persistence, service-worker caching, or clinical logging.
+- Production tests cover fail-closed loading, empty and error recovery, complete visit rendering, legacy-unattributed payment display, duplicate-safe pagination, duplicate-request suppression, cross-page ordering rejection, direct protected-route integration, and cancellation on unmount.
 
 ### W1 acceptance gates
 
