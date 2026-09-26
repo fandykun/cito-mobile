@@ -1288,6 +1288,12 @@ W0 patient-history follow-up: added accessible record-type filters with counts f
 - Command acceptance and projection refresh are separate states. A failed post-acceptance reload reports that the record was saved and offers a read-only refresh rather than incorrectly replaying the write.
 - Duplicate submits are disabled, all profile/history mutation entry points are mutually gated, in-flight commands abort on route exit, and sensitive drafts remain in React memory only. Conflicts retire the stale command identity, reload authoritative profile/history state, preserve the draft for explicit review, and require a newly identified resubmission. Newly opened append forms receive keyboard focus. Production tests cover request identity, strict timestamps, semantic response matching, exact retry, conflicts, authoritative refresh, accepted-command refresh failure, draft changes, duplicate suppression, focus, and cancellation.
 
+#### W1.15a: production patient visit-history transport — complete
+
+- Added a dedicated production web visit-history reader for authenticated, patient-filtered cursor pages from `GET /api/v1/visits` without importing prototype fixtures or retaining records outside React memory.
+- The transport validates exact page and visit shapes, patient association, active-record state, clinical UTF-8 byte limits, calendar dates, strict timestamps, payment attribution, item identifiers and quantities, immutable price snapshots, deterministic newest-first order, cursor consistency, and complete income/cost/profit reconciliation before data can enter a view.
+- Contract tests cover encoded patient/cursor requests, malformed relationships and medical fields, impossible dates and timestamps, financial inconsistency, item bounds, deletion state, pagination invariants, ordering, and rejection before transport. Rendering, pagination state, cancellation, and responsive patient-profile integration remain the next independently shippable step.
+
 ### W1 acceptance gates
 
 - Unauthenticated navigation cannot render or retain clinic data.
