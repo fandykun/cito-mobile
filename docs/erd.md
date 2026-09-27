@@ -37,12 +37,14 @@ erDiagram
         uuid id PK
         uuid owner_id FK
         string name
-        string species
-        string breed
-        date dob
+        string species "nullable"
+        string breed "nullable"
+        int age "nullable reported whole years, 0-200"
         decimal current_weight
-        binary allergies "ciphertext at rest"
+        binary anamnesa "ciphertext at rest"
         binary chronic_conditions "ciphertext at rest"
+        binary temperature "nullable Celsius ciphertext at rest"
+        binary diagnosis "current summary ciphertext at rest"
         datetime created_at
         datetime updated_at
     }
@@ -157,8 +159,13 @@ erDiagram
 - Cash-affecting source records use the same constrained payment methods: `cash`, `qris`, `transfer`, or `card`. The server schema temporarily permits `NULL` on visit, expense, and owner-draw rows solely to preserve pre-attribution history during forward upgrades; new writes must provide a method, and unknown legacy rows cannot contribute to authoritative cash reconciliation until backfilled.
 - `DAILY_SUMMARY` and `MONTHLY_SUMMARY` are **derived/computed projections**, not manually entered. The current backend computes them from `VISIT`, `RETAIL_TRANSACTION`, `EXPENSE`, and `OWNER_DRAW` source records on demand; a future materialization is an optimization, not a separate source of truth.
 - Sync state belongs to the encrypted mobile outbox/checkpoint store, not authoritative PostgreSQL domain rows. The server-side operation ledger and checkpoint format remain part of the unfinished sync design.
-- `PET` and `VISIT` include `updated_at` since both are editable after creation (correcting profile info, amending a diagnosis/notes) — `created_at` is preserved as the original record date, `updated_at` reflects the latest edit.
+- `PET` and `VISIT` include `updated_at` since both are editable after creation (correcting profile info, current clinical summary, or visit diagnosis/notes) — `created_at` is preserved as the original record date, `updated_at` reflects the latest edit.
+- Pet `age` is a nullable reported whole-year value rather than a dynamically calculated age. Existing DOB values are preserved internally as `legacy_dob` during the compatibility period but are not exposed as current command fields.
+- Pet `species` and `breed` may be unknown (`NULL`) but, when present, must be nonblank bounded strings.
+- Pet `temperature` is a nullable current Celsius value from 20.0 through 50.0 with at most one decimal place. It is a current profile value, not a vitals-history ledger.
+- Pet profile `diagnosis` is a manually maintained current summary; chronological encounter diagnoses remain on `VISIT` records.
 - Medical fields shown as `binary` are plaintext only at authenticated application boundaries; PostgreSQL stores versioned authenticated-encryption envelopes in `BYTEA` columns as defined by ADR 0003.
+- The logical `anamnesa` field retains the immutable cryptographic associated-data identifier `allergies` so ciphertext written before ADR 0009 remains decryptable. Database/API names and authenticated encryption field identities are intentionally decoupled for this field.
 - `APP_USER` is a standalone entity (not connected by foreign key to clinic data) — it exists purely to gate login access. Since there's only one user and no roles/scopes, clinic records don't need a `user_id` ownership column; the account is provisioned manually (no self-registration flow) and simply controls whether the app can be opened at all.
 
 ---

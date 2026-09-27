@@ -83,11 +83,11 @@ Single user: the clinic owner/vet. No role-based access control needed for MVP.
 - **Supplier info** (optional, lightweight): name and contact per item, no formal PO workflow needed for MVP
 
 ### 3.3 Patient (Pet) Records
-- **Pet profile**: name, species, breed, date of birth or age, weight (with history log), owner name & contact
-- **Health flags**: allergies, chronic conditions — shown prominently on the record
+- **Pet profile**: name; optional species and breed; reported whole-year age (0–200, nullable); current temperature in Celsius (20.0–50.0, nullable); weight with history; owner name and contact
+- **Clinical summary**: encrypted anamnesa, chronic conditions, and current profile diagnosis shown prominently on the protected record. The profile diagnosis is a current summary and does not replace encounter-specific visit diagnoses.
 - **Visit history**: chronological list of all past visits for that pet
 - **Vaccination tracking**: vaccine type, date given, next due date (with reminder)
-- **Editable records**: owner can update/edit a pet's profile (e.g., correct weight, update allergy/chronic condition info, fix a typo in breed/name) and edit past visit records (e.g., amend a diagnosis or add follow-up notes) after initial save
+- **Editable records**: owner can update/edit a pet's profile (e.g., reported age, optional species/breed, anamnesa, chronic conditions, current temperature/diagnosis, or name) and edit past visit records (e.g., amend an encounter diagnosis or add follow-up notes) after initial save
   - Edits are timestamped (edited_at) so there's a record of when a change was made, distinct from the original creation date — important given these are medical records
   - Since there's only one user, no approval workflow is needed; edits save directly
 
@@ -179,7 +179,7 @@ Single user: the clinic owner/vet. No role-based access control needed for MVP.
 
 ## 4. Data Entities (High-Level)
 
-- **Pet** — id, name, species, breed, DOB/age, weight history, allergies, chronic conditions, owner_id
+- **Pet** — id, owner_id, name, nullable species, nullable breed, nullable reported age, weight history, encrypted anamnesa, encrypted chronic conditions, encrypted current temperature, encrypted current profile diagnosis
 - **Owner** — id, name, contact info
 - **InventoryItem** — id, name, category, unit, cost_price, selling_price, stock_quantity, low_stock_threshold, expiry_date
 - **Visit** — id, pet_id, date, reason, clinical_observations, diagnosis, treatment_plan, vet_notes, service_fee
@@ -229,5 +229,6 @@ Single user: the clinic owner/vet. No role-based access control needed for MVP.
 | v2.4 | Accepted the production browser security model: same-origin HTTPS, separate cookie-based web sessions, exact-origin and CSRF checks, no-store API responses, no persistent browser clinic data, and fail-closed route/session behavior. |
 | v2.5 | Approved online web inventory create/edit/adjust commands with client-UUID idempotency, optimistic versions, and explicit stale offline-mobile conflict handling; all other web domains remain read-only. |
 | v2.6 | Made the web console an online writable operational client for command-safe creates, updates, and append-only records; retained mobile-only offline queues, command-specific audit rules, and explicit multi-client conflict handling. |
+| v2.7 | Replaced public pet DOB with nullable reported whole-year age; made species/breed nullable; renamed encrypted allergies to anamnesa; and added encrypted current temperature and profile diagnosis. |
 
 **Process going forward**: new feature requests should be added directly into the relevant section of this PRD (Goals, User Stories, Feature Specifications, Data Entities) rather than creating a separate PRD document — this keeps one source of truth for the product, especially since `AGENTS.md` and the architecture doc both reference this file. Log each meaningful change as a new row above.
