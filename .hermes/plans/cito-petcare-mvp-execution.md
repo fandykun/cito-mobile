@@ -1310,6 +1310,13 @@ W0 patient-history follow-up: added accessible record-type filters with counts f
 - Create and update responses are accepted only when their identifiers, owner association, normalized semantic fields, event timestamp, and expected result version match the submitted command. All profile mutation entry points remain mutually gated while retryable intent is open.
 - Production tests cover owner-filter request construction and cross-owner rejection, sibling navigation, exact patient-command retry, navigation locking, deferred and failed conflict refreshes, new identity after review, response-command mismatch rejection, original-version enforcement, pagination retry/repeated cursors/conflicting duplicates, protected routing, and focused form entry.
 
+#### W1.17: production daily finance overview — complete
+
+- Extended the production finance transport with an authenticated clinic-day reader that validates canonical calendar dates, exact closed response shapes, bounded whole-IDR values, signed net totals, payment-method buckets, unattributed record counts, and complete category reconciliation before data enters React state.
+- Replaced the protected overview placeholder with a read-only daily financial projection that defaults to the current `Asia/Jakarta` clinic date while allowing an explicit calendar date. The view presents gross income, operating expenses, net before owner draw, retained funds after draw, medical/retail components, and cash, QRIS, transfer, card, and legacy-unattributed payment buckets without introducing financial mutation controls.
+- Added fail-closed loading, deterministic zero-activity, recoverable error/retry, stale-request cancellation on date changes and route exit, and explicit incomplete-attribution warnings. Zero-value records with unknown legacy payment methods remain visible through their unattributed counts and are never presented as an empty day or assumed cash.
+- Production tests cover strict parser and request behavior, response-date mismatch, malformed and unreconciled projections, loading and retry states, date-change cancellation, zero activity, incomplete attribution, authenticated overview integration, and the existing monthly-finance boundary.
+
 ### W1 acceptance gates
 
 - Unauthenticated navigation cannot render or retain clinic data.
