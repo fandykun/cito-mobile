@@ -12,8 +12,8 @@ The clinic currently operates with mixed personal/business finances and no digit
 - Track inventory (medical and retail stock) with cost and selling prices
 - Record patient (pet) visits with detailed, secure medical history, diagnoses, and treatments
 - Provide fast retail transactions for medicine & food sales with automatic PDF receipt generation
-- Automatically calculate income, cost, and profit per visit and per retail transaction
-- Roll up visit and retail data into daily and monthly financial views
+- Automatically calculate income, cost, and profit per invoice and per retail transaction
+- Roll up paid invoices and retail data into daily and monthly financial views
 - Clearly separate clinic-retained funds from owner's draw (personal income)
 - Work offline, syncing when connectivity returns
 - Require login before any data (stock, financials, patient records) is accessible, protecting sensitive clinic and financial information
@@ -48,8 +48,8 @@ Single user: the clinic owner/vet. No role-based access control needed for MVP.
 2. As the owner, I want to be alerted when stock is low or an item is nearing expiry, so I can reorder in time and avoid waste.
 3. As the owner, I want to create a patient record for each pet, so I can track that pet's identity and owner contact.
 4. As the owner, I want to log a visit for a pet — including behavior notes, diagnosis, and medicine/treatment given — so I have a complete medical history.
-5. As the owner, when I log medicine used in a visit, I want stock to auto-deduct and the visit's cost/income to auto-calculate, so I don't have to re-enter data.
-6. As the owner, I want to see each visit's income, cost, and profit, so I understand which visits/services are most profitable.
+5. As the owner, I want to prepare an invoice with service and inventory lines, then deduct stock atomically when I issue it, so clinical notes and billing remain separate.
+6. As the owner, I want to see each invoice's income, cost, and profit, so I understand which services and products are most profitable.
 7. As the owner, I want a daily summary of income and expenses (including a cash drawer reconciliation), so I know how the clinic did each day.
 8. As the owner, I want a monthly financial overview showing gross income, expenses, net profit, how much I've drawn personally, and how much is retained in the clinic, so I can decide how much I can safely pay myself.
 9. As the owner, I want to log an "owner's draw" as a distinct transaction type (not a generic expense), so my personal withdrawals don't distort the clinic's operating expense picture.
@@ -79,7 +79,7 @@ Single user: the clinic owner/vet. No role-based access control needed for MVP.
 - **Item fields**: name, category (Medical / Retail), unit, cost price, selling price, current stock quantity, low-stock threshold, expiry date (optional, required for medical items)
 - **Alerts**: low-stock alert (below threshold), expiry alert with a configurable 1–365 day window that defaults to 30 days; the expiry alert includes already-expired items
 - **Stock adjustment**: manual adjustment with a reason field (spoilage, correction, breakage)
-- **Auto-deduction**: stock automatically decreases when an item is used in a visit
+- **Auto-deduction**: stock automatically decreases when an invoice containing inventory lines is issued or when a walk-in retail transaction completes; voiding an issued invoice restores its stock atomically
 - **Supplier info** (optional, lightweight): name and contact per item, no formal PO workflow needed for MVP
 
 ### 3.3 Patient (Pet) Records
@@ -106,9 +106,9 @@ Single user: the clinic owner/vet. No role-based access control needed for MVP.
   - Regular backup/sync to the secured backend so records aren't lost if the device is lost or damaged
 
 ### 3.5 Visit Logging (Medical)
-- **Visit fields**: date, pet (linked), reason for visit, structured clinical record (per 3.3), medicine/treatment given
-- **Medicine/items used**: select from inventory; each selection auto-pulls cost price and selling price, and deducts stock
-- **Service fees**: consultation fee, procedure fee (manually entered or from a configurable price list)
+- **Clinical-only record**: date, pet (linked), reason for visit, clinical observations, diagnosis, treatment plan, and veterinarian notes
+- **No billing fields**: visits do not store service fees, payment methods, item lines, income, cost, or profit
+- **Optional invoice link**: billing may reference a visit, but the clinical record remains independently editable under its medical-record version rules
 
 ### 3.6 Retail Transactions (Medicine & Food Sales)
 - **Purpose**: handle quick, walk-in retail sales (e.g., a customer buying pet food or over-the-counter medicine) without going through a full medical visit/diagnosis flow
@@ -122,23 +122,28 @@ Single user: the clinic owner/vet. No role-based access control needed for MVP.
   - Receipt includes: clinic name, date/time, itemized list, quantities, prices, total, payment method
   - Receipt can be viewed, saved, or shared directly from the app (e.g., via WhatsApp) so the customer gets proof of purchase without needing a physical printer
   - Physical/thermal printer support can be added later as a post-MVP enhancement if needed
-- **Stock deduction**: retail sale automatically deducts sold quantity from inventory, same as a medical visit would
+- **Stock deduction**: retail sale automatically deducts sold quantity from inventory, independently from invoice stock movements
 - **Speed target**: a retail transaction (item selection → payment → PDF receipt generated) should take well under a minute, since this is meant to be a fast counter transaction, not a full patient workflow
 
-### 3.7 Per-Visit / Per-Transaction Financials
-- **Visit income** = sum of (selling price × quantity) for all medicines/items used in a medical visit + service/procedure fees
-- **Visit cost** = sum of (cost price × quantity) for all medicines/items used
-- **Visit profit** = visit income − visit cost
+### 3.7 Invoice / Retail Transaction Financials
+- **Invoice lifecycle**: draft → issued → paid, with draft or issued invoices also voidable. Paid invoices cannot be voided because refunds are outside the current scope.
+- **Draft invoice**: editable service and inventory lines with immutable cost/selling price snapshots; no stock or finance effect
+- **Issue invoice**: atomically deduct all inventory-line quantities. Any insufficient stock rejects the entire transition with no partial deduction.
+- **Pay invoice**: requires a payment method, records `paid_at`, and creates the finance-income record in the same transaction
+- **Void invoice**: requires a reason; voiding an issued invoice restores all deducted inventory in the same transaction
+- **Invoice income** = sum of (selling price snapshot × quantity) for all service and inventory lines
+- **Invoice cost** = sum of (cost price snapshot × quantity); service lines always have zero cost
+- **Invoice profit** = invoice income − invoice cost
 - **Retail transaction income** = sum of (selling price × quantity) for items sold
 - **Retail transaction cost** = sum of (cost price × quantity) for items sold
 - **Retail transaction profit** = retail income − retail cost
-- Both visit and retail transaction profit are displayed on their respective records and rolled into the daily financial summary automatically
+- Invoice and retail transaction profit are displayed on their respective records. Only paid invoices enter financial summaries, recognized on the clinic-local date of `paid_at`; draft, issued-unpaid, and void invoices contribute no income.
 
 ### 3.8 Daily Income & Expense
-- **Auto-populated income**: sum of all medical visit incomes + all retail transaction incomes for the day
+- **Auto-populated income**: sum of paid invoice income recognized on `paid_at` plus walk-in retail transaction income for the day
 - **Manual expense entry**: category (restock, utilities, rent, equipment, misc), amount, note
 - **Payment method breakdown**: cash, QRIS, transfer, card
-- **Payment attribution source of truth**: every medical visit payment, retail sale, operating expense, and owner's draw records exactly one payment method (cash, QRIS, transfer, or card). Legacy records whose method is unknown remain explicitly unattributed and must not be assumed to be cash.
+- **Payment attribution source of truth**: every paid invoice, retail sale, operating expense, and owner's draw records exactly one payment method (cash, QRIS, transfer, or card). Legacy records whose method is unknown remain explicitly unattributed and must not be assumed to be cash.
 - **Daily payment breakdown**: show medical income, retail income, operating expenses, and owner's draw separately for each payment method. Include legacy unknown amounts in overall accounting totals but never in a known-method bucket. Explicitly report whether attribution is complete, including zero-amount legacy records, so partial cash totals cannot be mistaken for a fully reconciled drawer.
 - **Cash drawer reconciliation**: opening balance, calculated expected closing balance, actual closing balance, variance
   - Expected closing cash = opening cash + cash medical income + cash retail income − cash operating expenses − cash owner's draw. QRIS, transfer, and card payments never affect drawer cash.
@@ -167,8 +172,8 @@ Single user: the clinic owner/vet. No role-based access control needed for MVP.
 ### 3.11 Desktop Web Companion (Post-MVP)
 - **Purpose:** provide a desktop-optimized online operational console that shares the API and domain rules with mobile; do not duplicate the mobile UI one-for-one or claim browser offline support.
 - **Review scope:** overview dashboard, daily/monthly financial views, payment-method and reconciliation status, inventory low-stock/expiry alerts, patient search, pet profile review, and chronological visit/vaccination/weight history.
-- **Approved commands:** inventory create/edit/adjust; owner and pet create/update; weight and vaccination append; visit create/amend; retail, expense, and owner-draw creation. Each command ships only after its runtime validation, idempotency/version, conflict, protected-route, and domain-invariant tests pass.
-- **Command ownership:** derived summaries are never written directly; current weight changes through the weight ledger; stock changes through adjustments, visits, and retail; completed retail and financial records remain append-only until dedicated audited correction commands exist.
+- **Approved commands:** inventory create/edit/adjust; owner and pet create/update; weight and vaccination append; clinical visit create/amend; invoice draft create/edit and issue/pay/void transitions; retail, expense, and owner-draw creation. Each command ships only after its runtime validation, idempotency/version, conflict, protected-route, and domain-invariant tests pass.
+- **Command ownership:** derived summaries are never written directly; current weight changes through the weight ledger; stock changes through adjustments, invoice issue/void, and retail; completed retail and financial records remain append-only until dedicated audited correction commands exist.
 - **Explicitly excluded:** browser offline mode, background sync, browser-persisted clinic data/drafts, generic delete-and-recreate correction flows, direct projection writes, and authoritative cash closing until its persisted command is specified.
 - **Access:** use the same manually provisioned clinic account and existing authorization boundary. No registration, roles, public pages containing clinic data, or separate web-only account system.
 - **Security:** production web pages require authentication before rendering clinic data. ADR 0006 defines a same-origin HTTPS deployment, separate browser-auth endpoints, Secure/HttpOnly/SameSite session cookies, exact-origin and double-submit CSRF enforcement, no-store API responses, safe refresh/logout behavior, and route-authorization tests. Sensitive responses must not be written to `localStorage`, sessionStorage, IndexedDB, service-worker caches, analytics, telemetry, or client logs; a visual prototype must use synthetic data only.
@@ -182,8 +187,9 @@ Single user: the clinic owner/vet. No role-based access control needed for MVP.
 - **Pet** — id, owner_id, name, nullable species, nullable breed, nullable reported age, weight history, encrypted anamnesa, encrypted chronic conditions, encrypted current temperature, encrypted current profile diagnosis
 - **Owner** — id, name, contact info
 - **InventoryItem** — id, name, category, unit, cost_price, selling_price, stock_quantity, low_stock_threshold, expiry_date
-- **Visit** — id, pet_id, date, reason, clinical_observations, diagnosis, treatment_plan, vet_notes, service_fee
-- **VisitItem** — id, visit_id, inventory_item_id, quantity, cost_price_at_time, selling_price_at_time
+- **Visit** — id, pet_id, date, reason, clinical_observations, diagnosis, treatment_plan, vet_notes
+- **Invoice** — id, pet_id, derived owner_id, optional visit_id, server invoice_number, status, issue_date, paid_at, payment_method, void_reason, note, computed totals, metadata
+- **InvoiceLine** — id, invoice_id, optional inventory_item_id (null for service), description, quantity, cost_price_at_time, selling_price_at_time
 - **RetailTransaction** — id, date, total_amount, payment_method, receipt_number
 - **RetailTransactionItem** — id, transaction_id, inventory_item_id, quantity, cost_price_at_time, selling_price_at_time
 - **Expense** — id, date, category, amount, note
@@ -197,11 +203,11 @@ Single user: the clinic owner/vet. No role-based access control needed for MVP.
 
 ## 5. Success Criteria (MVP)
 
-- Owner can fully log a patient visit — including detailed medical history and medicine used — in under 2–3 minutes
+- Owner can fully log a clinical patient visit in under 2–3 minutes and bill it separately through an invoice when needed
 - Owner can complete a retail transaction, from item selection to generated PDF receipt, in under 1 minute
 - Medical records are stored securely (encrypted, access-locked) with no data loss risk
 - No app data (inventory, financials, patient records) is viewable without logging in first, including when offline
-- Inventory stock levels stay accurate without manual recounting, due to auto-deduction from both visits and retail sales
+- Inventory stock levels stay accurate without manual recounting, due to atomic invoice issue/void movements and retail-sale deductions
 - Owner can view an accurate monthly financial picture (medical vs. retail income, expenses, profit, draw, retained) without manual spreadsheet work
 - App remains usable (core actions, including retail checkout and PDF receipt generation) with no internet connection, syncing cleanly afterward
 - Web console performs the ADR 0008 command set and presents authenticated desktop views without persisting clinic records, credentials, or drafts in browser storage
@@ -230,5 +236,6 @@ Single user: the clinic owner/vet. No role-based access control needed for MVP.
 | v2.5 | Approved online web inventory create/edit/adjust commands with client-UUID idempotency, optimistic versions, and explicit stale offline-mobile conflict handling; all other web domains remain read-only. |
 | v2.6 | Made the web console an online writable operational client for command-safe creates, updates, and append-only records; retained mobile-only offline queues, command-specific audit rules, and explicit multi-client conflict handling. |
 | v2.7 | Replaced public pet DOB with nullable reported whole-year age; made species/breed nullable; renamed encrypted allergies to anamnesa; and added encrypted current temperature and profile diagnosis. |
+| v2.8 | Separated clinical visits from billing; added web invoice drafts and issue/pay/void transitions, paid-at financial recognition, atomic stock movement, patient invoice history, and browser A4 printing. |
 
 **Process going forward**: new feature requests should be added directly into the relevant section of this PRD (Goals, User Stories, Feature Specifications, Data Entities) rather than creating a separate PRD document — this keeps one source of truth for the product, especially since `AGENTS.md` and the architecture doc both reference this file. Log each meaningful change as a new row above.

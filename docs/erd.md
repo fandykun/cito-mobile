@@ -6,12 +6,15 @@
 erDiagram
     OWNER ||--o{ PET : owns
     PET ||--o{ VISIT : has
+    PET ||--o{ INVOICE : billed
+    OWNER ||--o{ INVOICE : billed
     PET ||--o{ VACCINATION : has
-    VISIT ||--o{ VISIT_ITEM : includes
-    INVENTORY_ITEM ||--o{ VISIT_ITEM : "used in"
+    VISIT ||--o{ INVOICE : "optionally billed by"
+    INVOICE ||--|{ INVOICE_LINE : includes
+    INVENTORY_ITEM ||--o{ INVOICE_LINE : "optionally references"
     INVENTORY_ITEM ||--o{ RETAIL_TRANSACTION_ITEM : "sold in"
     RETAIL_TRANSACTION ||--o{ RETAIL_TRANSACTION_ITEM : includes
-    VISIT ||--o| DAILY_SUMMARY : "rolls into"
+    INVOICE ||--o| DAILY_SUMMARY : "paid income rolls into"
     RETAIL_TRANSACTION ||--o| DAILY_SUMMARY : "rolls into"
     EXPENSE ||--o| DAILY_SUMMARY : "rolls into"
     DAILY_SUMMARY ||--o| MONTHLY_SUMMARY : "rolls into"
@@ -79,19 +82,34 @@ erDiagram
         binary diagnosis "ciphertext at rest"
         binary treatment_plan "ciphertext at rest"
         binary vet_notes "ciphertext at rest"
-        decimal service_fee
-        decimal visit_income
-        decimal visit_cost
-        decimal visit_profit
-        string payment_method "nullable only for legacy unattributed rows"
         datetime created_at
         datetime updated_at
     }
 
-    VISIT_ITEM {
+    INVOICE {
         uuid id PK
-        uuid visit_id FK
-        uuid inventory_item_id FK
+        uuid pet_id FK
+        uuid owner_id FK
+        uuid visit_id FK "nullable"
+        string invoice_number UK
+        string status "draft|issued|paid|void"
+        date issue_date
+        datetime paid_at "nullable until paid"
+        string payment_method "nullable until paid"
+        text void_reason "nullable"
+        text note "nullable"
+        decimal total_amount
+        decimal total_cost
+        decimal total_profit "generated"
+        datetime created_at
+        datetime updated_at
+    }
+
+    INVOICE_LINE {
+        uuid id PK
+        uuid invoice_id FK
+        uuid inventory_item_id FK "nullable for service"
+        string description
         int quantity
         decimal cost_price_at_time
         decimal selling_price_at_time
@@ -155,9 +173,11 @@ erDiagram
 ```
 
 **Notes on the ERD:**
-- `VISIT_ITEM` and `RETAIL_TRANSACTION_ITEM` both snapshot `cost_price_at_time` / `selling_price_at_time` from `INVENTORY_ITEM` — so historical records stay accurate even if prices change later.
-- Cash-affecting source records use the same constrained payment methods: `cash`, `qris`, `transfer`, or `card`. The server schema temporarily permits `NULL` on visit, expense, and owner-draw rows solely to preserve pre-attribution history during forward upgrades; new writes must provide a method, and unknown legacy rows cannot contribute to authoritative cash reconciliation until backfilled.
-- `DAILY_SUMMARY` and `MONTHLY_SUMMARY` are **derived/computed projections**, not manually entered. The current backend computes them from `VISIT`, `RETAIL_TRANSACTION`, `EXPENSE`, and `OWNER_DRAW` source records on demand; a future materialization is an optimization, not a separate source of truth.
+- `INVOICE_LINE` and `RETAIL_TRANSACTION_ITEM` snapshot `cost_price_at_time` / `selling_price_at_time` from `INVENTORY_ITEM` — so historical records stay accurate even if prices change later. Service invoice lines have no inventory reference and always use zero cost.
+- `VISIT` is clinical-only. It has no payment, item, stock, income, cost, or profit fields; an invoice may optionally link to one visit.
+- Invoice stock effects occur only on state transitions: draft → issued deducts every inventory line atomically, and issued → void restores those quantities atomically. Paid invoices cannot be voided.
+- Cash-affecting source records use the same constrained payment methods: `cash`, `qris`, `transfer`, or `card`. Paid invoices always have a method; expense and owner-draw rows may remain `NULL` only for legacy attribution gaps.
+- `DAILY_SUMMARY` and `MONTHLY_SUMMARY` are **derived/computed projections**, not manually entered. The current backend computes them from paid invoice income records, `RETAIL_TRANSACTION`, `EXPENSE`, and `OWNER_DRAW` source records on demand. Invoice income is recognized on the clinic-local date of `paid_at`, never `issue_date`.
 - Sync state belongs to the encrypted mobile outbox/checkpoint store, not authoritative PostgreSQL domain rows. The server-side operation ledger and checkpoint format remain part of the unfinished sync design.
 - `PET` and `VISIT` include `updated_at` since both are editable after creation (correcting profile info, current clinical summary, or visit diagnosis/notes) — `created_at` is preserved as the original record date, `updated_at` reflects the latest edit.
 - Pet `age` is a nullable reported whole-year value rather than a dynamically calculated age. Existing DOB values are preserved internally as `legacy_dob` during the compatibility period but are not exposed as current command fields.
@@ -185,7 +205,7 @@ flowchart TB
     end
 
     subgraph Web["Web Companion (Desktop Browser — React)"]
-        WEBUI[Desktop UI<br/>Read-only first release]
+        WEBUI[Desktop UI<br/>Online operational console]
         WEBSESSION[Authenticated Browser Session<br/>No clinic-data persistence]
     end
 
@@ -219,35 +239,27 @@ flowchart TB
     style Data fill:#e8fef0
 ```
 
-### 2.2 Medical Visit Flow
+### 2.2 Clinical Visit and Web Invoice Flow
 
 ```mermaid
 sequenceDiagram
     participant Owner as Owner (App User)
-    participant App as Mobile App
-    participant Local as Local Encrypted DB
-    participant Sync as Sync Queue
+    participant Web as Web Console
     participant API as Backend API
     participant DB as PostgreSQL
 
-    Owner->>App: Open pet profile, start new visit
-    App->>Local: Load pet history (offline-capable)
-    Owner->>App: Enter clinical observations, diagnosis, treatment
-    Owner->>App: Select medicine/items used
-    App->>Local: Auto-fetch cost/selling price, deduct stock
-    App->>App: Calculate visit income, cost, profit
-    App->>Local: Save visit record (marked unsynced)
-    Local->>Sync: Queue for sync
-    alt Online
-        Sync->>API: POST /visits
-        API->>DB: Persist visit + update inventory
-        API-->>Sync: Ack
-        Sync->>Local: Mark synced
-    else Offline
-        Sync-->>App: Remains queued
-        Note over App,Sync: Retries automatically on reconnect
-    end
-    App->>Local: Update daily summary (medical income)
+    Owner->>Web: Record clinical visit
+    Web->>API: POST /visits (clinical fields only)
+    API->>DB: Persist encrypted clinical record
+    Owner->>Web: Create draft invoice, optionally link visit
+    Web->>API: POST /invoices
+    API->>DB: Persist draft and price snapshots (no stock effect)
+    Owner->>Web: Issue invoice
+    Web->>API: POST /invoices/{id}/issue
+    API->>DB: Atomically validate and deduct all inventory lines
+    Owner->>Web: Confirm payment method
+    Web->>API: POST /invoices/{id}/pay
+    API->>DB: Atomically mark paid and create income record
 ```
 
 ### 2.3 Retail Transaction Flow (Fast Checkout)
@@ -277,7 +289,7 @@ sequenceDiagram
 
 ```mermaid
 flowchart LR
-    A[Visit Records] --> D[Daily Summary]
+    A[Paid Invoice Income] --> D[Daily Summary]
     B[Retail Transactions] --> D
     C[Expenses] --> D
     D --> E[Monthly Summary]
@@ -304,7 +316,7 @@ flowchart LR
 |---|---|
 | App login | Required at launch — single, manually-provisioned account (username/password); no self-registration. Session token persists for a **configurable duration** (default ~1–3 days); supports offline login via securely cached credentials |
 | Local storage | Encrypted local DB (e.g., SQLCipher) — no plaintext medical data at rest on device |
-| Web browser | Authenticated before clinic data renders; first release is read-only and online-only. ADR 0006 requires same-origin Secure/HttpOnly/SameSite session cookies, exact-origin and CSRF enforcement, no-store API responses, and no clinic records or tokens in `localStorage`/sessionStorage/IndexedDB/service-worker caches |
+| Web browser | Authenticated before clinic data renders and online-only. ADR 0006 requires same-origin Secure/HttpOnly/SameSite session cookies, exact-origin and CSRF enforcement, no-store API responses, and no clinic records or tokens in `localStorage`/sessionStorage/IndexedDB/service-worker caches. Invoice POST/PUT transitions use the same CSRF-protected session boundary. |
 | Transport | TLS/HTTPS for all API calls |
 | Backend storage | Encrypted PostgreSQL (at-rest encryption), access restricted to authenticated API |
 | Backups | Automated, encrypted backups of the backend database |
