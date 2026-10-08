@@ -60,7 +60,7 @@ Single user: the clinic owner/vet. No role-based access control needed for MVP.
 14. As the owner, I want a PDF receipt automatically generated after a retail sale, so the customer has proof of purchase (viewable, shareable, or printable later) without me writing one by hand.
 15. As the owner, I want to update or correct a pet's profile or past visit record, so I can fix mistakes or add follow-up information without creating a duplicate record.
 16. As the owner, I want to log in before accessing the app, so my stock, financial, and patient data stay private if my device is lost or someone else picks it up.
-17. As the owner, I want to stay logged in for a configurable period (e.g., 1–3 days) instead of logging in every time I open the app, so daily use stays convenient without sacrificing security.
+17. As the owner, I want to stay logged in for a configurable period of up to 30 days instead of logging in every time I open the app, so daily use stays convenient without sacrificing security.
 18. As the owner, I want to review and perform supported clinic operations on a larger desktop screen, so I can manage online work without using the phone for every task.
 
 ---
@@ -72,7 +72,7 @@ Single user: the clinic owner/vet. No role-based access control needed for MVP.
 - **Username and password only** — the current product has no PIN or biometric authentication/re-lock flow
 - **Single account, manually provisioned** — the owner's login credentials are set up manually (e.g., by the developer/admin during initial setup); there is **no self-registration, sign-up, or "create account" flow** in the app
 - **No roles/scopes** — login exists purely as an access gate, not for permission differentiation, since there's only one user
-- **Session handling**: once logged in with username and password, the session persists for a **configurable duration** (default suggestion: 1–3 days) so the owner isn't forced to log in every time the app opens; after the session expires, a fresh username/password login is required. Duration is adjustable (e.g., in app settings) rather than hardcoded.
+- **Session handling**: once logged in with username and password, the session persists for a **configurable duration from 24 hours up to 30 days** so the owner isn't forced to log in every time the app opens; after the session expires, a fresh username/password login is required. The provisioned account policy controls the duration rather than hardcoding it in the client.
 - **Password/credential recovery**: since there's no self-registration, recovery is also a manual/admin-assisted process (e.g., resetting credentials directly in the backend) rather than an automated "forgot password" email flow — acceptable given single-user scale
 
 ### 3.2 Inventory Management
@@ -225,7 +225,7 @@ Single user: the clinic owner/vet. No role-based access control needed for MVP.
 | v1.4 | Confirmed React Native + Expo EAS Build as the mobile framework (cloud iOS builds, no Mac required). |
 | v1.5 | Added ability to update/edit patient (pet) profiles and past visit records. |
 | v1.6 | Added login requirement (single manually-provisioned account, no self-registration, no roles) to protect stock/financial/patient data. |
-| v1.7 | Login sessions made persistent for a configurable duration (default ~1–3 days) instead of requiring login every app open. |
+| v1.7 | Login sessions made persistent for a configurable duration instead of requiring login every app open. The supported account policy is now 24 hours to 30 days. |
 | v1.8 | Removed "Future Considerations" section; added this version history for tracking changes going forward. |
 | v1.9 | Authentication limited to username and password for the current product; removed PIN and biometric re-lock requirements. |
 | v2.0 | Defined the configurable clinic business timezone (`Asia/Jakarta` default) and the inventory expiry-alert window (30-day default, including expired items). |

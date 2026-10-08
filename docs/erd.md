@@ -24,7 +24,7 @@ erDiagram
         uuid id PK
         string username
         string password_hash
-        int session_duration_hours "configurable, e.g. 24-72"
+        int session_duration_hours "configurable, 24-720"
         datetime last_login_at
         datetime created_at
     }
@@ -314,7 +314,7 @@ flowchart LR
 
 | Layer | Protection |
 |---|---|
-| App login | Required at launch — single, manually-provisioned account (username/password); no self-registration. Session token persists for a **configurable duration** (default ~1–3 days); supports offline login via securely cached credentials |
+| App login | Required at launch — single, manually-provisioned account (username/password); no self-registration. Session token persists for a **configurable duration from 24 hours up to 30 days**; supports offline login via securely cached credentials |
 | Local storage | Encrypted local DB (e.g., SQLCipher) — no plaintext medical data at rest on device |
 | Web browser | Authenticated before clinic data renders and online-only. ADR 0006 requires same-origin Secure/HttpOnly/SameSite session cookies, exact-origin and CSRF enforcement, no-store API responses, and no clinic records or tokens in `localStorage`/sessionStorage/IndexedDB/service-worker caches. Invoice POST/PUT transitions use the same CSRF-protected session boundary. |
 | Transport | TLS/HTTPS for all API calls |
