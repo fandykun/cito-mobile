@@ -1,5 +1,7 @@
 # Product Requirements Document: Vet Clinic Management System
 
+> Migration snapshot from `fandykun/cito-petcare` commit `70894a3`, retained for mobile development context and historical verification. Website/backend work and referenced server files live in that repository; this document is not a claim that those files or tasks belong here. Consult the current backend PRD, ERD, OpenAPI contract, and ADRs before changing domain behavior. Current mobile repository ownership is defined in `AGENTS.md` and `README.md`.
+
 ## 1. Overview
 
 ### 1.1 Purpose

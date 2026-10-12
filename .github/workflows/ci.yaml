@@ -1,0 +1,43 @@
+name: Mobile CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  mobile:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - name: Pin npm
+        run: npm install --global npm@10.9.4
+      - name: Install dependencies
+        run: npm ci
+      - name: Type-check
+        run: npm run mobile:typecheck
+      - name: Lint
+        run: npm run mobile:lint
+      - name: Test
+        run: npm run mobile:test
+      - name: Check Expo dependencies
+        working-directory: apps/mobile
+        run: npx expo install --check
+      - name: Export Android bundle
+        run: npm run mobile:export:android
+      - name: Build mobile design reference
+        run: npm run prototype:build
+      - name: Audit production dependencies
+        run: npm audit --omit=dev --audit-level=high

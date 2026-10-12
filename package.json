@@ -1,0 +1,46 @@
+{
+  "name": "cito-mobile",
+  "private": true,
+  "version": "0.0.0",
+  "packageManager": "npm@10.9.4",
+  "description": "Cito Petcare Expo mobile client and synthetic mobile-design reference",
+  "workspaces": [
+    "apps/mobile",
+    "prototype/web"
+  ],
+  "scripts": {
+    "start": "npm run start --workspace @cito-petcare/mobile --",
+    "web": "npm run web --workspace @cito-petcare/mobile",
+    "mobile:build:development:android": "npm run build:development:android --workspace @cito-petcare/mobile",
+    "mobile:export:android": "npm run export:android --workspace @cito-petcare/mobile",
+    "mobile:lint": "npm run lint --workspace @cito-petcare/mobile",
+    "mobile:prebuild:android": "npm run prebuild:android --workspace @cito-petcare/mobile",
+    "mobile:start": "npm run start --workspace @cito-petcare/mobile --",
+    "mobile:test": "npm run test --workspace @cito-petcare/mobile",
+    "mobile:typecheck": "npm run typecheck --workspace @cito-petcare/mobile",
+    "prototype:build": "npm run build --workspace @cito-petcare/prototype",
+    "prototype:dev": "npm run dev --workspace @cito-petcare/prototype --"
+  },
+  "engines": {
+    "node": ">=20",
+    "npm": ">=10 <11"
+  },
+  "overrides": {
+    "react-native-reanimated": "4.5.1",
+    "react-native-screens": "4.26.2",
+    "react-native-worklets": "0.10.1"
+  },
+  "devDependencies": {
+    "@react-native/jest-preset": "0.86.3",
+    "expo": "57.0.22",
+    "expo-constants": "57.0.18",
+    "expo-font": "57.0.4",
+    "expo-modules-core": "57.0.18",
+    "react": "19.2.3",
+    "react-dom": "19.2.3",
+    "react-native": "0.86.3",
+    "react-native-reanimated": "4.5.1",
+    "react-native-screens": "4.26.2",
+    "react-native-worklets": "0.10.1"
+  }
+}
