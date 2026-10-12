@@ -42,6 +42,14 @@ Single user: the clinic owner/vet. No role-based access control needed for MVP.
 
 ---
 
+### 1.7 Production web language and locale
+
+- The complete production web UI defaults to Bahasa Indonesia, including login, navigation, operational forms/history, validation and error states, accessibility labels, financial review, and browser-printed invoices. An accessible English toggle is available on login and throughout the protected shell.
+- Language switching is immediate and preserves the current route, form values, filters, validated data, command IDs, pending uncertain-result retries, and conflict-review locks. It never translates user-entered clinical data, owner/patient names, inventory descriptions/units, invoice identifiers, or API values.
+- Selection is in-memory for the page lifetime, survives login/logout on that page, and resets to Indonesian on reload/new tabs. No browser locale persistence is introduced; ADR 0006 remains unchanged.
+- Dates and numeric display follow `id-ID` or `en-GB` conventions. Currency remains IDR/rupiah, monetary writes remain whole integers, clinical units remain unchanged, and the configured clinic timezone and financial boundaries remain authoritative. Locale does not change stored dates, command semantics, price snapshots, or replay/conflict behavior.
+- This policy applies only to `apps/web`; mobile and both prototypes retain their separate delivery scope. Explicit bilingual catalog keys and React context drive translation, not DOM rewriting or external translation services.
+
 ## 2. User Stories
 
 1. As the owner, I want to add and update inventory items (with cost price and selling price) so I know what I have in stock and what each item is worth.
@@ -237,5 +245,6 @@ Single user: the clinic owner/vet. No role-based access control needed for MVP.
 | v2.6 | Made the web console an online writable operational client for command-safe creates, updates, and append-only records; retained mobile-only offline queues, command-specific audit rules, and explicit multi-client conflict handling. |
 | v2.7 | Replaced public pet DOB with nullable reported whole-year age; made species/breed nullable; renamed encrypted allergies to anamnesa; and added encrypted current temperature and profile diagnosis. |
 | v2.8 | Separated clinical visits from billing; added web invoice drafts and issue/pay/void transitions, paid-at financial recognition, atomic stock movement, patient invoice history, and browser A4 printing. |
+| v2.9 | Made the production web UI Indonesian by default with an in-memory English toggle, explicit bilingual catalogs, state-preserving live switching, localized print/errors/accessibility, and unchanged clinic data/currency/timezone/replay semantics. |
 
 **Process going forward**: new feature requests should be added directly into the relevant section of this PRD (Goals, User Stories, Feature Specifications, Data Entities) rather than creating a separate PRD document — this keeps one source of truth for the product, especially since `AGENTS.md` and the architecture doc both reference this file. Log each meaningful change as a new row above.

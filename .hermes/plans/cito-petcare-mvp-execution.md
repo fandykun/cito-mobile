@@ -1317,6 +1317,15 @@ W0 patient-history follow-up: added accessible record-type filters with counts f
 - Added fail-closed loading, deterministic zero-activity, recoverable error/retry, stale-request cancellation on date changes and route exit, and explicit incomplete-attribution warnings. Zero-value records with unknown legacy payment methods remain visible through their unattributed counts and are never presented as an empty day or assumed cash.
 - Production tests cover strict parser and request behavior, response-date mismatch, malformed and unreconciled projections, loading and retry states, date-change cancellation, zero activity, incomplete attribution, authenticated overview integration, and the existing monthly-finance boundary.
 
+#### Production web bilingual localization — implementation verified
+
+- [x] Translate every shipped `apps/web` UI boundary to Bahasa Indonesia by default with complete explicit English and Indonesian catalogs and React context. Includes login/shell, dashboard, inventory, owners, patient profiles/forms/histories, visits, invoices/A4 printing, finance, status/accessibility labels, and native/application validation and sanitized errors.
+- [x] Add accessible language controls on login and the protected shell; retain route, DOM/form identity, filters, validated records, drafts, exact replay UUIDs, and navigation/conflict locks across live switches. No locale-driven remounts or transport requests.
+- [x] Keep locale selection page-memory-only under ADR 0006. Preserve currency/units, canonical command values, clinic business dates/timezone, price snapshots, CSRF/session handling, replay/conflict rules, and all user-entered clinical text/API identifiers. Mobile/prototypes/API/database remain untouched.
+- [x] Add production-default, switching/state-retention, catalog/interpolation-parity, printable invoice, unchanged clinical-data, validation, and exact uncertain-result replay tests. Run TypeScript AST audits over JSX and helper strings in `.ts` and `.tsx`.
+- [x] Verify the full production web test suite and TypeScript/Vite build. Legacy behavioral suites explicitly choose English in test setup; production defaults remain Indonesian.
+- [ ] After the parent reviews and ships, verify both locales and A4 print preview on the deployed HTTPS origin; confirm reload defaults to Indonesian and browser storage remains empty of clinic data/tokens/locale preferences. This is a reversible static web release with no schema migration.
+
 ### W1 acceptance gates
 
 - Unauthenticated navigation cannot render or retain clinic data.
