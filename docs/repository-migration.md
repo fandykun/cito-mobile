@@ -28,7 +28,7 @@ GitHub API authentication was unavailable, so remote Actions status and reposito
 
 ## Local-only files
 
-Generated native directories, node_modules, build output, Expo cache, local environment files, and credentials are excluded. The original checkout's ignored local files are retained for recovery, not copied into Git. Regenerate native projects from the preserved config/plugins; securely configure any needed local environment variables in the new checkout.
+Generated native directories, node_modules, build output, Expo cache, local environment files, and credentials are excluded. The original checkout's ignored local files are archived locally at `/home/ubuntu/project/.cito-mobile-pre-split-local` (owner-only directory), not copied into Git. Regenerate native projects from the preserved config/plugins; securely configure any needed local environment variables in the new checkout.
 
 ## Rollback
 
